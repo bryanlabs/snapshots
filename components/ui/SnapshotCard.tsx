@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { motion } from "framer-motion";
 import { DownloadIcon, ViewIcon } from "../icons";
 import { ChainIcon } from "./ChainIcon";
 
@@ -15,35 +18,81 @@ interface SnapshotCardProps {
   chain: ChainSnapshot;
 }
 
+const cardVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.5,
+    },
+  },
+};
+
 export const SnapshotCard = ({ chain }: SnapshotCardProps) => {
   const chainId = chain.name.toLowerCase().replace(/\s+/g, "");
 
   return (
-    <div className="bg-white rounded-xl border border-border p-6 hover:shadow-lg transition-all duration-200 hover:-translate-y-1">
+    <motion.div
+      variants={cardVariants}
+      whileHover={{
+        y: -4,
+        transition: { duration: 0.2 },
+      }}
+      className="bg-white rounded-xl border border-border p-6 hover:shadow-lg transition-all duration-200"
+    >
       <div className="flex items-start gap-4 mb-4">
-        <ChainIcon name={chain.name} />
+        <motion.div
+          whileHover={{ rotate: 5, scale: 1.1 }}
+          transition={{ duration: 0.2 }}
+        >
+          <ChainIcon name={chain.name} />
+        </motion.div>
         <div className="flex-1">
-          <h3 className="text-xl font-bold text-foreground mb-1">
+          <motion.h3
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.4, delay: 0.1 }}
+            className="text-xl font-bold text-foreground mb-1"
+          >
             {chain.name}
-          </h3>
-          <p className="text-sm text-muted-foreground">{chain.network}</p>
+          </motion.h3>
+          <motion.p
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.4, delay: 0.2 }}
+            className="text-sm text-muted-foreground"
+          >
+            {chain.network}
+          </motion.p>
         </div>
       </div>
 
-      <div className="space-y-3 mb-6">
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5, delay: 0.3 }}
+        className="space-y-3 mb-6"
+      >
         <div className="flex justify-between items-center">
           <span className="text-sm text-muted-foreground">Latest Block:</span>
-          <span className="font-mono text-sm font-medium text-foreground">
+          <motion.span
+            whileHover={{ scale: 1.05 }}
+            className="font-mono text-sm font-medium text-foreground"
+          >
             #{chain.latestBlock.toLocaleString()}
-          </span>
+          </motion.span>
         </div>
 
         <div className="flex justify-between items-center">
           <span className="text-sm text-muted-foreground">Size:</span>
           <div className="text-right">
-            <div className="font-medium text-sm text-foreground">
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              className="font-medium text-sm text-foreground"
+            >
               {chain.size}
-            </div>
+            </motion.div>
             <div className="text-xs text-muted-foreground">
               pruned: {chain.prunedSize}
             </div>
@@ -52,25 +101,43 @@ export const SnapshotCard = ({ chain }: SnapshotCardProps) => {
 
         <div className="flex justify-between items-center">
           <span className="text-sm text-muted-foreground">Updated:</span>
-          <span className="text-sm font-medium text-foreground">
+          <motion.span
+            whileHover={{ scale: 1.05 }}
+            className="text-sm font-medium text-foreground"
+          >
             {chain.updated}
-          </span>
+          </motion.span>
         </div>
-      </div>
+      </motion.div>
 
-      <div className="flex gap-3">
-        <button className="flex-1 bg-accent hover:bg-accent/90 text-white font-medium py-2.5 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2">
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.4 }}
+        className="flex gap-3"
+      >
+        <motion.button
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          className="flex-1 bg-accent hover:bg-accent/90 text-white font-medium py-2.5 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2"
+        >
           <DownloadIcon />
           Download
-        </button>
+        </motion.button>
         <Link
           href={`/chains/${chainId}`}
           className="bg-slate-100 hover:bg-slate-200 text-foreground font-medium py-2.5 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2"
         >
-          <ViewIcon />
-          Details
+          <motion.div
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.95 }}
+            className="flex items-center gap-2"
+          >
+            <ViewIcon />
+            Details
+          </motion.div>
         </Link>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 };
