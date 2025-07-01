@@ -1,8 +1,10 @@
+import { GLOBAL_STATS } from "@/lib/data/chains";
+
 export const HeroStats = () => {
   const stats = [
-    { number: "30+", label: "Chains Available" },
-    { number: "Daily", label: "Updates" },
-    { number: "99.9%", label: "Uptime" },
+    { number: `${GLOBAL_STATS.totalChains}+`, label: "Chains Available" },
+    { number: GLOBAL_STATS.updateFrequency, label: "Updates" },
+    { number: GLOBAL_STATS.uptime, label: "Uptime" },
   ];
 
   return (
