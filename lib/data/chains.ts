@@ -38,6 +38,11 @@ export interface ChainConfig {
   website?: string;
   github?: string;
   docs?: string;
+  // Real token data
+  token: {
+    symbol: string;
+    denom: string;
+  };
   hardware: {
     minRam: string;
     recommendedRam: string;
@@ -70,6 +75,10 @@ export const CHAINS_CONFIG: Record<string, ChainConfig> = {
     website: "https://cosmos.network",
     github: "https://github.com/cosmos/gaia",
     docs: "https://hub.cosmos.network",
+    token: {
+      symbol: "ATOM",
+      denom: "uatom",
+    },
     hardware: {
       minRam: "16 GB",
       recommendedRam: "32 GB",
@@ -132,6 +141,10 @@ export const CHAINS_CONFIG: Record<string, ChainConfig> = {
     website: "https://nobleassets.xyz",
     github: "https://github.com/noble-assets/noble",
     docs: "https://docs.nobleassets.xyz",
+    token: {
+      symbol: "USDC",
+      denom: "uusdc",
+    },
     hardware: {
       minRam: "8 GB",
       recommendedRam: "16 GB",
@@ -194,6 +207,10 @@ export const CHAINS_CONFIG: Record<string, ChainConfig> = {
     website: "https://kujira.network",
     github: "https://github.com/Team-Kujira/core",
     docs: "https://docs.kujira.app",
+    token: {
+      symbol: "KUJI",
+      denom: "ukuji",
+    },
     hardware: {
       minRam: "8 GB",
       recommendedRam: "16 GB",
@@ -240,6 +257,10 @@ export const CHAINS_CONFIG: Record<string, ChainConfig> = {
     website: "https://junonetwork.io",
     github: "https://github.com/CosmosContracts/juno",
     docs: "https://docs.junonetwork.io",
+    token: {
+      symbol: "JUNO",
+      denom: "ujuno",
+    },
     hardware: {
       minRam: "8 GB",
       recommendedRam: "16 GB",
@@ -299,6 +320,10 @@ export const CHAINS_CONFIG: Record<string, ChainConfig> = {
     website: "https://akash.network",
     github: "https://github.com/akash-network/node",
     docs: "https://docs.akash.network",
+    token: {
+      symbol: "AKT",
+      denom: "uakt",
+    },
     hardware: {
       minRam: "8 GB",
       recommendedRam: "16 GB",
@@ -342,6 +367,10 @@ export const CHAINS_CONFIG: Record<string, ChainConfig> = {
     website: "https://neutron.org",
     github: "https://github.com/neutron-org/neutron",
     docs: "https://docs.neutron.org",
+    token: {
+      symbol: "NTRN",
+      denom: "untrn",
+    },
     hardware: {
       minRam: "16 GB",
       recommendedRam: "32 GB",
@@ -401,6 +430,10 @@ export const CHAINS_CONFIG: Record<string, ChainConfig> = {
     website: "https://injective.com",
     github: "https://github.com/InjectiveLabs/injective-chain-releases",
     docs: "https://docs.injective.network",
+    token: {
+      symbol: "INJ",
+      denom: "inj",
+    },
     hardware: {
       minRam: "16 GB",
       recommendedRam: "32 GB",
@@ -460,6 +493,10 @@ export const CHAINS_CONFIG: Record<string, ChainConfig> = {
     website: "https://osmosis.zone",
     github: "https://github.com/osmosis-labs/osmosis",
     docs: "https://docs.osmosis.zone",
+    token: {
+      symbol: "OSMO",
+      denom: "uosmo",
+    },
     hardware: {
       minRam: "16 GB",
       recommendedRam: "32 GB",
@@ -524,6 +561,10 @@ export const CHAINS_CONFIG: Record<string, ChainConfig> = {
     website: "https://terra.money",
     github: "https://github.com/terra-money/core",
     docs: "https://docs.terra.money",
+    token: {
+      symbol: "LUNA",
+      denom: "uluna",
+    },
     hardware: {
       minRam: "16 GB",
       recommendedRam: "32 GB",
@@ -584,6 +625,10 @@ export const CHAINS_CONFIG: Record<string, ChainConfig> = {
     website: "https://thorchain.org",
     github: "https://github.com/thorchain/thornode",
     docs: "https://docs.thorchain.org",
+    token: {
+      symbol: "RUNE",
+      denom: "rune",
+    },
     hardware: {
       minRam: "32 GB",
       recommendedRam: "64 GB",
@@ -662,10 +707,6 @@ export function toChainSnapshot(config: ChainConfig): ChainSnapshot {
     throw new Error(`No mainnet data found for chain ${config.id}`);
   }
 
-  // Generate denom and symbol based on chain name
-  const symbol = config.name.toUpperCase().replace(/\s+/g, "").slice(0, 4);
-  const denom = `u${config.name.toLowerCase().replace(/\s+/g, "")}`;
-
   return {
     name: config.name,
     network: mainnetData.chainId,
@@ -676,9 +717,9 @@ export function toChainSnapshot(config: ChainConfig): ChainSnapshot {
     tokenPrice: undefined,
     stakingApr: undefined,
     nodeVersion: config.binary.version,
-    minimumGasPrice: `0.001${denom}`,
-    symbol: symbol,
-    denom: denom,
+    minimumGasPrice: `0.001${config.token.denom}`,
+    symbol: config.token.symbol,
+    denom: config.token.denom,
     description: config.description,
     logo: config.logo,
     blockExplorerUrl: undefined,
@@ -692,7 +733,7 @@ export function toChainSnapshot(config: ChainConfig): ChainSnapshot {
     },
     endpoints: {
       rpc: mainnetData.rpcEndpoints.primary,
-      api: mainnetData.rpcEndpoints.secondary,
+      api: mainnetData.restEndpoints?.primary,
       grpc: undefined,
       stateSync: undefined,
       snapshot: mainnetData.snapshots?.[0]?.url,
@@ -721,6 +762,7 @@ export function toSnapshotOptions(
       size: networkData.snapshots?.[0]?.size ?? "N/A",
       lastUpdated: networkData.lastUpdated,
       description: "Pruned node with recent blocks only",
+      url: networkData.snapshots?.[0]?.url ?? "",
     },
   ];
 }
