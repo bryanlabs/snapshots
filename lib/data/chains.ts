@@ -5,16 +5,21 @@ import { SnapshotOption } from "@/components/ui/SnapshotTable";
 export interface NetworkData {
   chainId: string;
   latestBlock: number;
-  sizes: {
-    full: string;
-    pruned: string;
-    archive: string;
-    stateSync: string;
-  };
+  snapshots?: [
+    {
+      url: string;
+      size: string;
+      type: "full" | "pruned" | "archive" | "stateSync";
+    }
+  ];
   lastUpdated: string;
   rpcEndpoints: {
     primary: string;
-    secondary: string;
+    secondary?: string;
+  };
+  restEndpoints?: {
+    primary: string;
+    secondary?: string;
   };
   status: "active" | "maintenance" | "deprecated";
 }
@@ -77,50 +82,37 @@ export const CHAINS_CONFIG: Record<string, ChainConfig> = {
     networks: {
       mainnet: {
         chainId: "cosmoshub-4",
-        latestBlock: 18234567,
-        sizes: {
-          full: "145 GB",
-          pruned: "23 GB",
-          archive: "478 GB",
-          stateSync: "2.1 GB",
-        },
+        latestBlock: 39018394,
+        snapshots: [
+          {
+            url: "https://snapshots.polkachu.com/snapshots/osmosis/osmosis_39018394.tar.lz4",
+            size: "23 GB",
+            type: "pruned",
+          },
+        ],
         lastUpdated: "2 hours ago",
         rpcEndpoints: {
-          primary: "https://rpc-cosmoshub.bryanlabs.net",
-          secondary: "https://rpc2-cosmoshub.bryanlabs.net",
+          primary: "https://gaia-rpc.bryanlabs.net/",
+        },
+        restEndpoints: {
+          primary: "https://gaia-api.bryanlabs.net/",
         },
         status: "active",
       },
       testnet: {
         chainId: "theta-testnet-001",
-        latestBlock: 15234892,
-        sizes: {
-          full: "89 GB",
-          pruned: "14 GB",
-          archive: "234 GB",
-          stateSync: "1.2 GB",
-        },
+        latestBlock: 12592394,
         lastUpdated: "1 hour ago",
         rpcEndpoints: {
-          primary: "https://rpc-testnet-cosmoshub.bryanlabs.net",
-          secondary: "https://rpc2-testnet-cosmoshub.bryanlabs.net",
+          primary: "https://cosmos-testnet-rpc.polkachu.com/",
         },
-        status: "active",
-      },
-      archive: {
-        chainId: "cosmoshub-4-archive",
-        latestBlock: 18234567,
-        sizes: {
-          full: "1.2 TB",
-          pruned: "145 GB",
-          archive: "2.1 TB",
-          stateSync: "2.1 GB",
-        },
-        lastUpdated: "12 hours ago",
-        rpcEndpoints: {
-          primary: "https://rpc-archive-cosmoshub.bryanlabs.net",
-          secondary: "https://rpc2-archive-cosmoshub.bryanlabs.net",
-        },
+        snapshots: [
+          {
+            url: "https://snapshots.polkachu.com/testnet-snapshots/cosmos/cosmos_12592394.tar.lz4",
+            size: "5 GB",
+            type: "pruned",
+          },
+        ],
         status: "active",
       },
     },
@@ -152,33 +144,36 @@ export const CHAINS_CONFIG: Record<string, ChainConfig> = {
     networks: {
       mainnet: {
         chainId: "noble-1",
-        latestBlock: 8765432,
-        sizes: {
-          full: "12 GB",
-          pruned: "2.1 GB",
-          archive: "28 GB",
-          stateSync: "0.5 GB",
-        },
+        latestBlock: 30074846,
+        snapshots: [
+          {
+            url: "https://snapshots.polkachu.com/snapshots/noble/noble_30074846.tar.lz4",
+            size: "2 GB",
+            type: "pruned",
+          },
+        ],
         lastUpdated: "1 hour ago",
         rpcEndpoints: {
-          primary: "https://rpc-noble.bryanlabs.net",
-          secondary: "https://rpc2-noble.bryanlabs.net",
+          primary: "https://noble-rpc.bryanlabs.net/",
+        },
+        restEndpoints: {
+          primary: "https://noble-api.bryanlabs.net/",
         },
         status: "active",
       },
       testnet: {
         chainId: "grand-1",
-        latestBlock: 5432987,
-        sizes: {
-          full: "8.2 GB",
-          pruned: "1.4 GB",
-          archive: "18 GB",
-          stateSync: "0.3 GB",
-        },
+        latestBlock: 33387752,
+        snapshots: [
+          {
+            url: "https://snapshots.polkachu.com/testnet-snapshots/noble/noble_33387752.tar.lz4",
+            size: "860 MB",
+            type: "pruned",
+          },
+        ],
         lastUpdated: "45 minutes ago",
         rpcEndpoints: {
-          primary: "https://rpc-testnet-noble.bryanlabs.net",
-          secondary: "https://rpc2-testnet-noble.bryanlabs.net",
+          primary: "https://noble-testnet-rpc.polkachu.com/",
         },
         status: "active",
       },
@@ -211,33 +206,240 @@ export const CHAINS_CONFIG: Record<string, ChainConfig> = {
     networks: {
       mainnet: {
         chainId: "kaiyo-1",
-        latestBlock: 9234567,
-        sizes: {
-          full: "34 GB",
-          pruned: "6.2 GB",
-          archive: "78 GB",
-          stateSync: "1.1 GB",
-        },
+        latestBlock: 32329671,
+        snapshots: [
+          {
+            url: "https://snapshots.polkachu.com/snapshots/kujira/kujira_32329671.tar.lz4",
+            size: "25 GB",
+            type: "pruned",
+          },
+        ],
         lastUpdated: "3 hours ago",
         rpcEndpoints: {
-          primary: "https://rpc-kujira.bryanlabs.net",
-          secondary: "https://rpc2-kujira.bryanlabs.net",
+          primary: "https://kujira-rpc.bryanlabs.net/",
+        },
+        restEndpoints: {
+          primary: "https://kujira-api.bryanlabs.net/",
+        },
+        status: "active",
+      },
+    },
+  },
+
+  juno: {
+    id: "juno",
+    name: "Juno",
+    description:
+      "A decentralized public blockchain and smart contract platform for the Cosmos ecosystem, built on CosmWasm",
+    binary: {
+      name: "junod",
+      version: "v23.0.0",
+      repository: "https://github.com/CosmosContracts/juno",
+    },
+    logo: "https://polkachu.com/images/chains/juno.png",
+    website: "https://junonetwork.io",
+    github: "https://github.com/CosmosContracts/juno",
+    docs: "https://docs.junonetwork.io",
+    hardware: {
+      minRam: "8 GB",
+      recommendedRam: "16 GB",
+      storagePruned: "200 GB SSD",
+      storageArchive: "400 GB SSD",
+      cpu: "4+ cores",
+      network: "100 Mbps+",
+    },
+    features: ["Smart Contracts", "CosmWasm", "Governance", "IBC"],
+    networks: {
+      mainnet: {
+        chainId: "juno-1",
+        latestBlock: 27934769,
+        snapshots: [
+          {
+            url: "https://snapshots.polkachu.com/snapshots/juno/juno_27934769.tar.lz4",
+            size: "6 GB",
+            type: "pruned",
+          },
+        ],
+        lastUpdated: "2 hours ago",
+        rpcEndpoints: {
+          primary: "https://juno-rpc.polkachu.com/",
         },
         status: "active",
       },
       testnet: {
-        chainId: "harpoon-4",
-        latestBlock: 6789234,
-        sizes: {
-          full: "21 GB",
-          pruned: "3.8 GB",
-          archive: "45 GB",
-          stateSync: "0.7 GB",
+        chainId: "uni-7",
+        latestBlock: 3254980,
+        snapshots: [
+          {
+            url: "https://snapshots.polkachu.com/testnet-snapshots/juno/juno_3254980.tar.lz4",
+            size: "611 MB",
+            type: "pruned",
+          },
+        ],
+        lastUpdated: "1 hour ago",
+        rpcEndpoints: {
+          primary: "https://juno-testnet-rpc.polkachu.com/",
         },
+        status: "active",
+      },
+    },
+  },
+
+  akash: {
+    id: "akash",
+    name: "Akash",
+    description:
+      "The world's first decentralized cloud marketplace for compute resources, enabling censorship-resistant deployment",
+    binary: {
+      name: "akash",
+      version: "v0.32.0",
+      repository: "https://github.com/akash-network/node",
+    },
+    logo: "https://polkachu.com/images/chains/akash.png",
+    website: "https://akash.network",
+    github: "https://github.com/akash-network/node",
+    docs: "https://docs.akash.network",
+    hardware: {
+      minRam: "8 GB",
+      recommendedRam: "16 GB",
+      storagePruned: "150 GB SSD",
+      storageArchive: "300 GB SSD",
+      cpu: "4+ cores",
+      network: "100 Mbps+",
+    },
+    features: ["Cloud Computing", "Marketplace", "Deployment", "IBC"],
+    networks: {
+      mainnet: {
+        chainId: "akashnet-2",
+        latestBlock: 22233131,
+        snapshots: [
+          {
+            url: "https://snapshots.polkachu.com/snapshots/akash/akash_22233131.tar.lz4",
+            size: "8 GB",
+            type: "pruned",
+          },
+        ],
+        lastUpdated: "3 hours ago",
+        rpcEndpoints: {
+          primary: "https://akash-rpc.polkachu.com/",
+        },
+        status: "active",
+      },
+    },
+  },
+
+  neutron: {
+    id: "neutron",
+    name: "Neutron",
+    description:
+      "The most secure blockchain for smart contracts built on Cosmos Hub with Interchain Security",
+    binary: {
+      name: "neutrond",
+      version: "v3.0.2",
+      repository: "https://github.com/neutron-org/neutron",
+    },
+    logo: "https://polkachu.com/images/chains/neutron.png",
+    website: "https://neutron.org",
+    github: "https://github.com/neutron-org/neutron",
+    docs: "https://docs.neutron.org",
+    hardware: {
+      minRam: "16 GB",
+      recommendedRam: "32 GB",
+      storagePruned: "300 GB SSD",
+      storageArchive: "600 GB SSD",
+      cpu: "6+ cores",
+      network: "200 Mbps+",
+    },
+    features: ["Interchain Security", "Smart Contracts", "Cross-chain", "IBC"],
+    networks: {
+      mainnet: {
+        chainId: "neutron-1",
+        latestBlock: 28975627,
+        snapshots: [
+          {
+            url: "https://snapshots.polkachu.com/snapshots/neutron/neutron_28975627.tar.lz4",
+            size: "12 GB",
+            type: "pruned",
+          },
+        ],
+        lastUpdated: "1 hour ago",
+        rpcEndpoints: {
+          primary: "https://neutron-rpc.polkachu.com/",
+        },
+        status: "active",
+      },
+      testnet: {
+        chainId: "pion-1",
+        latestBlock: 32145283,
+        snapshots: [
+          {
+            url: "https://snapshots.polkachu.com/testnet-snapshots/neutron/neutron_32145283.tar.lz4",
+            size: "12 GB",
+            type: "pruned",
+          },
+        ],
+        lastUpdated: "45 minutes ago",
+        rpcEndpoints: {
+          primary: "https://neutron-testnet-rpc.polkachu.com/",
+        },
+        status: "active",
+      },
+    },
+  },
+
+  injective: {
+    id: "injective",
+    name: "Injective",
+    description:
+      "A lightning-fast interoperable layer-one blockchain optimized for Web3 finance applications",
+    binary: {
+      name: "injectived",
+      version: "v1.12.1",
+      repository: "https://github.com/InjectiveLabs/injective-chain-releases",
+    },
+    logo: "https://polkachu.com/images/chains/injective.png",
+    website: "https://injective.com",
+    github: "https://github.com/InjectiveLabs/injective-chain-releases",
+    docs: "https://docs.injective.network",
+    hardware: {
+      minRam: "16 GB",
+      recommendedRam: "32 GB",
+      storagePruned: "500 GB SSD",
+      storageArchive: "1 TB SSD",
+      cpu: "6+ cores",
+      network: "200 Mbps+",
+    },
+    features: ["DeFi", "Trading", "Cross-chain", "High Performance"],
+    networks: {
+      mainnet: {
+        chainId: "injective-1",
+        latestBlock: 123689927,
+        snapshots: [
+          {
+            url: "https://snapshots.polkachu.com/snapshots/injective/injective_123689927.tar.lz4",
+            size: "18 GB",
+            type: "pruned",
+          },
+        ],
         lastUpdated: "2 hours ago",
         rpcEndpoints: {
-          primary: "https://rpc-testnet-kujira.bryanlabs.net",
-          secondary: "https://rpc2-testnet-kujira.bryanlabs.net",
+          primary: "https://injective-rpc.polkachu.com/",
+        },
+        status: "active",
+      },
+      testnet: {
+        chainId: "injective-888",
+        latestBlock: 82611666,
+        snapshots: [
+          {
+            url: "https://snapshots.polkachu.com/testnet-snapshots/injective/injective_82611666.tar.lz4",
+            size: "8 GB",
+            type: "pruned",
+          },
+        ],
+        lastUpdated: "1 hour ago",
+        rpcEndpoints: {
+          primary: "https://injective-testnet-rpc.polkachu.com/",
         },
         status: "active",
       },
@@ -275,108 +477,33 @@ export const CHAINS_CONFIG: Record<string, ChainConfig> = {
     networks: {
       mainnet: {
         chainId: "osmosis-1",
-        latestBlock: 12345678,
-        sizes: {
-          full: "189 GB",
-          pruned: "25 GB",
-          archive: "487 GB",
-          stateSync: "2.8 GB",
-        },
+        latestBlock: 39018394,
+        snapshots: [
+          {
+            url: "https://snapshots.polkachu.com/snapshots/osmosis/osmosis_39018394.tar.lz4",
+            size: "23 GB",
+            type: "pruned",
+          },
+        ],
         lastUpdated: "4 hours ago",
         rpcEndpoints: {
-          primary: "https://rpc-osmosis.bryanlabs.net",
-          secondary: "https://rpc2-osmosis.bryanlabs.net",
+          primary: "https://osmosis-rpc.polkachu.com/",
         },
         status: "active",
       },
       testnet: {
         chainId: "osmo-test-5",
-        latestBlock: 8234567,
-        sizes: {
-          full: "123 GB",
-          pruned: "18 GB",
-          archive: "298 GB",
-          stateSync: "1.9 GB",
-        },
+        latestBlock: 29019745,
+        snapshots: [
+          {
+            url: "https://snapshots.polkachu.com/testnet-snapshots/osmosis/osmosis_29019745.tar.lz4",
+            size: "129 GB",
+            type: "pruned",
+          },
+        ],
         lastUpdated: "3 hours ago",
         rpcEndpoints: {
-          primary: "https://rpc-testnet-osmosis.bryanlabs.net",
-          secondary: "https://rpc2-testnet-osmosis.bryanlabs.net",
-        },
-        status: "active",
-      },
-      archive: {
-        chainId: "osmosis-1-archive",
-        latestBlock: 12345678,
-        sizes: {
-          full: "890 GB",
-          pruned: "189 GB",
-          archive: "1.8 TB",
-          stateSync: "2.8 GB",
-        },
-        lastUpdated: "8 hours ago",
-        rpcEndpoints: {
-          primary: "https://rpc-archive-osmosis.bryanlabs.net",
-          secondary: "https://rpc2-archive-osmosis.bryanlabs.net",
-        },
-        status: "active",
-      },
-    },
-  },
-
-  "terra-classic": {
-    id: "terra-classic",
-    name: "Terra Classic",
-    description:
-      "The original Terra blockchain continuing as Terra Classic with community governance and development",
-    binary: {
-      name: "terrad",
-      version: "v2.4.0",
-      repository: "https://github.com/classic-terra/core",
-    },
-    logo: "https://terraclassic.community/img/logo.png",
-    website: "https://terraclassic.community",
-    github: "https://github.com/classic-terra/core",
-    docs: "https://docs.terraclassic.community",
-    hardware: {
-      minRam: "32 GB",
-      recommendedRam: "64 GB",
-      storagePruned: "1 TB SSD",
-      storageArchive: "3 TB SSD",
-      cpu: "8+ cores",
-      network: "500 Mbps+",
-    },
-    features: ["LUNC", "USTC", "Community Governance", "Classic DeFi"],
-    networks: {
-      mainnet: {
-        chainId: "columbus-5",
-        latestBlock: 15678901,
-        sizes: {
-          full: "423 GB",
-          pruned: "67 GB",
-          archive: "1.2 TB",
-          stateSync: "4.1 GB",
-        },
-        lastUpdated: "6 hours ago",
-        rpcEndpoints: {
-          primary: "https://rpc-terra-classic.bryanlabs.net",
-          secondary: "https://rpc2-terra-classic.bryanlabs.net",
-        },
-        status: "active",
-      },
-      testnet: {
-        chainId: "bombay-12",
-        latestBlock: 8901234,
-        sizes: {
-          full: "234 GB",
-          pruned: "38 GB",
-          archive: "567 GB",
-          stateSync: "2.1 GB",
-        },
-        lastUpdated: "4 hours ago",
-        rpcEndpoints: {
-          primary: "https://rpc-testnet-terra-classic.bryanlabs.net",
-          secondary: "https://rpc2-testnet-terra-classic.bryanlabs.net",
+          primary: "https://osmosis-testnet-rpc.polkachu.com/",
         },
         status: "active",
       },
@@ -409,29 +536,30 @@ export const CHAINS_CONFIG: Record<string, ChainConfig> = {
     networks: {
       mainnet: {
         chainId: "phoenix-1",
-        latestBlock: 7856432,
-        sizes: {
-          full: "45 GB",
-          pruned: "8.3 GB",
-          archive: "98 GB",
-          stateSync: "1.4 GB",
-        },
+        latestBlock: 16333882,
+        snapshots: [
+          {
+            url: "https://snapshots.polkachu.com/snapshots/terra/terra_16333882.tar.lz4",
+            size: "9 GB",
+            type: "pruned",
+          },
+        ],
         lastUpdated: "2 hours ago",
         rpcEndpoints: {
-          primary: "https://rpc-terra.bryanlabs.net",
-          secondary: "https://rpc2-terra.bryanlabs.net",
+          primary: "https://terra-rpc.polkachu.com/",
         },
         status: "active",
       },
       testnet: {
         chainId: "pisco-1",
-        latestBlock: 4567890,
-        sizes: {
-          full: "28 GB",
-          pruned: "5.1 GB",
-          archive: "62 GB",
-          stateSync: "0.9 GB",
-        },
+        latestBlock: 17443600,
+        snapshots: [
+          {
+            url: "https://snapshots.polkachu.com/testnet-snapshots/terra/terra_17443600.tar.lz4",
+            size: "3 GB",
+            type: "pruned",
+          },
+        ],
         lastUpdated: "1 hour ago",
         rpcEndpoints: {
           primary: "https://rpc-testnet-terra.bryanlabs.net",
@@ -474,12 +602,6 @@ export const CHAINS_CONFIG: Record<string, ChainConfig> = {
       mainnet: {
         chainId: "thorchain-1",
         latestBlock: 14567890,
-        sizes: {
-          full: "234 GB",
-          pruned: "42 GB",
-          archive: "678 GB",
-          stateSync: "3.2 GB",
-        },
         lastUpdated: "5 hours ago",
         rpcEndpoints: {
           primary: "https://rpc-thorchain.bryanlabs.net",
@@ -490,12 +612,6 @@ export const CHAINS_CONFIG: Record<string, ChainConfig> = {
       testnet: {
         chainId: "thorchain-testnet-v2",
         latestBlock: 9876543,
-        sizes: {
-          full: "145 GB",
-          pruned: "26 GB",
-          archive: "398 GB",
-          stateSync: "2.1 GB",
-        },
         lastUpdated: "4 hours ago",
         rpcEndpoints: {
           primary: "https://rpc-testnet-thorchain.bryanlabs.net",
@@ -546,13 +662,41 @@ export function toChainSnapshot(config: ChainConfig): ChainSnapshot {
     throw new Error(`No mainnet data found for chain ${config.id}`);
   }
 
+  // Generate denom and symbol based on chain name
+  const symbol = config.name.toUpperCase().replace(/\s+/g, "").slice(0, 4);
+  const denom = `u${config.name.toLowerCase().replace(/\s+/g, "")}`;
+
   return {
     name: config.name,
     network: mainnetData.chainId,
     latestBlock: mainnetData.latestBlock,
-    size: mainnetData.sizes.full,
-    prunedSize: mainnetData.sizes.pruned,
+    size: mainnetData.snapshots?.[0]?.size ?? "N/A",
+    prunedSize: mainnetData.snapshots?.[0]?.size ?? "N/A",
     updated: mainnetData.lastUpdated,
+    tokenPrice: undefined,
+    stakingApr: undefined,
+    nodeVersion: config.binary.version,
+    minimumGasPrice: `0.001${denom}`,
+    symbol: symbol,
+    denom: denom,
+    description: config.description,
+    logo: config.logo,
+    blockExplorerUrl: undefined,
+    github: config.github,
+    services: {
+      rpc: true,
+      api: true,
+      grpc: false,
+      stateSync: true,
+      snapshot: true,
+    },
+    endpoints: {
+      rpc: mainnetData.rpcEndpoints.primary,
+      api: mainnetData.rpcEndpoints.secondary,
+      grpc: undefined,
+      stateSync: undefined,
+      snapshot: mainnetData.snapshots?.[0]?.url,
+    },
   };
 }
 
@@ -572,32 +716,11 @@ export function toSnapshotOptions(
 
   return [
     {
-      type: "Latest",
-      blockHeight: baseBlock,
-      size: networkData.sizes.full,
-      lastUpdated: networkData.lastUpdated,
-      description: "Full node with complete transaction history",
-    },
-    {
       type: "Pruned",
       blockHeight: baseBlock,
-      size: networkData.sizes.pruned,
+      size: networkData.snapshots?.[0]?.size ?? "N/A",
       lastUpdated: networkData.lastUpdated,
       description: "Pruned node with recent blocks only",
-    },
-    {
-      type: "Archive",
-      blockHeight: baseBlock - 50000, // Archive is slightly behind
-      size: networkData.sizes.archive,
-      lastUpdated: "2 days ago",
-      description: "Complete historical data archive",
-    },
-    {
-      type: "State Sync",
-      blockHeight: baseBlock - 1000, // State sync is recent but not latest
-      size: networkData.sizes.stateSync,
-      lastUpdated: "3 hours ago",
-      description: "Minimal snapshot for state sync",
     },
   ];
 }
@@ -616,10 +739,12 @@ export function generateQuickStartCommands(
   networkType: string = "mainnet"
 ) {
   const networkData = getNetworkData(chainId, networkType);
-  const networkSuffix = networkType === "mainnet" ? "" : `-${networkType}`;
+  const snapshotUrl = networkData?.snapshots?.[0]?.url;
 
   return {
-    download: `wget https://snapshots.bryanlabs.net/${chainId}${networkSuffix}/latest.tar.gz`,
+    download: snapshotUrl
+      ? `wget ${snapshotUrl}`
+      : `# Download snapshot from your preferred provider`,
     extract: `tar -xzf latest.tar.gz`,
     stop: `sudo systemctl stop ${binaryName}`,
     backup: `cp -r ~/.${binaryName}/data ~/.${binaryName}/data_backup`,
