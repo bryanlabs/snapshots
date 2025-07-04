@@ -17,8 +17,8 @@ import {
   generateQuickStartCommands,
   getAvailableNetworks,
   getNetworkData,
-  NETWORK_OPTIONS,
 } from "@/lib/data/chains";
+import { useEnhancedChainData } from "@/lib/hooks/useEnhancedChainData";
 import { notFound } from "next/navigation";
 
 // Animation variants
@@ -75,17 +75,28 @@ interface ChainDetailProps {
 export default function ChainDetail({ params }: ChainDetailProps) {
   // Unwrap params Promise for Next.js 15 compatibility
   const resolvedParams = use(params);
+  const chainId =
+    resolvedParams.chainId === "cosmoshub" ? "cosmos" : resolvedParams.chainId;
 
-  // Get chain data from centralized source
-  const chain = getChainById(resolvedParams.chainId);
+  // Get static chain data first (required for routing)
+  const staticConfig = getChainById(resolvedParams.chainId);
 
-  // If chain not found, show 404
-  if (!chain) {
+  // If static config not found, show 404
+  if (!staticConfig) {
     notFound();
   }
 
+  // Use the enhanced chain data hook
+  const {
+    enrichedChain,
+    liveData,
+    isLoadingLive,
+    liveDataError,
+    enhancedInfo,
+  } = useEnhancedChainData(staticConfig, chainId);
+
   // Get available networks for this chain and set default
-  const availableNetworks = getAvailableNetworks(chain.id);
+  const availableNetworks = getAvailableNetworks(enrichedChain.id);
   const [selectedNetwork, setSelectedNetwork] = useState(
     availableNetworks.includes("Mainnet")
       ? "Mainnet"
@@ -93,7 +104,7 @@ export default function ChainDetail({ params }: ChainDetailProps) {
   );
 
   // Get network-specific data
-  const currentNetworkData = getNetworkData(chain.id, selectedNetwork);
+  const currentNetworkData = getNetworkData(enrichedChain.id, selectedNetwork);
 
   // If no network data found, fallback to mainnet
   if (!currentNetworkData && availableNetworks.length > 0) {
@@ -101,13 +112,16 @@ export default function ChainDetail({ params }: ChainDetailProps) {
     setSelectedNetwork(fallbackNetwork);
   }
 
-  // Generate snapshot options from chain config for selected network
-  const snapshots: SnapshotOption[] = toSnapshotOptions(chain, selectedNetwork);
+  // Generate snapshot options from enriched chain config for selected network
+  const snapshots: SnapshotOption[] = toSnapshotOptions(
+    enrichedChain,
+    selectedNetwork
+  );
 
   // Generate quick start commands for selected network
   const quickStartCommands = generateQuickStartCommands(
-    chain.id,
-    chain.binary.name,
+    enrichedChain.id,
+    enrichedChain.binary.name,
     selectedNetwork
   );
 
@@ -122,27 +136,63 @@ export default function ChainDetail({ params }: ChainDetailProps) {
         {/* Breadcrumb */}
         <motion.div variants={sectionVariants}>
           <Breadcrumb
-            items={[{ label: "Snapshots", href: "/" }, { label: chain.name }]}
+            items={[
+              { label: "Snapshots", href: "/" },
+              { label: enrichedChain.name },
+            ]}
           />
         </motion.div>
 
         {/* Header */}
         <motion.div variants={sectionVariants} className="mb-8">
-          <motion.h1
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6 }}
-            className="text-4xl font-bold text-foreground mb-4"
-          >
-            {chain.name} Snapshots
-          </motion.h1>
+          <div className="flex items-start gap-4 mb-4">
+            <motion.h1
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6 }}
+              className="text-4xl font-bold text-foreground"
+            >
+              {enrichedChain.name} Snapshots
+            </motion.h1>
+
+            {/* Live data indicator */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="flex items-center gap-2 mt-2"
+            >
+              {isLoadingLive ? (
+                <div className="flex items-center gap-2 px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full text-sm">
+                  <div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse"></div>
+                  Loading live data...
+                </div>
+              ) : liveDataError ? (
+                <div className="flex items-center gap-2 px-3 py-1 bg-red-100 text-red-700 rounded-full text-sm">
+                  <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                  API error - using static data
+                </div>
+              ) : liveData ? (
+                <div className="flex items-center gap-2 px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  Live data
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-sm">
+                  <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
+                  Static data
+                </div>
+              )}
+            </motion.div>
+          </div>
+
           <motion.p
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, delay: 0.1 }}
             className="text-xl text-muted-foreground mb-6"
           >
-            {chain.description}
+            {enrichedChain.description}
           </motion.p>
 
           {/* Network Selector */}
@@ -226,20 +276,74 @@ export default function ChainDetail({ params }: ChainDetailProps) {
             </InfoCard>
           </motion.div>
 
-          {/* Chain Information */}
+          {/* Chain Information - Enhanced with live data */}
           <motion.div variants={cardVariants}>
             <InfoCard title="Chain Information">
               <InfoRow
                 label="Chain ID"
                 value={currentNetworkData?.chainId || "N/A"}
               />
-              <InfoRow label="Binary Version" value={chain.binary.version} />
-              <InfoRow label="Binary Name" value={chain.binary.name} />
+              <InfoRow
+                label="Binary Version"
+                value={
+                  <div className="flex items-center gap-2">
+                    {enrichedChain.binary.version}
+                    {liveData &&
+                      liveData.node_version !== staticConfig.binary.version && (
+                        <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">
+                          Live
+                        </span>
+                      )}
+                  </div>
+                }
+              />
+              <InfoRow label="Binary Name" value={enrichedChain.binary.name} />
+
+              {/* Enhanced info from live data */}
+              {enhancedInfo &&
+                enhancedInfo.map((info, index) => (
+                  <InfoRow
+                    key={index}
+                    label={info.label}
+                    value={
+                      <div
+                        className={`flex items-center gap-2 ${
+                          info.type === "price"
+                            ? "text-green-600"
+                            : info.type === "apr"
+                            ? "text-blue-600"
+                            : "text-foreground"
+                        }`}
+                      >
+                        {info.isArray ? (
+                          <div className="flex flex-col gap-1">
+                            {(info.value as string[]).map((item, idx) => (
+                              <span
+                                key={idx}
+                                className="font-medium font-mono text-sm"
+                              >
+                                {item}
+                              </span>
+                            ))}
+                          </div>
+                        ) : (
+                          <span className="font-medium">
+                            {info.value as string}
+                          </span>
+                        )}
+                        <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">
+                          Live
+                        </span>
+                      </div>
+                    }
+                  />
+                ))}
+
               <InfoRow
                 label="Features"
                 value={
-                  <div className="flex flex-wrap gap-1">
-                    {chain.features.map((feature, index) => (
+                  <div className="flex flex-wrap gap-1 justify-end">
+                    {enrichedChain.features.map((feature, index) => (
                       <motion.span
                         key={index}
                         whileHover={{ scale: 1.05 }}
@@ -255,7 +359,7 @@ export default function ChainDetail({ params }: ChainDetailProps) {
                 label="GitHub Repository"
                 value={
                   <motion.a
-                    href={chain.binary.repository}
+                    href={enrichedChain.binary.repository}
                     target="_blank"
                     rel="noopener noreferrer"
                     whileHover={{ scale: 1.02 }}
@@ -265,12 +369,12 @@ export default function ChainDetail({ params }: ChainDetailProps) {
                   </motion.a>
                 }
               />
-              {chain.website && (
+              {enrichedChain.website && (
                 <InfoRow
                   label="Official Website"
                   value={
                     <motion.a
-                      href={chain.website}
+                      href={enrichedChain.website}
                       target="_blank"
                       rel="noopener noreferrer"
                       whileHover={{ scale: 1.02 }}
@@ -281,12 +385,12 @@ export default function ChainDetail({ params }: ChainDetailProps) {
                   }
                 />
               )}
-              {chain.docs && (
+              {enrichedChain.docs && (
                 <InfoRow
                   label="Documentation"
                   value={
                     <motion.a
-                      href={chain.docs}
+                      href={enrichedChain.docs}
                       target="_blank"
                       rel="noopener noreferrer"
                       whileHover={{ scale: 1.02 }}
@@ -303,21 +407,24 @@ export default function ChainDetail({ params }: ChainDetailProps) {
           {/* Hardware Requirements */}
           <motion.div variants={cardVariants}>
             <InfoCard title="Hardware Requirements">
-              <InfoRow label="Minimum RAM" value={chain.hardware.minRam} />
+              <InfoRow
+                label="Minimum RAM"
+                value={enrichedChain.hardware.minRam}
+              />
               <InfoRow
                 label="Recommended RAM"
-                value={chain.hardware.recommendedRam}
+                value={enrichedChain.hardware.recommendedRam}
               />
               <InfoRow
                 label="Storage (Pruned)"
-                value={chain.hardware.storagePruned}
+                value={enrichedChain.hardware.storagePruned}
               />
               <InfoRow
                 label="Storage (Archive)"
-                value={chain.hardware.storageArchive}
+                value={enrichedChain.hardware.storageArchive}
               />
-              <InfoRow label="CPU" value={chain.hardware.cpu} />
-              <InfoRow label="Network" value={chain.hardware.network} />
+              <InfoRow label="CPU" value={enrichedChain.hardware.cpu} />
+              <InfoRow label="Network" value={enrichedChain.hardware.network} />
             </InfoCard>
           </motion.div>
 
@@ -373,7 +480,7 @@ rpc_servers = "${currentNetworkData?.rpcEndpoints.primary || "N/A"},${
             </InfoCard>
           </motion.div>
 
-          {/* Network Information */}
+          {/* Network Information - Enhanced with live RPC endpoints */}
           <motion.div variants={cardVariants}>
             <InfoCard title="Network Information">
               <InfoRow label="Selected Network" value={selectedNetwork} />
@@ -395,7 +502,20 @@ rpc_servers = "${currentNetworkData?.rpcEndpoints.primary || "N/A"},${
               />
               <InfoRow
                 label="Primary RPC"
-                value={currentNetworkData?.rpcEndpoints.primary || "N/A"}
+                value={
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-sm">
+                      {currentNetworkData?.rpcEndpoints.primary || "N/A"}
+                    </span>
+                    {liveData?.polkachu_services?.rpc?.url &&
+                      liveData.polkachu_services.rpc.url !==
+                        staticConfig.networks.mainnet?.rpcEndpoints.primary && (
+                        <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">
+                          Live
+                        </span>
+                      )}
+                  </div>
+                }
               />
               <InfoRow
                 label="Secondary RPC"
@@ -405,6 +525,31 @@ rpc_servers = "${currentNetworkData?.rpcEndpoints.primary || "N/A"},${
                 label="Status"
                 value={currentNetworkData?.status || "N/A"}
               />
+
+              {/* Show available Polkachu services if live data is available */}
+              {liveData?.polkachu_services && (
+                <InfoRow
+                  label="Available Services"
+                  value={
+                    <div className="flex flex-wrap gap-1 mt-1 justify-end">
+                      {Object.entries(liveData.polkachu_services).map(
+                        ([service, config]) =>
+                          config &&
+                          typeof config === "object" &&
+                          "active" in config &&
+                          config.active && (
+                            <span
+                              key={service}
+                              className="px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full"
+                            >
+                              {service.toUpperCase()}
+                            </span>
+                          )
+                      )}
+                    </div>
+                  }
+                />
+              )}
             </InfoCard>
           </motion.div>
 
@@ -422,7 +567,7 @@ rpc_servers = "${currentNetworkData?.rpcEndpoints.primary || "N/A"},${
                       "Permission errors: Ensure correct file ownership",
                       "Disk space: Ensure adequate free space before extraction",
                       "Network timeouts: Use a reliable internet connection",
-                      `Binary mismatch: Ensure you're using ${chain.binary.version}`,
+                      `Binary mismatch: Ensure you're using ${enrichedChain.binary.version}`,
                     ].map((issue, index) => (
                       <motion.li
                         key={index}
@@ -449,28 +594,28 @@ rpc_servers = "${currentNetworkData?.rpcEndpoints.primary || "N/A"},${
                     >
                       • BryanLabs Discord: Get community support
                     </motion.p>
-                    {chain.docs && (
+                    {enrichedChain.docs && (
                       <motion.p
                         whileHover={{ x: 5 }}
                         className="text-sm text-muted-foreground"
                       >
                         •{" "}
                         <a
-                          href={chain.docs}
+                          href={enrichedChain.docs}
                           className="text-accent hover:text-accent/80 underline"
                         >
                           Official Documentation
                         </a>
                       </motion.p>
                     )}
-                    {chain.github && (
+                    {enrichedChain.github && (
                       <motion.p
                         whileHover={{ x: 5 }}
                         className="text-sm text-muted-foreground"
                       >
                         •{" "}
                         <a
-                          href={chain.github}
+                          href={enrichedChain.github}
                           className="text-accent hover:text-accent/80 underline"
                         >
                           GitHub Issues

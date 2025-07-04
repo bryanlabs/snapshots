@@ -1,9 +1,18 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { SearchIcon, HeroStats, SnapshotsGrid } from "@/components";
+import {
+  SearchIcon,
+  HeroStats,
+  SnapshotsGrid,
+  StatusIndicator,
+} from "@/components";
+import {
+  getMigrationStatus,
+  MigrationStatus,
+} from "@/lib/utils/data-migration";
 
 // Animation variants
 const heroVariants = {
@@ -54,6 +63,28 @@ const gridVariants = {
 
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [migrationStatus, setMigrationStatus] =
+    useState<MigrationStatus | null>(null);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchStatus = async () => {
+      try {
+        // Minimum loading time to show the orange indicator
+        const [status] = await Promise.all([
+          getMigrationStatus(),
+          new Promise((resolve) => setTimeout(resolve, 800)), // Minimum 800ms loading
+        ]);
+        setMigrationStatus(status);
+      } catch (error) {
+        console.error("Error fetching migration status:", error);
+      } finally {
+        setIsInitialLoading(false);
+      }
+    };
+
+    fetchStatus();
+  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
@@ -114,6 +145,19 @@ export default function Home() {
           {/* Hero Statistics */}
           <motion.div variants={statsVariants}>
             <HeroStats />
+          </motion.div>
+
+          {/* Data Source Status */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.8 }}
+            className="flex justify-center mt-6"
+          >
+            <StatusIndicator
+              isLive={migrationStatus?.isUsingLiveData || false}
+              isLoading={isInitialLoading || !migrationStatus}
+            />
           </motion.div>
         </div>
       </motion.main>
