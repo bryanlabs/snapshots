@@ -8,3 +8,4 @@ export { SnapshotTable } from "./SnapshotTable";
 export type { SnapshotOption } from "./SnapshotTable";
 export { CodeBlock } from "./CodeBlock";
 export { InfoCard, InfoRow } from "./InfoCard";
+export { StatusIndicator } from "./StatusIndicator";
