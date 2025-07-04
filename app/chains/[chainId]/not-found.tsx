@@ -9,8 +9,8 @@ export default function NotFound() {
             Chain Not Found
           </h1>
           <p className="text-xl text-muted-foreground mb-6">
-            The blockchain you're looking for doesn't exist in our snapshot
-            collection.
+            The blockchain you&apos;re looking for doesn&apos;t exist in our
+            snapshot collection.
           </p>
         </div>
 
@@ -59,7 +59,7 @@ export default function NotFound() {
 
         <div className="mt-8 text-sm text-muted-foreground">
           <p>
-            Don't see your chain? <br />
+            Don&apos;t see your chain? <br />
             <a
               href="mailto:hello@bryanlabs.net"
               className="text-accent hover:text-accent/80 underline"
