@@ -23,7 +23,7 @@ interface InfoRowProps {
 }
 
 export const InfoRow = ({ label, value }: InfoRowProps) => (
-  <div className="flex justify-between items-center py-2 border-b border-slate-100 last:border-b-0">
+  <div className="flex justify-between py-2 border-b border-slate-100 last:border-b-0">
     <span className="text-muted-foreground font-medium">{label}:</span>
     <span className="text-foreground">{value}</span>
   </div>
