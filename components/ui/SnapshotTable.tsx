@@ -6,6 +6,7 @@ export interface SnapshotOption {
   size: string;
   lastUpdated: string;
   description?: string;
+  url: string;
 }
 
 interface SnapshotTableProps {
@@ -69,10 +70,13 @@ export const SnapshotTable = ({ snapshots }: SnapshotTableProps) => (
                 </span>
               </td>
               <td className="py-4 px-6">
-                <button className="bg-accent hover:bg-accent/90 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 flex items-center gap-2">
+                <a
+                  className="bg-accent hover:bg-accent/90 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 flex items-center gap-2 justify-center"
+                  href={snapshot.url}
+                >
                   <DownloadIcon />
                   Download
-                </button>
+                </a>
               </td>
             </tr>
           ))}
