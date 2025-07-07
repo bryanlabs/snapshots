@@ -6,12 +6,16 @@ const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
   display: "swap",
+  preload: true,
 });
 
 export const metadata: Metadata = {
-  title: "Blockchain Snapshots - BryanLabs",
+  title: {
+    default: "Blockchain Snapshots - BryanLabs",
+    template: "%s | BryanLabs Snapshots",
+  },
   description:
-    "Fast, reliable blockchain snapshots for Cosmos ecosystem chains. Updated daily with pruned options available and global CDN delivery.",
+    "Fast, reliable blockchain snapshots for Cosmos ecosystem chains. Updated daily with pruned options available and global CDN delivery. Download latest snapshots for Juno, Osmosis, Cosmos Hub, and more.",
   keywords: [
     "blockchain",
     "snapshots",
@@ -19,26 +23,42 @@ export const metadata: Metadata = {
     "cosmos-sdk",
     "devops",
     "infrastructure",
+    "juno",
+    "osmosis",
+    "cosmos hub",
+    "blockchain data",
+    "node synchronization",
+    "pruned snapshots",
+    "state sync",
   ],
-  authors: [{ name: "BryanLabs" }],
+  authors: [{ name: "BryanLabs", url: "https://bryanlabs.net" }],
   creator: "BryanLabs",
   publisher: "BryanLabs",
+  category: "Technology",
+  classification: "Blockchain Infrastructure",
   openGraph: {
     title: "Blockchain Snapshots - BryanLabs",
     description:
-      "Fast, reliable blockchain snapshots for Cosmos ecosystem chains",
+      "Fast, reliable blockchain snapshots for Cosmos ecosystem chains. Updated daily with global CDN delivery.",
     type: "website",
     locale: "en_US",
+    siteName: "BryanLabs Snapshots",
   },
   twitter: {
     card: "summary_large_image",
     title: "Blockchain Snapshots - BryanLabs",
     description:
       "Fast, reliable blockchain snapshots for Cosmos ecosystem chains",
+    creator: "@bryanlabs",
   },
   robots: {
     index: true,
     follow: true,
+  },
+  viewport: {
+    width: "device-width",
+    initialScale: 1,
+    maximumScale: 5,
   },
 };
 
@@ -49,6 +69,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="scroll-smooth">
+      <head>
+        <link rel="preconnect" href="https://polkachu.com" />
+      </head>
       <body className={`${inter.variable} font-sans antialiased`}>
         {children}
       </body>
