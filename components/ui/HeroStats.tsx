@@ -46,8 +46,6 @@ export const HeroStats = () => {
         setStats({
           totalChains: 18,
           updateFrequency: "Daily",
-          uptime: "99.9%",
-          activeServices: 0,
         });
       } finally {
         setIsLoading(false);
