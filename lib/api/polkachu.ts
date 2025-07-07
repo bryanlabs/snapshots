@@ -336,8 +336,8 @@ export function getCachedData<T>(key: string): T | null {
     if (!cached) return null;
 
     const parsed = JSON.parse(cached);
-    if (Date.now() - parsed.timestamp > 5 * 60 * 1000) {
-      // 5 minutes
+    // Increase cache duration to 15 minutes for better performance
+    if (Date.now() - parsed.timestamp > 15 * 60 * 1000) {
       localStorage.removeItem(key);
       return null;
     }
@@ -359,8 +359,16 @@ export function setCachedData<T>(key: string, data: T): void {
         timestamp: Date.now(),
       })
     );
-  } catch {
-    // Ignore cache errors
+  } catch (error) {
+    // Clear some cache if storage is full
+    if (error instanceof Error && error.name === "QuotaExceededError") {
+      const keys = Object.keys(localStorage).filter((k) =>
+        k.startsWith("enhanced-")
+      );
+      keys
+        .slice(0, Math.ceil(keys.length / 2))
+        .forEach((k) => localStorage.removeItem(k));
+    }
   }
 }
 
