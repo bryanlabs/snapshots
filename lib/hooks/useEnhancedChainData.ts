@@ -10,7 +10,7 @@ interface UseEnhancedChainDataResult {
   enhancedInfo: Array<{
     label: string;
     value: string | string[];
-    type: "price" | "apr" | "gas";
+    type: "gas";
     isArray: boolean;
   }> | null;
 }
@@ -62,26 +62,14 @@ function mergeChainData(
   };
 }
 
-// Utility to format long addresses in gas prices
+// Utility to format gas price for better readability
 function formatGasPrice(gasPrice: string): string {
   const trimmed = gasPrice.trim();
   if (!trimmed) return gasPrice;
 
-  // Handle factory addresses: 0.01186factory/kujira1qk00h5atutpsv900x202pxx42npjr9thg58dnqpa72f2p7m2luase444a7/uusk
-  const factoryRegex =
-    /^([\d.]+)(factory\/[a-zA-Z0-9]{1,15})([a-zA-Z0-9]{25,})(\/.+)$/;
-  const factoryMatch = trimmed.match(factoryRegex);
-
-  if (factoryMatch) {
-    const [, amount, prefix, longAddress, suffix] = factoryMatch;
-    const truncatedAddress = longAddress.substring(0, 4) + "...";
-    return `${amount} ${prefix}${truncatedAddress}${suffix}`;
-  }
-
   // Handle IBC denoms: 0.025ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2
   const ibcRegex = /^([\d.]+)(ibc\/[A-Z0-9]{15,})$/;
   const ibcMatch = trimmed.match(ibcRegex);
-
   if (ibcMatch) {
     const [, amount, ibcDenom] = ibcMatch;
     const hash = ibcDenom.replace("ibc/", "");
@@ -91,10 +79,19 @@ function formatGasPrice(gasPrice: string): string {
     return `${amount} ${truncatedIbc}`;
   }
 
+  // Handle factory addresses: 0.01186factory/kujira1qk00h5atutpsv900x202pxx42npjr9thg58dnqpa72f2p7m2luase444a7/uusk
+  const factoryRegex =
+    /^([\d.]+)(factory\/[a-zA-Z0-9]{1,15})([a-zA-Z0-9]{25,})(\/.+)$/;
+  const factoryMatch = trimmed.match(factoryRegex);
+  if (factoryMatch) {
+    const [, amount, prefix, longAddress, suffix] = factoryMatch;
+    const truncatedAddress = longAddress.substring(0, 4) + "...";
+    return `${amount} ${prefix}${truncatedAddress}${suffix}`;
+  }
+
   // Handle very long contract addresses (cosmwasm style)
   const contractRegex = /^([\d.]+)([a-zA-Z0-9]{40,})$/;
   const contractMatch = trimmed.match(contractRegex);
-
   if (contractMatch) {
     const [, amount, address] = contractMatch;
     const truncatedAddress = `${address.substring(0, 8)}...${address.substring(
@@ -106,7 +103,6 @@ function formatGasPrice(gasPrice: string): string {
   // For regular denoms, add space between amount and denom
   const regularRegex = /^([\d.]+)([a-zA-Z][a-zA-Z0-9]*)$/;
   const regularMatch = trimmed.match(regularRegex);
-
   if (regularMatch) {
     const [, amount, denom] = regularMatch;
     return `${amount} ${denom}`;
@@ -116,62 +112,18 @@ function formatGasPrice(gasPrice: string): string {
   return trimmed;
 }
 
-// Utility to parse and format minimum gas prices
-function parseMinimumGasPrices(gasPriceString: string): string[] {
-  if (!gasPriceString || typeof gasPriceString !== "string") {
-    return [];
-  }
+// Utility to parse minimum gas prices
+function parseMinimumGasPrices(gasPrice: string): string[] {
+  if (!gasPrice) return [];
 
-  // Split by various separators: comma, semicolon, pipe, space (but preserve spaces within addresses)
-  const prices = gasPriceString
-    .split(/[,;|\n\r]/)
-    .map((price) => price.trim())
-    .filter(
-      (price) => price.length > 0 && price !== "null" && price !== "undefined"
-    )
-    .map(formatGasPrice)
-    .filter((price) => price.length > 0); // Remove any empty results from formatting
-
-  return prices;
+  // Handle various formats like "0.001uatom,0.002utoken" or "0.001uatom"
+  return gasPrice
+    .split(",")
+    .map((price) => formatGasPrice(price.trim()))
+    .filter((p) => p.length > 0);
 }
 
-// Utility to generate enhanced info sections with live data
-function generateEnhancedInfo(liveData?: PolkachuChainDetail | null) {
-  if (!liveData) return null;
-
-  const enhancements = [];
-
-  if (liveData.token_price) {
-    enhancements.push({
-      label: "Token Price",
-      value: `$${parseFloat(liveData.token_price).toFixed(4)}`,
-      type: "price" as const,
-      isArray: false,
-    });
-  }
-
-  if (liveData.staking_apr) {
-    enhancements.push({
-      label: "Staking APR",
-      value: `${(parseFloat(liveData.staking_apr) * 100).toFixed(2)}%`,
-      type: "apr" as const,
-      isArray: false,
-    });
-  }
-
-  if (liveData.minimum_gas_price) {
-    const gasPrices = parseMinimumGasPrices(liveData.minimum_gas_price);
-    enhancements.push({
-      label: "Min Gas Price",
-      value: gasPrices[0],
-      type: "gas" as const,
-      isArray: false,
-    });
-  }
-
-  return enhancements.length > 0 ? enhancements : null;
-}
-
+// Hook to enhance chain data with live information
 export function useEnhancedChainData(
   staticConfig: ChainConfig,
   chainId: string
@@ -180,46 +132,70 @@ export function useEnhancedChainData(
   const [isLoadingLive, setIsLoadingLive] = useState(true);
   const [liveDataError, setLiveDataError] = useState<string | null>(null);
 
-  // Fetch live data on mount
+  // Fetch live data from Polkachu
   useEffect(() => {
+    let isMounted = true;
+
     const fetchLiveData = async () => {
       try {
         setIsLoadingLive(true);
         setLiveDataError(null);
 
-        console.log(`Fetching live data for ${chainId}...`);
-        const live = await fetchChainDetails(chainId);
+        const data = await fetchChainDetails(chainId);
 
-        if (live) {
-          setLiveData(live);
-          console.log(`✅ Live data loaded for ${chainId}`);
-        } else {
-          console.log(
-            `⚠️ No live data found for ${chainId}, using static fallback`
-          );
+        if (isMounted) {
+          if (data) {
+            setLiveData(data);
+          } else {
+            setLiveDataError("Chain not found in Polkachu API");
+          }
         }
       } catch (error) {
-        console.warn(`❌ Failed to fetch live data for ${chainId}:`, error);
-        setLiveDataError("Failed to load live data");
+        if (isMounted) {
+          setLiveDataError(
+            error instanceof Error ? error.message : "Failed to fetch live data"
+          );
+        }
       } finally {
-        setIsLoadingLive(false);
+        if (isMounted) {
+          setIsLoadingLive(false);
+        }
       }
     };
 
     fetchLiveData();
+
+    return () => {
+      isMounted = false;
+    };
   }, [chainId]);
 
-  // Merge static config with live data
+  // Merge static and live data
   const enrichedChain = useMemo(
     () => mergeChainData(staticConfig, liveData),
     [staticConfig, liveData]
   );
 
-  // Generate enhanced info sections
-  const enhancedInfo = useMemo(
-    () => generateEnhancedInfo(liveData),
-    [liveData]
-  );
+  // Generate enhanced info sections with live data
+  const enhancedInfo = useMemo(() => {
+    if (!liveData) return null;
+
+    const enhancements = [];
+
+    if (liveData.minimum_gas_price) {
+      const gasPrices = parseMinimumGasPrices(liveData.minimum_gas_price);
+      if (gasPrices.length > 0) {
+        enhancements.push({
+          label: "Min Gas Price",
+          value: gasPrices[0],
+          type: "gas" as const,
+          isArray: false,
+        });
+      }
+    }
+
+    return enhancements.length > 0 ? enhancements : null;
+  }, [liveData]);
 
   return {
     enrichedChain,

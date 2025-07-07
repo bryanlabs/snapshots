@@ -87,9 +87,7 @@ export interface EnhancedChainSnapshot {
   prunedSize: string;
   updated: string;
 
-  // New Polkachu fields
-  tokenPrice?: string;
-  stakingApr?: string;
+  // Required fields
   nodeVersion: string;
   minimumGasPrice: string;
   symbol: string;
@@ -118,9 +116,6 @@ export interface EnhancedChainSnapshot {
 export interface DynamicStats {
   totalChains: number;
   updateFrequency: string;
-  uptime: string;
-  activeServices: number;
-  averageStakingApr?: string;
 }
 
 // API functions
@@ -201,49 +196,49 @@ export async function fetchChainDetails(
       await delay(retryDelay);
       return fetchChainDetails(chainName, retryCount + 1);
     }
-
-    console.error(`Error fetching details for chain ${chainName}:`, error);
+    console.error(`Error fetching chain details for ${chainName}:`, error);
     return null;
   }
 }
 
-// Rate limiting helper
+// Helper delay function
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export async function fetchMultipleChainDetails(
   chainNames: string[]
 ): Promise<PolkachuChainDetail[]> {
-  const results: PolkachuChainDetail[] = [];
-  const BATCH_SIZE = 3; // Process 3 chains at a time
-  const DELAY_BETWEEN_BATCHES = 2000; // 2 seconds between batches
-  const DELAY_BETWEEN_REQUESTS = 300; // 300ms between individual requests
+  const BATCH_SIZE = 3; // Process 3 chains at a time to avoid rate limits
+  const BATCH_DELAY = 2000; // 2 second delay between batches
 
-  // Process chains in smaller batches to avoid rate limiting
+  const results: PolkachuChainDetail[] = [];
+
   for (let i = 0; i < chainNames.length; i += BATCH_SIZE) {
     const batch = chainNames.slice(i, i + BATCH_SIZE);
 
     console.log(
-      `Fetching batch ${Math.floor(i / BATCH_SIZE) + 1}: ${batch.join(", ")}`
+      `Fetching batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(
+        chainNames.length / BATCH_SIZE
+      )}: ${batch.join(", ")}`
     );
 
-    // Process batch with delays between requests
-    const batchPromises = batch.map((name, index) =>
-      delay(index * DELAY_BETWEEN_REQUESTS).then(() => fetchChainDetails(name))
+    const batchPromises = batch.map((chainName) =>
+      fetchChainDetails(chainName)
     );
 
-    const batchResults = await Promise.allSettled(batchPromises);
+    try {
+      const batchResults = await Promise.all(batchPromises);
+      const validResults = batchResults.filter(
+        (result): result is PolkachuChainDetail => result !== null
+      );
+      results.push(...validResults);
 
-    // Add successful results
-    batchResults.forEach((result) => {
-      if (result.status === "fulfilled" && result.value !== null) {
-        results.push(result.value);
+      // Add delay between batches (except for the last one)
+      if (i + BATCH_SIZE < chainNames.length) {
+        console.log(`Waiting ${BATCH_DELAY}ms before next batch...`);
+        await delay(BATCH_DELAY);
       }
-    });
-
-    // Delay before next batch (except for the last batch)
-    if (i + BATCH_SIZE < chainNames.length) {
-      console.log(`Waiting ${DELAY_BETWEEN_BATCHES}ms before next batch...`);
-      await delay(DELAY_BETWEEN_BATCHES);
+    } catch (error) {
+      console.error(`Error processing batch ${batch.join(", ")}:`, error);
     }
   }
 
@@ -292,13 +287,7 @@ export function transformToEnhancedSnapshot(
     prunedSize: snapshotData.prunedSize,
     updated: snapshotData.updated,
 
-    // New Polkachu fields
-    tokenPrice: polkachuData.token_price
-      ? `$${parseFloat(polkachuData.token_price).toFixed(4)}`
-      : undefined,
-    stakingApr: polkachuData.staking_apr
-      ? `${(parseFloat(polkachuData.staking_apr) * 100).toFixed(2)}%`
-      : undefined,
+    // Required fields
     nodeVersion: polkachuData.node_version,
     minimumGasPrice: polkachuData.minimum_gas_price,
     symbol: polkachuData.symbol,
@@ -332,55 +321,47 @@ export function transformToEnhancedSnapshot(
 export function calculateDynamicStats(
   chains: PolkachuChainDetail[]
 ): DynamicStats {
-  const activeServices = chains.reduce((acc, chain) => {
-    const services = Object.values(chain.polkachu_services).filter(
-      (service) =>
-        service &&
-        typeof service === "object" &&
-        "active" in service &&
-        service.active
-    );
-    return acc + services.length;
-  }, 0);
-
-  // Calculate average staking APR
-  const stakingAprs = chains
-    .filter((chain) => chain.staking_apr && parseFloat(chain.staking_apr) > 0)
-    .map((chain) => parseFloat(chain.staking_apr!));
-
-  const averageStakingApr =
-    stakingAprs.length > 0
-      ? `${(
-          (stakingAprs.reduce((a, b) => a + b, 0) / stakingAprs.length) *
-          100
-        ).toFixed(1)}%`
-      : undefined;
-
   return {
     totalChains: chains.length,
     updateFrequency: "Live",
-    uptime: "99.9%",
-    activeServices,
-    averageStakingApr,
   };
 }
 
-// Cache management
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const cache = new Map<string, { data: any; timestamp: number }>();
-
+// Simple caching layer
 export function getCachedData<T>(key: string): T | null {
-  const cached = cache.get(key);
-  if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
-    return cached.data;
+  if (typeof window === "undefined") return null;
+
+  try {
+    const cached = localStorage.getItem(key);
+    if (!cached) return null;
+
+    const parsed = JSON.parse(cached);
+    if (Date.now() - parsed.timestamp > 5 * 60 * 1000) {
+      // 5 minutes
+      localStorage.removeItem(key);
+      return null;
+    }
+
+    return parsed.data;
+  } catch {
+    return null;
   }
-  cache.delete(key);
-  return null;
 }
 
 export function setCachedData<T>(key: string, data: T): void {
-  cache.set(key, { data, timestamp: Date.now() });
+  if (typeof window === "undefined") return;
+
+  try {
+    localStorage.setItem(
+      key,
+      JSON.stringify({
+        data,
+        timestamp: Date.now(),
+      })
+    );
+  } catch {
+    // Ignore cache errors
+  }
 }
 
 // Main function to get enhanced chain data with caching
@@ -401,10 +382,7 @@ export async function getEnhancedChainData(): Promise<{
   try {
     // Fetch popular/priority chains first for better UX (reduced to avoid rate limits)
     const priorityChains = [
-      "osmosis",
-      "cosmos",
       "juno",
-      "akash",
       "kujira",
       "noble",
       "terra",
@@ -442,8 +420,6 @@ export async function getEnhancedChainData(): Promise<{
       stats: {
         totalChains: 0,
         updateFrequency: "Error",
-        uptime: "N/A",
-        activeServices: 0,
       },
     };
   }

@@ -308,7 +308,7 @@ export default function ChainDetail({ params }: ChainDetailProps) {
                     value={
                       <div
                         className={`flex items-center gap-2 ${
-                          info.type === "price"
+                          info.type === "gas"
                             ? "text-green-600"
                             : info.type === "apr"
                             ? "text-blue-600"

@@ -71,21 +71,7 @@ export const HeroStats = () => {
         label: "Updates",
         color: "text-foreground",
       },
-      {
-        number: stats.uptime,
-        label: "Uptime",
-        color: "text-foreground",
-      },
     ];
-
-    // Add average staking APR if available
-    if (stats.averageStakingApr) {
-      baseStats.push({
-        number: stats.averageStakingApr,
-        label: "Avg Staking APR",
-        color: "text-green-600",
-      });
-    }
 
     return baseStats;
   };
@@ -112,80 +98,69 @@ export const HeroStats = () => {
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      className={`grid grid-cols-1 ${
-        displayStats.length === 4 ? "md:grid-cols-4" : "md:grid-cols-3"
-      } gap-8 max-w-4xl mx-auto`}
+      className="flex flex-wrap justify-center items-center gap-8 md:gap-12 lg:gap-16 max-w-4xl mx-auto"
     >
-      {displayStats.map((stat, index) => (
-        <motion.div
-          key={index}
-          variants={itemVariants}
-          whileHover={{
-            scale: 1.05,
-            y: -5,
-            transition: { duration: 0.2 },
-          }}
-          className="text-center group cursor-pointer transition-transform duration-200"
-        >
-          {isLoading ? (
+      {isLoading
+        ? // Loading state with skeleton
+          [...Array(2)].map((_, index) => (
             <motion.div
-              initial={{ scale: 0 }}
-              animate={{
-                scale: 1,
-                opacity: [0.5, 1, 0.5],
-              }}
-              transition={{
-                scale: {
-                  delay: index * 0.2,
-                  duration: 0.5,
-                  type: "spring",
-                  stiffness: 100,
-                },
-                opacity: {
+              key={index}
+              variants={itemVariants}
+              className="text-center"
+            >
+              <motion.div
+                animate={{
+                  opacity: [0.5, 1, 0.5],
+                }}
+                transition={{
                   duration: 1.5,
                   repeat: Infinity,
-                  ease: "easeInOut",
-                },
-              }}
-              className="text-3xl md:text-4xl font-extrabold mb-2 leading-none text-muted-foreground"
-            >
-              ...
+                  delay: index * 0.2,
+                }}
+                className="text-3xl md:text-4xl lg:text-5xl font-bold mb-2 bg-slate-200 text-transparent rounded w-16 h-12 mx-auto"
+              />
+              <motion.div
+                animate={{
+                  opacity: [0.5, 1, 0.5],
+                }}
+                transition={{
+                  duration: 1.5,
+                  repeat: Infinity,
+                  delay: index * 0.2 + 0.1,
+                }}
+                className="text-sm md:text-base text-transparent bg-slate-200 rounded w-20 h-4 mx-auto"
+              />
             </motion.div>
-          ) : (
+          ))
+        : displayStats.map((stat, index) => (
             <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{
-                delay: index * 0.2,
-                duration: 0.5,
-                type: "spring",
-                stiffness: 100,
-              }}
-              className={`text-3xl md:text-4xl font-extrabold mb-2 leading-none ${stat.color}`}
+              key={index}
+              variants={itemVariants}
+              className="text-center"
             >
-              {stat.number}
+              <motion.div
+                initial={{ scale: 0.5 }}
+                animate={{ scale: 1 }}
+                transition={{
+                  duration: 0.8,
+                  delay: index * 0.2,
+                  type: "spring",
+                  bounce: 0.4,
+                }}
+                className={`text-3xl md:text-4xl lg:text-5xl font-bold mb-2 ${stat.color}`}
+              >
+                {stat.number}
+              </motion.div>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.6, delay: index * 0.2 + 0.2 }}
+                className="text-sm md:text-base text-muted-foreground font-medium"
+              >
+                {stat.label}
+              </motion.div>
             </motion.div>
-          )}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: index * 0.2 + 0.3 }}
-            className="text-sm font-medium text-muted uppercase tracking-wider"
-          >
-            {stat.label}
-          </motion.div>
-          {isLoading && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: index * 0.2 + 0.5 }}
-              className="text-xs text-muted-foreground mt-1"
-            >
-              Loading...
-            </motion.div>
-          )}
-        </motion.div>
-      ))}
+          ))}
     </motion.div>
   );
 };

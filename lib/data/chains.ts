@@ -61,72 +61,6 @@ export interface ChainConfig {
 
 // Comprehensive chain configurations
 export const CHAINS_CONFIG: Record<string, ChainConfig> = {
-  cosmoshub: {
-    id: "cosmoshub",
-    name: "Cosmos Hub",
-    description:
-      "The heart of the Cosmos ecosystem - the first hub in the Cosmos network enabling secure interchain communication",
-    binary: {
-      name: "gaiad",
-      version: "v18.1.0",
-      repository: "https://github.com/cosmos/gaia",
-    },
-    logo: "https://cosmos.network/img/logo.png",
-    website: "https://cosmos.network",
-    github: "https://github.com/cosmos/gaia",
-    docs: "https://hub.cosmos.network",
-    token: {
-      symbol: "ATOM",
-      denom: "uatom",
-    },
-    hardware: {
-      minRam: "16 GB",
-      recommendedRam: "32 GB",
-      storagePruned: "500 GB SSD",
-      storageArchive: "2 TB SSD",
-      cpu: "4+ cores",
-      network: "100 Mbps+",
-    },
-    features: ["IBC", "Governance", "Staking", "Interchain Security"],
-    networks: {
-      mainnet: {
-        chainId: "cosmoshub-4",
-        latestBlock: 39018394,
-        snapshots: [
-          {
-            url: "https://snapshots.polkachu.com/snapshots/osmosis/osmosis_39018394.tar.lz4",
-            size: "23 GB",
-            type: "pruned",
-          },
-        ],
-        lastUpdated: "2 hours ago",
-        rpcEndpoints: {
-          primary: "https://gaia-rpc.bryanlabs.net/",
-        },
-        restEndpoints: {
-          primary: "https://gaia-api.bryanlabs.net/",
-        },
-        status: "active",
-      },
-      testnet: {
-        chainId: "theta-testnet-001",
-        latestBlock: 12592394,
-        lastUpdated: "1 hour ago",
-        rpcEndpoints: {
-          primary: "https://cosmos-testnet-rpc.polkachu.com/",
-        },
-        snapshots: [
-          {
-            url: "https://snapshots.polkachu.com/testnet-snapshots/cosmos/cosmos_12592394.tar.lz4",
-            size: "5 GB",
-            type: "pruned",
-          },
-        ],
-        status: "active",
-      },
-    },
-  },
-
   noble: {
     id: "noble",
     name: "Noble",
@@ -192,7 +126,6 @@ export const CHAINS_CONFIG: Record<string, ChainConfig> = {
       },
     },
   },
-
   kujira: {
     id: "kujira",
     name: "Kujira",
@@ -242,7 +175,6 @@ export const CHAINS_CONFIG: Record<string, ChainConfig> = {
       },
     },
   },
-
   juno: {
     id: "juno",
     name: "Juno",
@@ -305,54 +237,6 @@ export const CHAINS_CONFIG: Record<string, ChainConfig> = {
       },
     },
   },
-
-  akash: {
-    id: "akash",
-    name: "Akash",
-    description:
-      "The world's first decentralized cloud marketplace for compute resources, enabling censorship-resistant deployment",
-    binary: {
-      name: "akash",
-      version: "v0.32.0",
-      repository: "https://github.com/akash-network/node",
-    },
-    logo: "https://polkachu.com/images/chains/akash.png",
-    website: "https://akash.network",
-    github: "https://github.com/akash-network/node",
-    docs: "https://docs.akash.network",
-    token: {
-      symbol: "AKT",
-      denom: "uakt",
-    },
-    hardware: {
-      minRam: "8 GB",
-      recommendedRam: "16 GB",
-      storagePruned: "150 GB SSD",
-      storageArchive: "300 GB SSD",
-      cpu: "4+ cores",
-      network: "100 Mbps+",
-    },
-    features: ["Cloud Computing", "Marketplace", "Deployment", "IBC"],
-    networks: {
-      mainnet: {
-        chainId: "akashnet-2",
-        latestBlock: 22233131,
-        snapshots: [
-          {
-            url: "https://snapshots.polkachu.com/snapshots/akash/akash_22233131.tar.lz4",
-            size: "8 GB",
-            type: "pruned",
-          },
-        ],
-        lastUpdated: "3 hours ago",
-        rpcEndpoints: {
-          primary: "https://akash-rpc.polkachu.com/",
-        },
-        status: "active",
-      },
-    },
-  },
-
   neutron: {
     id: "neutron",
     name: "Neutron",
@@ -415,7 +299,6 @@ export const CHAINS_CONFIG: Record<string, ChainConfig> = {
       },
     },
   },
-
   injective: {
     id: "injective",
     name: "Injective",
@@ -478,75 +361,6 @@ export const CHAINS_CONFIG: Record<string, ChainConfig> = {
       },
     },
   },
-
-  osmosis: {
-    id: "osmosis",
-    name: "Osmosis",
-    description:
-      "The leading DEX and liquidity hub for the Cosmos ecosystem with advanced AMM capabilities",
-    binary: {
-      name: "osmosisd",
-      version: "v25.0.0",
-      repository: "https://github.com/osmosis-labs/osmosis",
-    },
-    logo: "https://osmosis.zone/img/logo.png",
-    website: "https://osmosis.zone",
-    github: "https://github.com/osmosis-labs/osmosis",
-    docs: "https://docs.osmosis.zone",
-    token: {
-      symbol: "OSMO",
-      denom: "uosmo",
-    },
-    hardware: {
-      minRam: "16 GB",
-      recommendedRam: "32 GB",
-      storagePruned: "600 GB SSD",
-      storageArchive: "1.5 TB SSD",
-      cpu: "6+ cores",
-      network: "200 Mbps+",
-    },
-    features: [
-      "DEX",
-      "Liquidity Pools",
-      "Concentrated Liquidity",
-      "Superfluid Staking",
-    ],
-    networks: {
-      mainnet: {
-        chainId: "osmosis-1",
-        latestBlock: 39018394,
-        snapshots: [
-          {
-            url: "https://snapshots.polkachu.com/snapshots/osmosis/osmosis_39018394.tar.lz4",
-            size: "23 GB",
-            type: "pruned",
-          },
-        ],
-        lastUpdated: "4 hours ago",
-        rpcEndpoints: {
-          primary: "https://osmosis-rpc.polkachu.com/",
-        },
-        status: "active",
-      },
-      testnet: {
-        chainId: "osmo-test-5",
-        latestBlock: 29019745,
-        snapshots: [
-          {
-            url: "https://snapshots.polkachu.com/testnet-snapshots/osmosis/osmosis_29019745.tar.lz4",
-            size: "129 GB",
-            type: "pruned",
-          },
-        ],
-        lastUpdated: "3 hours ago",
-        rpcEndpoints: {
-          primary: "https://osmosis-testnet-rpc.polkachu.com/",
-        },
-        status: "active",
-      },
-    },
-  },
-
   terra: {
     id: "terra",
     name: "Terra 2.0",
@@ -714,8 +528,6 @@ export function toChainSnapshot(config: ChainConfig): ChainSnapshot {
     size: mainnetData.snapshots?.[0]?.size ?? "N/A",
     prunedSize: mainnetData.snapshots?.[0]?.size ?? "N/A",
     updated: mainnetData.lastUpdated,
-    tokenPrice: undefined,
-    stakingApr: undefined,
     nodeVersion: config.binary.version,
     minimumGasPrice: `0.001${config.token.denom}`,
     symbol: config.token.symbol,
@@ -804,5 +616,4 @@ export const NETWORK_OPTIONS = ["Mainnet", "Testnet", "Archive"] as const;
 export const GLOBAL_STATS = {
   totalChains: getAllChains().length,
   updateFrequency: "Daily",
-  uptime: "99.9%",
 } as const;

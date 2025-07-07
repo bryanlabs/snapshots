@@ -39,8 +39,6 @@ export async function getChainDataWithFallback(): Promise<{
       return {
         ...chain,
         // Add required new fields with fallback values
-        tokenPrice: undefined,
-        stakingApr: undefined,
         nodeVersion: chainConfig?.binary.version || "Unknown",
         minimumGasPrice: chainConfig?.token
           ? `0.001${chainConfig.token.denom}`
@@ -69,17 +67,9 @@ export async function getChainDataWithFallback(): Promise<{
       };
     });
 
-    // Calculate real service counts from static data
-    const realActiveServices = enhancedStaticChains.reduce((total, chain) => {
-      return total + Object.values(chain.services).filter(Boolean).length;
-    }, 0);
-
     const fallbackStats: DynamicStats = {
       totalChains: GLOBAL_STATS.totalChains,
       updateFrequency: GLOBAL_STATS.updateFrequency,
-      uptime: GLOBAL_STATS.uptime,
-      activeServices: realActiveServices,
-      averageStakingApr: undefined, // No APR data available in static fallback
     };
 
     return {

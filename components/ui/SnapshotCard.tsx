@@ -13,8 +13,6 @@ export interface ChainSnapshot {
   size: string;
   prunedSize: string;
   updated: string;
-  tokenPrice?: string;
-  stakingApr?: string;
   nodeVersion: string;
   minimumGasPrice: string;
   symbol: string;
@@ -101,16 +99,6 @@ export const SnapshotCard = ({ chain }: SnapshotCardProps) => {
           >
             {chain.network}
           </motion.p>
-          {chain.symbol && (
-            <motion.span
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.4, delay: 0.3 }}
-              className="inline-block mt-1 px-2 py-1 bg-accent/10 text-accent text-xs font-medium rounded"
-            >
-              {chain.symbol}
-            </motion.span>
-          )}
         </div>
       </div>
 
@@ -142,33 +130,6 @@ export const SnapshotCard = ({ chain }: SnapshotCardProps) => {
           </div>
         </div>
 
-        {(chain.tokenPrice || chain.stakingApr) && (
-          <div className="flex justify-between items-center">
-            <span className="text-sm text-muted-foreground">
-              {chain.tokenPrice && chain.stakingApr
-                ? "Price / APR:"
-                : chain.tokenPrice
-                ? "Price:"
-                : "Staking APR:"}
-            </span>
-            <div className="text-right">
-              {chain.tokenPrice && (
-                <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  className="font-medium text-sm text-green-600"
-                >
-                  {chain.tokenPrice}
-                </motion.div>
-              )}
-              {chain.stakingApr && (
-                <div className="text-xs text-blue-600 font-medium">
-                  {chain.stakingApr} APR
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
         <div className="flex justify-between items-center">
           <span className="text-sm text-muted-foreground">Node Version:</span>
           <motion.span
@@ -187,30 +148,6 @@ export const SnapshotCard = ({ chain }: SnapshotCardProps) => {
           >
             {chain.updated}
           </motion.span>
-        </div>
-
-        <div className="mt-4">
-          <div className="text-sm text-muted-foreground mb-2">
-            Available Services:
-          </div>
-          <div className="flex flex-wrap gap-1">
-            {Object.entries(chain.services).map(
-              ([service, active]) =>
-                active && (
-                  <span
-                    key={service}
-                    className="px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full"
-                  >
-                    {service.toUpperCase()}
-                  </span>
-                )
-            )}
-            {Object.values(chain.services).every((v) => !v) && (
-              <span className="px-2 py-1 bg-gray-100 text-gray-500 text-xs rounded-full">
-                No services available
-              </span>
-            )}
-          </div>
         </div>
       </motion.div>
 

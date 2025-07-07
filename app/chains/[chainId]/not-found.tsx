@@ -24,16 +24,10 @@ export default function NotFound() {
           </p>
           <div className="grid grid-cols-2 gap-2 text-sm">
             <div className="text-left text-muted-foreground">
-              • CosmosHub
-              <br />
-              • Osmosis
-              <br />
               • Juno
               <br />• Stargaze
             </div>
             <div className="text-left text-muted-foreground">
-              • Akash
-              <br />
               • Persistence
               <br />
               • Secret Network
