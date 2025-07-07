@@ -9,3 +9,5 @@ export type { SnapshotOption } from "./SnapshotTable";
 export { CodeBlock } from "./CodeBlock";
 export { InfoCard, InfoRow } from "./InfoCard";
 export { StatusIndicator } from "./StatusIndicator";
+export { ErrorBoundary } from "./ErrorBoundary";
+export { SkeletonLoader, SkeletonCard, SkeletonStats } from "./SkeletonLoader";

@@ -54,7 +54,6 @@ const cardVariants = {
 
 export const SnapshotCard = ({ chain }: SnapshotCardProps) => {
   const chainId = chain.name.toLowerCase().replace(/\s+/g, "");
-  console.log(chain, "chain.endpoints.snapshot");
 
   return (
     <motion.div
