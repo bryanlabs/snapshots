@@ -105,6 +105,7 @@ export default function Home() {
               alt="BryanLabs Logo"
               width={200}
               height={200}
+              className="mx-auto mb-4"
             />
           </motion.div>
 
