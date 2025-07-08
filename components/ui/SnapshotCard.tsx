@@ -5,6 +5,8 @@ import { motion } from "framer-motion";
 import { DownloadIcon, ViewIcon } from "../icons";
 import { ChainIcon } from "./ChainIcon";
 import Image from "next/image";
+import { usePolkachuSnapshots } from "@/lib/hooks";
+import { SkeletonSnapshotCard } from "./SkeletonLoader";
 
 export interface ChainSnapshot {
   name: string;
@@ -39,6 +41,7 @@ export interface ChainSnapshot {
 
 interface SnapshotCardProps {
   chain: ChainSnapshot;
+  index?: number;
 }
 
 const cardVariants = {
@@ -52,8 +55,18 @@ const cardVariants = {
   },
 };
 
-export const SnapshotCard = ({ chain }: SnapshotCardProps) => {
+export const SnapshotCard = ({ chain, index = 0 }: SnapshotCardProps) => {
   const chainId = chain.name.toLowerCase().replace(/\s+/g, "");
+  const { data: snapshots, isLoading: isLoadingSnapshots } =
+    usePolkachuSnapshots({
+      network: chainId,
+      type: "mainnet",
+    });
+
+  // Show skeleton while loading
+  if (isLoadingSnapshots) {
+    return <SkeletonSnapshotCard index={index} />;
+  }
 
   return (
     <motion.div
@@ -96,7 +109,7 @@ export const SnapshotCard = ({ chain }: SnapshotCardProps) => {
             transition={{ duration: 0.4, delay: 0.2 }}
             className="text-sm text-muted-foreground"
           >
-            {chain.network}
+            {snapshots?.snapshot.name}
           </motion.p>
         </div>
       </div>
@@ -113,20 +126,8 @@ export const SnapshotCard = ({ chain }: SnapshotCardProps) => {
             whileHover={{ scale: 1.05 }}
             className="font-mono text-sm font-medium text-foreground"
           >
-            #{chain.latestBlock.toLocaleString()}
+            #{snapshots?.snapshot.block_height.toLocaleString()}
           </motion.span>
-        </div>
-
-        <div className="flex justify-between items-center">
-          <span className="text-sm text-muted-foreground">Pruned Size:</span>
-          <div className="text-right">
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              className="font-medium text-sm text-foreground"
-            >
-              {chain.prunedSize}
-            </motion.div>
-          </div>
         </div>
 
         <div className="flex justify-between items-center">
@@ -145,7 +146,7 @@ export const SnapshotCard = ({ chain }: SnapshotCardProps) => {
             whileHover={{ scale: 1.05 }}
             className="text-sm font-medium text-foreground"
           >
-            {chain.updated}
+            {snapshots?.snapshot.time}
           </motion.span>
         </div>
       </motion.div>
@@ -159,7 +160,7 @@ export const SnapshotCard = ({ chain }: SnapshotCardProps) => {
         <motion.a
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
-          href={chain.endpoints.snapshot}
+          href={snapshots?.snapshot.url}
           className="flex-1 bg-accent hover:bg-accent/90 text-white font-medium py-2.5 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2"
         >
           <DownloadIcon />
