@@ -129,3 +129,60 @@ export const SkeletonStats = ({ count = 2 }: { count?: number }) => (
     ))}
   </div>
 );
+
+export const SkeletonSnapshotTable = () => (
+  <div className="bg-white rounded-xl border border-border overflow-hidden mb-12">
+    <div className="overflow-x-auto">
+      <table className="w-full">
+        <thead className="bg-slate-50 border-b border-border">
+          <tr>
+            <th className="text-left py-4 px-6 font-semibold text-foreground">
+              Time
+            </th>
+            <th className="text-left py-4 px-6 font-semibold text-foreground">
+              Block Height
+            </th>
+            <th className="text-left py-4 px-6 font-semibold text-foreground">
+              Size
+            </th>
+            <th className="text-left py-4 px-6 font-semibold text-foreground">
+              Last Updated
+            </th>
+            <th className="text-left py-4 px-6 font-semibold text-foreground">
+              Action
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr className="border-b border-border last:border-b-0 hover:bg-slate-50 transition-colors">
+            <td className="py-4 px-6">
+              <SkeletonLoader width="80%" height={20} animationDelay={0.1} />
+            </td>
+            <td className="py-4 px-6">
+              <SkeletonLoader
+                width="90%"
+                height={20}
+                animationDelay={0.2}
+                className="font-mono"
+              />
+            </td>
+            <td className="py-4 px-6">
+              <SkeletonLoader width="60%" height={20} animationDelay={0.3} />
+            </td>
+            <td className="py-4 px-6">
+              <SkeletonLoader width="70%" height={20} animationDelay={0.4} />
+            </td>
+            <td className="py-4 px-6">
+              <SkeletonLoader
+                width={100}
+                height={40}
+                animationDelay={0.5}
+                className="rounded-lg"
+              />
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+);
