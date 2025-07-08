@@ -2,8 +2,9 @@
 
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
-import { SnapshotCard, ChainSnapshot } from "../ui/SnapshotCard";
+import { SnapshotCard, ChainSnapshot } from "@/components/ui/SnapshotCard";
 import { getChainDataWithFallback } from "@/lib/utils/data-migration";
+import { SkeletonSnapshotCard } from "@/components/ui/SkeletonLoader";
 
 interface SnapshotsGridProps {
   searchQuery: string;
@@ -30,106 +31,6 @@ const itemVariants = {
     },
   },
 };
-
-// Skeleton loading component
-const SkeletonCard = ({ index }: { index: number }) => (
-  <motion.div
-    variants={itemVariants}
-    className="bg-white rounded-xl border border-border p-6"
-  >
-    <div className="flex items-start gap-4 mb-4">
-      <motion.div
-        animate={{
-          opacity: [0.5, 1, 0.5],
-        }}
-        transition={{
-          duration: 1.5,
-          repeat: Infinity,
-          delay: index * 0.1,
-        }}
-        className="w-12 h-12 bg-slate-200 rounded-full"
-      />
-      <div className="flex-1">
-        <motion.div
-          animate={{
-            opacity: [0.5, 1, 0.5],
-          }}
-          transition={{
-            duration: 1.5,
-            repeat: Infinity,
-            delay: index * 0.1 + 0.1,
-          }}
-          className="h-6 bg-slate-200 rounded mb-2 w-3/4"
-        />
-        <motion.div
-          animate={{
-            opacity: [0.5, 1, 0.5],
-          }}
-          transition={{
-            duration: 1.5,
-            repeat: Infinity,
-            delay: index * 0.1 + 0.2,
-          }}
-          className="h-4 bg-slate-200 rounded w-1/2"
-        />
-      </div>
-    </div>
-
-    <div className="space-y-3 mb-6">
-      {[...Array(4)].map((_, i) => (
-        <div key={i} className="flex justify-between items-center">
-          <motion.div
-            animate={{
-              opacity: [0.5, 1, 0.5],
-            }}
-            transition={{
-              duration: 1.5,
-              repeat: Infinity,
-              delay: index * 0.1 + i * 0.05,
-            }}
-            className="h-4 bg-slate-200 rounded w-1/3"
-          />
-          <motion.div
-            animate={{
-              opacity: [0.5, 1, 0.5],
-            }}
-            transition={{
-              duration: 1.5,
-              repeat: Infinity,
-              delay: index * 0.1 + i * 0.05 + 0.1,
-            }}
-            className="h-4 bg-slate-200 rounded w-1/4"
-          />
-        </div>
-      ))}
-    </div>
-
-    <div className="flex gap-3">
-      <motion.div
-        animate={{
-          opacity: [0.5, 1, 0.5],
-        }}
-        transition={{
-          duration: 1.5,
-          repeat: Infinity,
-          delay: index * 0.1 + 0.3,
-        }}
-        className="flex-1 h-10 bg-slate-200 rounded-lg"
-      />
-      <motion.div
-        animate={{
-          opacity: [0.5, 1, 0.5],
-        }}
-        transition={{
-          duration: 1.5,
-          repeat: Infinity,
-          delay: index * 0.1 + 0.4,
-        }}
-        className="h-10 w-20 bg-slate-200 rounded-lg"
-      />
-    </div>
-  </motion.div>
-);
 
 export const SnapshotsGrid = ({ searchQuery }: SnapshotsGridProps) => {
   const [chains, setChains] = useState<ChainSnapshot[]>([]);
@@ -205,7 +106,9 @@ export const SnapshotsGrid = ({ searchQuery }: SnapshotsGridProps) => {
         className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
       >
         {[...Array(6)].map((_, index) => (
-          <SkeletonCard key={index} index={index} />
+          <motion.div key={index} variants={itemVariants}>
+            <SkeletonSnapshotCard index={index} />
+          </motion.div>
         ))}
       </motion.div>
     );
