@@ -186,3 +186,66 @@ export const SkeletonSnapshotTable = () => (
     </div>
   </div>
 );
+
+export const SkeletonSnapshotCard = ({ index = 0 }: { index?: number }) => (
+  <div
+    className="bg-white rounded-xl border border-border p-6"
+    role="status"
+    aria-label="Loading snapshot data"
+  >
+    {/* Header with icon and title */}
+    <div className="flex items-start gap-4 mb-4">
+      <SkeletonLoader
+        variant="circle"
+        width={32}
+        height={32}
+        animationDelay={index * 0.1}
+      />
+      <div className="flex-1">
+        <SkeletonLoader
+          width="70%"
+          height={24}
+          animationDelay={index * 0.1 + 0.1}
+          className="mb-1"
+        />
+        <SkeletonLoader
+          width="50%"
+          height={16}
+          animationDelay={index * 0.1 + 0.2}
+        />
+      </div>
+    </div>
+
+    {/* Data rows */}
+    <div className="space-y-3 mb-6">
+      {[...Array(3)].map((_, i) => (
+        <div key={i} className="flex justify-between items-center">
+          <SkeletonLoader
+            width="40%"
+            height={16}
+            animationDelay={index * 0.1 + i * 0.05 + 0.3}
+          />
+          <SkeletonLoader
+            width="30%"
+            height={16}
+            animationDelay={index * 0.1 + i * 0.05 + 0.35}
+          />
+        </div>
+      ))}
+    </div>
+
+    {/* Buttons */}
+    <div className="flex gap-3">
+      <SkeletonLoader
+        className="flex-1"
+        height={42}
+        animationDelay={index * 0.1 + 0.5}
+      />
+      <SkeletonLoader
+        width={90}
+        height={42}
+        animationDelay={index * 0.1 + 0.6}
+      />
+    </div>
+  </div>
+);
