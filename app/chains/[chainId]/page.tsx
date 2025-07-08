@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, use } from "react";
+import { use } from "react";
 import { motion } from "framer-motion";
 import {
   Breadcrumb,
@@ -9,17 +9,12 @@ import {
   CodeBlock,
   InfoCard,
   InfoRow,
-  SnapshotOption,
 } from "@/components";
-import {
-  getChainById,
-  toSnapshotOptions,
-  generateQuickStartCommands,
-  getAvailableNetworks,
-  getNetworkData,
-} from "@/lib/data/chains";
+import { SkeletonSnapshotTable } from "@/components/ui/SkeletonLoader";
+import { getChainById, generateQuickStartCommands } from "@/lib/data/chains";
 import { useEnhancedChainData } from "@/lib/hooks/useEnhancedChainData";
 import { notFound } from "next/navigation";
+import { usePolkachuSnapshots, useNetworkTabs } from "@/lib/hooks";
 
 // Animation variants
 const pageVariants = {
@@ -95,16 +90,25 @@ export default function ChainDetail({ params }: ChainDetailProps) {
     enhancedInfo,
   } = useEnhancedChainData(staticConfig, chainId);
 
-  // Get available networks for this chain and set default
-  const availableNetworks = getAvailableNetworks(enrichedChain.id);
-  const [selectedNetwork, setSelectedNetwork] = useState(
-    availableNetworks.includes("Mainnet")
-      ? "Mainnet"
-      : availableNetworks[0] || "Mainnet"
-  );
+  // Use the network tabs hook for tab management
+  const {
+    selectedNetwork,
+    setSelectedNetwork,
+    availableNetworks,
+    currentTabValue,
+  } = useNetworkTabs(enrichedChain.id);
 
-  // Get network-specific data
-  const currentNetworkData = getNetworkData(enrichedChain.id, selectedNetwork);
+  const { data: snapshots, isLoading: isLoadingSnapshots } =
+    usePolkachuSnapshots({
+      network: chainId,
+      type: currentTabValue.apiType,
+    });
+
+  // Optional: Log current tab value for debugging
+  console.log("Current Tab Value:", currentTabValue);
+
+  // Get network-specific data from the current tab value
+  const currentNetworkData = currentTabValue.networkData;
 
   // If no network data found, fallback to mainnet
   if (!currentNetworkData && availableNetworks.length > 0) {
@@ -113,10 +117,6 @@ export default function ChainDetail({ params }: ChainDetailProps) {
   }
 
   // Generate snapshot options from enriched chain config for selected network
-  const snapshots: SnapshotOption[] = toSnapshotOptions(
-    enrichedChain,
-    selectedNetwork
-  );
 
   // Generate quick start commands for selected network
   const quickStartCommands = generateQuickStartCommands(
@@ -210,9 +210,15 @@ export default function ChainDetail({ params }: ChainDetailProps) {
         </motion.div>
 
         {/* Snapshot Options Table */}
-        <motion.div variants={sectionVariants} className="mb-8">
-          <SnapshotTable snapshots={snapshots} />
-        </motion.div>
+        {isLoadingSnapshots ? (
+          <motion.div variants={sectionVariants} className="mb-8">
+            <SkeletonSnapshotTable />
+          </motion.div>
+        ) : snapshots ? (
+          <motion.div variants={sectionVariants} className="mb-8">
+            <SnapshotTable snapshotData={snapshots} />
+          </motion.div>
+        ) : null}
 
         {/* Rich Content Sections */}
         <motion.div
@@ -231,7 +237,7 @@ export default function ChainDetail({ params }: ChainDetailProps) {
                 {[
                   {
                     title: "1. Download Snapshot",
-                    code: quickStartCommands.download,
+                    code: snapshots?.snapshot.url || "N/A",
                     description: "Download latest snapshot",
                   },
                   {
