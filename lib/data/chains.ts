@@ -1,5 +1,4 @@
-import { ChainSnapshot } from "@/components/ui/SnapshotCard";
-import { SnapshotOption } from "@/components/ui/SnapshotTable";
+import { ChainSnapshot } from "@/components";
 
 // Network-specific data interface
 export interface NetworkData {
@@ -61,6 +60,80 @@ export interface ChainConfig {
 
 // Comprehensive chain configurations
 export const CHAINS_CONFIG: Record<string, ChainConfig> = {
+  cosmoshub: {
+    id: "cosmoshub",
+    name: "Cosmos Hub",
+    description:
+      "The heart of the Cosmos ecosystem - the first hub in the Cosmos network enabling secure interchain communication",
+    binary: {
+      name: "gaiad",
+      version: "v18.1.0",
+      repository: "https://github.com/cosmos/gaia",
+    },
+    logo: "https://cosmos.network/img/logo.png",
+    website: "https://cosmos.network",
+    github: "https://github.com/cosmos/gaia",
+    docs: "https://hub.cosmos.network",
+    token: {
+      symbol: "ATOM",
+      denom: "uatom",
+    },
+    hardware: {
+      minRam: "16 GB",
+      recommendedRam: "32 GB",
+      storagePruned: "500 GB SSD",
+      storageArchive: "2 TB SSD",
+      cpu: "4+ cores",
+      network: "100 Mbps+",
+    },
+    features: ["IBC", "Governance", "Staking", "Interchain Security"],
+    networks: {
+      mainnet: {
+        chainId: "cosmoshub-4",
+        latestBlock: 18234567,
+        lastUpdated: "2 hours ago",
+        rpcEndpoints: {
+          primary: "https://rpc-cosmoshub.bryanlabs.net",
+          secondary: "https://rpc2-cosmoshub.bryanlabs.net",
+        },
+        status: "active",
+        snapshots: [
+          {
+            url: "https://snapshots.polkachu.com/snapshots/cosmos/cosmos_18234567.tar.lz4",
+            size: "1.2 TB",
+            type: "full",
+          },
+        ],
+      },
+      testnet: {
+        chainId: "theta-testnet-001",
+        latestBlock: 15234892,
+        lastUpdated: "1 hour ago",
+        rpcEndpoints: {
+          primary: "https://rpc-testnet-cosmoshub.bryanlabs.net",
+          secondary: "https://rpc2-testnet-cosmoshub.bryanlabs.net",
+        },
+        status: "active",
+        snapshots: [
+          {
+            url: "https://snapshots.polkachu.com/snapshots/cosmos/cosmos_18234567.tar.lz4",
+            size: "1.2 TB",
+            type: "full",
+          },
+        ],
+      },
+      archive: {
+        chainId: "cosmoshub-4-archive",
+        latestBlock: 18234567,
+        lastUpdated: "12 hours ago",
+        rpcEndpoints: {
+          primary: "https://rpc-archive-cosmoshub.bryanlabs.net",
+          secondary: "https://rpc2-archive-cosmoshub.bryanlabs.net",
+        },
+        status: "active",
+      },
+    },
+  },
   noble: {
     id: "noble",
     name: "Noble",
@@ -175,187 +248,87 @@ export const CHAINS_CONFIG: Record<string, ChainConfig> = {
       },
     },
   },
-  juno: {
-    id: "juno",
-    name: "Juno",
+  osmosis: {
+    id: "osmosis",
+    name: "Osmosis",
     description:
-      "A decentralized public blockchain and smart contract platform for the Cosmos ecosystem, built on CosmWasm",
+      "The leading DEX and liquidity hub for the Cosmos ecosystem with advanced AMM capabilities",
     binary: {
-      name: "junod",
-      version: "v23.0.0",
-      repository: "https://github.com/CosmosContracts/juno",
+      name: "osmosisd",
+      version: "v25.0.0",
+      repository: "https://github.com/osmosis-labs/osmosis",
     },
-    logo: "https://polkachu.com/images/chains/juno.png",
-    website: "https://junonetwork.io",
-    github: "https://github.com/CosmosContracts/juno",
-    docs: "https://docs.junonetwork.io",
+    logo: "https://osmosis.zone/img/logo.png",
+    website: "https://osmosis.zone",
+    github: "https://github.com/osmosis-labs/osmosis",
+    docs: "https://docs.osmosis.zone",
     token: {
-      symbol: "JUNO",
-      denom: "ujuno",
-    },
-    hardware: {
-      minRam: "8 GB",
-      recommendedRam: "16 GB",
-      storagePruned: "200 GB SSD",
-      storageArchive: "400 GB SSD",
-      cpu: "4+ cores",
-      network: "100 Mbps+",
-    },
-    features: ["Smart Contracts", "CosmWasm", "Governance", "IBC"],
-    networks: {
-      mainnet: {
-        chainId: "juno-1",
-        latestBlock: 27934769,
-        snapshots: [
-          {
-            url: "https://snapshots.polkachu.com/snapshots/juno/juno_27934769.tar.lz4",
-            size: "6 GB",
-            type: "pruned",
-          },
-        ],
-        lastUpdated: "2 hours ago",
-        rpcEndpoints: {
-          primary: "https://juno-rpc.polkachu.com/",
-        },
-        status: "active",
-      },
-      testnet: {
-        chainId: "uni-7",
-        latestBlock: 3254980,
-        snapshots: [
-          {
-            url: "https://snapshots.polkachu.com/testnet-snapshots/juno/juno_3254980.tar.lz4",
-            size: "611 MB",
-            type: "pruned",
-          },
-        ],
-        lastUpdated: "1 hour ago",
-        rpcEndpoints: {
-          primary: "https://juno-testnet-rpc.polkachu.com/",
-        },
-        status: "active",
-      },
-    },
-  },
-  neutron: {
-    id: "neutron",
-    name: "Neutron",
-    description:
-      "The most secure blockchain for smart contracts built on Cosmos Hub with Interchain Security",
-    binary: {
-      name: "neutrond",
-      version: "v3.0.2",
-      repository: "https://github.com/neutron-org/neutron",
-    },
-    logo: "https://polkachu.com/images/chains/neutron.png",
-    website: "https://neutron.org",
-    github: "https://github.com/neutron-org/neutron",
-    docs: "https://docs.neutron.org",
-    token: {
-      symbol: "NTRN",
-      denom: "untrn",
+      symbol: "OSMO",
+      denom: "uosmo",
     },
     hardware: {
       minRam: "16 GB",
       recommendedRam: "32 GB",
-      storagePruned: "300 GB SSD",
-      storageArchive: "600 GB SSD",
+      storagePruned: "600 GB SSD",
+      storageArchive: "1.5 TB SSD",
       cpu: "6+ cores",
       network: "200 Mbps+",
     },
-    features: ["Interchain Security", "Smart Contracts", "Cross-chain", "IBC"],
+    features: [
+      "DEX",
+      "Liquidity Pools",
+      "Concentrated Liquidity",
+      "Superfluid Staking",
+    ],
     networks: {
       mainnet: {
-        chainId: "neutron-1",
-        latestBlock: 28975627,
+        chainId: "osmosis-1",
+        latestBlock: 12345678,
         snapshots: [
           {
-            url: "https://snapshots.polkachu.com/snapshots/neutron/neutron_28975627.tar.lz4",
-            size: "12 GB",
+            url: "https://snapshots.polkachu.com/snapshots/osmosis/osmosis_12345678.tar.lz4",
+            size: "25 GB",
             type: "pruned",
           },
         ],
-        lastUpdated: "1 hour ago",
+        lastUpdated: "4 hours ago",
         rpcEndpoints: {
-          primary: "https://neutron-rpc.polkachu.com/",
+          primary: "https://rpc-osmosis.bryanlabs.net",
+          secondary: "https://rpc2-osmosis.bryanlabs.net",
         },
         status: "active",
       },
       testnet: {
-        chainId: "pion-1",
-        latestBlock: 32145283,
+        chainId: "osmo-test-5",
+        latestBlock: 8234567,
         snapshots: [
           {
-            url: "https://snapshots.polkachu.com/testnet-snapshots/neutron/neutron_32145283.tar.lz4",
-            size: "12 GB",
-            type: "pruned",
-          },
-        ],
-        lastUpdated: "45 minutes ago",
-        rpcEndpoints: {
-          primary: "https://neutron-testnet-rpc.polkachu.com/",
-        },
-        status: "active",
-      },
-    },
-  },
-  injective: {
-    id: "injective",
-    name: "Injective",
-    description:
-      "A lightning-fast interoperable layer-one blockchain optimized for Web3 finance applications",
-    binary: {
-      name: "injectived",
-      version: "v1.12.1",
-      repository: "https://github.com/InjectiveLabs/injective-chain-releases",
-    },
-    logo: "https://polkachu.com/images/chains/injective.png",
-    website: "https://injective.com",
-    github: "https://github.com/InjectiveLabs/injective-chain-releases",
-    docs: "https://docs.injective.network",
-    token: {
-      symbol: "INJ",
-      denom: "inj",
-    },
-    hardware: {
-      minRam: "16 GB",
-      recommendedRam: "32 GB",
-      storagePruned: "500 GB SSD",
-      storageArchive: "1 TB SSD",
-      cpu: "6+ cores",
-      network: "200 Mbps+",
-    },
-    features: ["DeFi", "Trading", "Cross-chain", "High Performance"],
-    networks: {
-      mainnet: {
-        chainId: "injective-1",
-        latestBlock: 123689927,
-        snapshots: [
-          {
-            url: "https://snapshots.polkachu.com/snapshots/injective/injective_123689927.tar.lz4",
+            url: "https://snapshots.polkachu.com/testnet-snapshots/osmosis/osmosis_8234567.tar.lz4",
             size: "18 GB",
             type: "pruned",
           },
         ],
-        lastUpdated: "2 hours ago",
+        lastUpdated: "3 hours ago",
         rpcEndpoints: {
-          primary: "https://injective-rpc.polkachu.com/",
+          primary: "https://rpc-testnet-osmosis.bryanlabs.net",
+          secondary: "https://rpc2-testnet-osmosis.bryanlabs.net",
         },
         status: "active",
       },
-      testnet: {
-        chainId: "injective-888",
-        latestBlock: 82611666,
+      archive: {
+        chainId: "osmosis-1-archive",
+        latestBlock: 12345678,
         snapshots: [
           {
-            url: "https://snapshots.polkachu.com/testnet-snapshots/injective/injective_82611666.tar.lz4",
-            size: "8 GB",
-            type: "pruned",
+            url: "https://snapshots.polkachu.com/snapshots/osmosis/osmosis_12345678_archive.tar.lz4",
+            size: "1.8 TB",
+            type: "archive",
           },
         ],
-        lastUpdated: "1 hour ago",
+        lastUpdated: "8 hours ago",
         rpcEndpoints: {
-          primary: "https://injective-testnet-rpc.polkachu.com/",
+          primary: "https://rpc-archive-osmosis.bryanlabs.net",
+          secondary: "https://rpc2-archive-osmosis.bryanlabs.net",
         },
         status: "active",
       },
@@ -424,7 +397,6 @@ export const CHAINS_CONFIG: Record<string, ChainConfig> = {
       },
     },
   },
-
   thorchain: {
     id: "thorchain",
     name: "THORChain",
@@ -551,32 +523,6 @@ export function toChainSnapshot(config: ChainConfig): ChainSnapshot {
       snapshot: mainnetData.snapshots?.[0]?.url,
     },
   };
-}
-
-// Transform network data to snapshot options for detail page table
-export function toSnapshotOptions(
-  config: ChainConfig,
-  networkType: string = "mainnet"
-): SnapshotOption[] {
-  const networkKey = networkType.toLowerCase() as keyof typeof config.networks;
-  const networkData = config.networks[networkKey];
-
-  if (!networkData) {
-    return [];
-  }
-
-  const baseBlock = networkData.latestBlock;
-
-  return [
-    {
-      type: "Pruned",
-      blockHeight: baseBlock,
-      size: networkData.snapshots?.[0]?.size ?? "N/A",
-      lastUpdated: networkData.lastUpdated,
-      description: "Pruned node with recent blocks only",
-      url: networkData.snapshots?.[0]?.url ?? "",
-    },
-  ];
 }
 
 // Get all chain snapshots for home page (uses mainnet data)

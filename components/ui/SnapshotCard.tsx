@@ -57,9 +57,10 @@ const cardVariants = {
 
 export const SnapshotCard = ({ chain, index = 0 }: SnapshotCardProps) => {
   const chainId = chain.name.toLowerCase().replace(/\s+/g, "");
+  const chainIdValue = chainId === "cosmoshub" ? "cosmos" : chainId;
   const { data: snapshots, isLoading: isLoadingSnapshots } =
     usePolkachuSnapshots({
-      network: chainId,
+      network: chainIdValue,
       type: "mainnet",
     });
 

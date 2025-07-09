@@ -389,14 +389,7 @@ export async function getEnhancedChainData(): Promise<{
 
   try {
     // Fetch popular/priority chains first for better UX (reduced to avoid rate limits)
-    const priorityChains = [
-      "juno",
-      "kujira",
-      "noble",
-      "terra",
-      "injective",
-      "neutron",
-    ];
+    const priorityChains = ["cosmos", "kujira", "noble", "terra", "osmosis"];
 
     const chainDetails = await fetchMultipleChainDetails(priorityChains);
 
