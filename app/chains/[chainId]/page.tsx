@@ -2,7 +2,12 @@
 
 import { use } from "react";
 import { motion } from "framer-motion";
-import { Breadcrumb, NetworkSelector, SnapshotTable } from "@/components";
+import {
+  Breadcrumb,
+  NetworkSelector,
+  SnapshotTable,
+  CopyableValue,
+} from "@/components";
 import { SkeletonSnapshotTable } from "@/components/ui/SkeletonLoader";
 import { getChainById } from "@/lib/data/chains";
 import { useEnhancedChainData } from "@/lib/hooks/useEnhancedChainData";
@@ -163,6 +168,45 @@ export default function ChainDetail({ params }: ChainDetailProps) {
             />
           </motion.div>
         </motion.div>
+
+        {/* Chain Information Card */}
+        {snapshots && (
+          <motion.div variants={sectionVariants} className="mb-8">
+            <div className="bg-white rounded-xl border border-border p-6">
+              <h2 className="text-2xl font-bold text-foreground mb-4">
+                Chain Information
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-muted-foreground">
+                    Node Version:
+                  </span>
+                  <CopyableValue
+                    value={enrichedChain.binary?.version || "N/A"}
+                    label="node version"
+                  >
+                    <span className="text-sm font-medium text-foreground font-mono">
+                      {enrichedChain.binary?.version || "N/A"}
+                    </span>
+                  </CopyableValue>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-muted-foreground">
+                    Snapshot Name:
+                  </span>
+                  <CopyableValue
+                    value={snapshots.snapshot.name}
+                    label="snapshot name"
+                  >
+                    <span className="text-sm font-medium text-foreground">
+                      {snapshots.snapshot.name}
+                    </span>
+                  </CopyableValue>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
 
         {/* Snapshot Options Table */}
         {isLoadingSnapshots ? (
