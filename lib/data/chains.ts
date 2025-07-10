@@ -1,20 +1,24 @@
-import { ChainSnapshot } from "@/components/ui/SnapshotCard";
-import { SnapshotOption } from "@/components/ui/SnapshotTable";
+import { ChainSnapshot } from "@/components";
 
 // Network-specific data interface
 export interface NetworkData {
   chainId: string;
   latestBlock: number;
-  sizes: {
-    full: string;
-    pruned: string;
-    archive: string;
-    stateSync: string;
-  };
+  snapshots?: [
+    {
+      url: string;
+      size: string;
+      type: "full" | "pruned" | "archive" | "stateSync";
+    }
+  ];
   lastUpdated: string;
   rpcEndpoints: {
     primary: string;
-    secondary: string;
+    secondary?: string;
+  };
+  restEndpoints?: {
+    primary: string;
+    secondary?: string;
   };
   status: "active" | "maintenance" | "deprecated";
 }
@@ -33,6 +37,11 @@ export interface ChainConfig {
   website?: string;
   github?: string;
   docs?: string;
+  // Real token data
+  token: {
+    symbol: string;
+    denom: string;
+  };
   hardware: {
     minRam: string;
     recommendedRam: string;
@@ -65,6 +74,10 @@ export const CHAINS_CONFIG: Record<string, ChainConfig> = {
     website: "https://cosmos.network",
     github: "https://github.com/cosmos/gaia",
     docs: "https://hub.cosmos.network",
+    token: {
+      symbol: "ATOM",
+      denom: "uatom",
+    },
     hardware: {
       minRam: "16 GB",
       recommendedRam: "32 GB",
@@ -78,44 +91,40 @@ export const CHAINS_CONFIG: Record<string, ChainConfig> = {
       mainnet: {
         chainId: "cosmoshub-4",
         latestBlock: 18234567,
-        sizes: {
-          full: "145 GB",
-          pruned: "23 GB",
-          archive: "478 GB",
-          stateSync: "2.1 GB",
-        },
         lastUpdated: "2 hours ago",
         rpcEndpoints: {
           primary: "https://rpc-cosmoshub.bryanlabs.net",
           secondary: "https://rpc2-cosmoshub.bryanlabs.net",
         },
         status: "active",
+        snapshots: [
+          {
+            url: "https://snapshots.polkachu.com/snapshots/cosmos/cosmos_18234567.tar.lz4",
+            size: "1.2 TB",
+            type: "full",
+          },
+        ],
       },
       testnet: {
         chainId: "theta-testnet-001",
         latestBlock: 15234892,
-        sizes: {
-          full: "89 GB",
-          pruned: "14 GB",
-          archive: "234 GB",
-          stateSync: "1.2 GB",
-        },
         lastUpdated: "1 hour ago",
         rpcEndpoints: {
           primary: "https://rpc-testnet-cosmoshub.bryanlabs.net",
           secondary: "https://rpc2-testnet-cosmoshub.bryanlabs.net",
         },
         status: "active",
+        snapshots: [
+          {
+            url: "https://snapshots.polkachu.com/snapshots/cosmos/cosmos_18234567.tar.lz4",
+            size: "1.2 TB",
+            type: "full",
+          },
+        ],
       },
       archive: {
         chainId: "cosmoshub-4-archive",
         latestBlock: 18234567,
-        sizes: {
-          full: "1.2 TB",
-          pruned: "145 GB",
-          archive: "2.1 TB",
-          stateSync: "2.1 GB",
-        },
         lastUpdated: "12 hours ago",
         rpcEndpoints: {
           primary: "https://rpc-archive-cosmoshub.bryanlabs.net",
@@ -125,7 +134,6 @@ export const CHAINS_CONFIG: Record<string, ChainConfig> = {
       },
     },
   },
-
   noble: {
     id: "noble",
     name: "Noble",
@@ -140,6 +148,10 @@ export const CHAINS_CONFIG: Record<string, ChainConfig> = {
     website: "https://nobleassets.xyz",
     github: "https://github.com/noble-assets/noble",
     docs: "https://docs.nobleassets.xyz",
+    token: {
+      symbol: "USDC",
+      denom: "uusdc",
+    },
     hardware: {
       minRam: "8 GB",
       recommendedRam: "16 GB",
@@ -152,39 +164,41 @@ export const CHAINS_CONFIG: Record<string, ChainConfig> = {
     networks: {
       mainnet: {
         chainId: "noble-1",
-        latestBlock: 8765432,
-        sizes: {
-          full: "12 GB",
-          pruned: "2.1 GB",
-          archive: "28 GB",
-          stateSync: "0.5 GB",
-        },
+        latestBlock: 30074846,
+        snapshots: [
+          {
+            url: "https://snapshots.polkachu.com/snapshots/noble/noble_30074846.tar.lz4",
+            size: "2 GB",
+            type: "pruned",
+          },
+        ],
         lastUpdated: "1 hour ago",
         rpcEndpoints: {
-          primary: "https://rpc-noble.bryanlabs.net",
-          secondary: "https://rpc2-noble.bryanlabs.net",
+          primary: "https://noble-rpc.bryanlabs.net/",
+        },
+        restEndpoints: {
+          primary: "https://noble-api.bryanlabs.net/",
         },
         status: "active",
       },
       testnet: {
         chainId: "grand-1",
-        latestBlock: 5432987,
-        sizes: {
-          full: "8.2 GB",
-          pruned: "1.4 GB",
-          archive: "18 GB",
-          stateSync: "0.3 GB",
-        },
+        latestBlock: 33387752,
+        snapshots: [
+          {
+            url: "https://snapshots.polkachu.com/testnet-snapshots/noble/noble_33387752.tar.lz4",
+            size: "860 MB",
+            type: "pruned",
+          },
+        ],
         lastUpdated: "45 minutes ago",
         rpcEndpoints: {
-          primary: "https://rpc-testnet-noble.bryanlabs.net",
-          secondary: "https://rpc2-testnet-noble.bryanlabs.net",
+          primary: "https://noble-testnet-rpc.polkachu.com/",
         },
         status: "active",
       },
     },
   },
-
   kujira: {
     id: "kujira",
     name: "Kujira",
@@ -199,6 +213,10 @@ export const CHAINS_CONFIG: Record<string, ChainConfig> = {
     website: "https://kujira.network",
     github: "https://github.com/Team-Kujira/core",
     docs: "https://docs.kujira.app",
+    token: {
+      symbol: "KUJI",
+      denom: "ukuji",
+    },
     hardware: {
       minRam: "8 GB",
       recommendedRam: "16 GB",
@@ -211,39 +229,25 @@ export const CHAINS_CONFIG: Record<string, ChainConfig> = {
     networks: {
       mainnet: {
         chainId: "kaiyo-1",
-        latestBlock: 9234567,
-        sizes: {
-          full: "34 GB",
-          pruned: "6.2 GB",
-          archive: "78 GB",
-          stateSync: "1.1 GB",
-        },
+        latestBlock: 32329671,
+        snapshots: [
+          {
+            url: "https://snapshots.polkachu.com/snapshots/kujira/kujira_32329671.tar.lz4",
+            size: "25 GB",
+            type: "pruned",
+          },
+        ],
         lastUpdated: "3 hours ago",
         rpcEndpoints: {
-          primary: "https://rpc-kujira.bryanlabs.net",
-          secondary: "https://rpc2-kujira.bryanlabs.net",
+          primary: "https://kujira-rpc.bryanlabs.net/",
         },
-        status: "active",
-      },
-      testnet: {
-        chainId: "harpoon-4",
-        latestBlock: 6789234,
-        sizes: {
-          full: "21 GB",
-          pruned: "3.8 GB",
-          archive: "45 GB",
-          stateSync: "0.7 GB",
-        },
-        lastUpdated: "2 hours ago",
-        rpcEndpoints: {
-          primary: "https://rpc-testnet-kujira.bryanlabs.net",
-          secondary: "https://rpc2-testnet-kujira.bryanlabs.net",
+        restEndpoints: {
+          primary: "https://kujira-api.bryanlabs.net/",
         },
         status: "active",
       },
     },
   },
-
   osmosis: {
     id: "osmosis",
     name: "Osmosis",
@@ -258,6 +262,10 @@ export const CHAINS_CONFIG: Record<string, ChainConfig> = {
     website: "https://osmosis.zone",
     github: "https://github.com/osmosis-labs/osmosis",
     docs: "https://docs.osmosis.zone",
+    token: {
+      symbol: "OSMO",
+      denom: "uosmo",
+    },
     hardware: {
       minRam: "16 GB",
       recommendedRam: "32 GB",
@@ -276,12 +284,13 @@ export const CHAINS_CONFIG: Record<string, ChainConfig> = {
       mainnet: {
         chainId: "osmosis-1",
         latestBlock: 12345678,
-        sizes: {
-          full: "189 GB",
-          pruned: "25 GB",
-          archive: "487 GB",
-          stateSync: "2.8 GB",
-        },
+        snapshots: [
+          {
+            url: "https://snapshots.polkachu.com/snapshots/osmosis/osmosis_12345678.tar.lz4",
+            size: "25 GB",
+            type: "pruned",
+          },
+        ],
         lastUpdated: "4 hours ago",
         rpcEndpoints: {
           primary: "https://rpc-osmosis.bryanlabs.net",
@@ -292,12 +301,13 @@ export const CHAINS_CONFIG: Record<string, ChainConfig> = {
       testnet: {
         chainId: "osmo-test-5",
         latestBlock: 8234567,
-        sizes: {
-          full: "123 GB",
-          pruned: "18 GB",
-          archive: "298 GB",
-          stateSync: "1.9 GB",
-        },
+        snapshots: [
+          {
+            url: "https://snapshots.polkachu.com/testnet-snapshots/osmosis/osmosis_8234567.tar.lz4",
+            size: "18 GB",
+            type: "pruned",
+          },
+        ],
         lastUpdated: "3 hours ago",
         rpcEndpoints: {
           primary: "https://rpc-testnet-osmosis.bryanlabs.net",
@@ -308,12 +318,13 @@ export const CHAINS_CONFIG: Record<string, ChainConfig> = {
       archive: {
         chainId: "osmosis-1-archive",
         latestBlock: 12345678,
-        sizes: {
-          full: "890 GB",
-          pruned: "189 GB",
-          archive: "1.8 TB",
-          stateSync: "2.8 GB",
-        },
+        snapshots: [
+          {
+            url: "https://snapshots.polkachu.com/snapshots/osmosis/osmosis_12345678_archive.tar.lz4",
+            size: "1.8 TB",
+            type: "archive",
+          },
+        ],
         lastUpdated: "8 hours ago",
         rpcEndpoints: {
           primary: "https://rpc-archive-osmosis.bryanlabs.net",
@@ -323,66 +334,6 @@ export const CHAINS_CONFIG: Record<string, ChainConfig> = {
       },
     },
   },
-
-  "terra-classic": {
-    id: "terra-classic",
-    name: "Terra Classic",
-    description:
-      "The original Terra blockchain continuing as Terra Classic with community governance and development",
-    binary: {
-      name: "terrad",
-      version: "v2.4.0",
-      repository: "https://github.com/classic-terra/core",
-    },
-    logo: "https://terraclassic.community/img/logo.png",
-    website: "https://terraclassic.community",
-    github: "https://github.com/classic-terra/core",
-    docs: "https://docs.terraclassic.community",
-    hardware: {
-      minRam: "32 GB",
-      recommendedRam: "64 GB",
-      storagePruned: "1 TB SSD",
-      storageArchive: "3 TB SSD",
-      cpu: "8+ cores",
-      network: "500 Mbps+",
-    },
-    features: ["LUNC", "USTC", "Community Governance", "Classic DeFi"],
-    networks: {
-      mainnet: {
-        chainId: "columbus-5",
-        latestBlock: 15678901,
-        sizes: {
-          full: "423 GB",
-          pruned: "67 GB",
-          archive: "1.2 TB",
-          stateSync: "4.1 GB",
-        },
-        lastUpdated: "6 hours ago",
-        rpcEndpoints: {
-          primary: "https://rpc-terra-classic.bryanlabs.net",
-          secondary: "https://rpc2-terra-classic.bryanlabs.net",
-        },
-        status: "active",
-      },
-      testnet: {
-        chainId: "bombay-12",
-        latestBlock: 8901234,
-        sizes: {
-          full: "234 GB",
-          pruned: "38 GB",
-          archive: "567 GB",
-          stateSync: "2.1 GB",
-        },
-        lastUpdated: "4 hours ago",
-        rpcEndpoints: {
-          primary: "https://rpc-testnet-terra-classic.bryanlabs.net",
-          secondary: "https://rpc2-testnet-terra-classic.bryanlabs.net",
-        },
-        status: "active",
-      },
-    },
-  },
-
   terra: {
     id: "terra",
     name: "Terra 2.0",
@@ -397,6 +348,10 @@ export const CHAINS_CONFIG: Record<string, ChainConfig> = {
     website: "https://terra.money",
     github: "https://github.com/terra-money/core",
     docs: "https://docs.terra.money",
+    token: {
+      symbol: "LUNA",
+      denom: "uluna",
+    },
     hardware: {
       minRam: "16 GB",
       recommendedRam: "32 GB",
@@ -409,29 +364,30 @@ export const CHAINS_CONFIG: Record<string, ChainConfig> = {
     networks: {
       mainnet: {
         chainId: "phoenix-1",
-        latestBlock: 7856432,
-        sizes: {
-          full: "45 GB",
-          pruned: "8.3 GB",
-          archive: "98 GB",
-          stateSync: "1.4 GB",
-        },
+        latestBlock: 16333882,
+        snapshots: [
+          {
+            url: "https://snapshots.polkachu.com/snapshots/terra/terra_16333882.tar.lz4",
+            size: "9 GB",
+            type: "pruned",
+          },
+        ],
         lastUpdated: "2 hours ago",
         rpcEndpoints: {
-          primary: "https://rpc-terra.bryanlabs.net",
-          secondary: "https://rpc2-terra.bryanlabs.net",
+          primary: "https://terra-rpc.polkachu.com/",
         },
         status: "active",
       },
       testnet: {
         chainId: "pisco-1",
-        latestBlock: 4567890,
-        sizes: {
-          full: "28 GB",
-          pruned: "5.1 GB",
-          archive: "62 GB",
-          stateSync: "0.9 GB",
-        },
+        latestBlock: 17443600,
+        snapshots: [
+          {
+            url: "https://snapshots.polkachu.com/testnet-snapshots/terra/terra_17443600.tar.lz4",
+            size: "3 GB",
+            type: "pruned",
+          },
+        ],
         lastUpdated: "1 hour ago",
         rpcEndpoints: {
           primary: "https://rpc-testnet-terra.bryanlabs.net",
@@ -441,7 +397,6 @@ export const CHAINS_CONFIG: Record<string, ChainConfig> = {
       },
     },
   },
-
   thorchain: {
     id: "thorchain",
     name: "THORChain",
@@ -456,6 +411,10 @@ export const CHAINS_CONFIG: Record<string, ChainConfig> = {
     website: "https://thorchain.org",
     github: "https://github.com/thorchain/thornode",
     docs: "https://docs.thorchain.org",
+    token: {
+      symbol: "RUNE",
+      denom: "rune",
+    },
     hardware: {
       minRam: "32 GB",
       recommendedRam: "64 GB",
@@ -474,12 +433,6 @@ export const CHAINS_CONFIG: Record<string, ChainConfig> = {
       mainnet: {
         chainId: "thorchain-1",
         latestBlock: 14567890,
-        sizes: {
-          full: "234 GB",
-          pruned: "42 GB",
-          archive: "678 GB",
-          stateSync: "3.2 GB",
-        },
         lastUpdated: "5 hours ago",
         rpcEndpoints: {
           primary: "https://rpc-thorchain.bryanlabs.net",
@@ -490,12 +443,6 @@ export const CHAINS_CONFIG: Record<string, ChainConfig> = {
       testnet: {
         chainId: "thorchain-testnet-v2",
         latestBlock: 9876543,
-        sizes: {
-          full: "145 GB",
-          pruned: "26 GB",
-          archive: "398 GB",
-          stateSync: "2.1 GB",
-        },
         lastUpdated: "4 hours ago",
         rpcEndpoints: {
           primary: "https://rpc-testnet-thorchain.bryanlabs.net",
@@ -550,56 +497,32 @@ export function toChainSnapshot(config: ChainConfig): ChainSnapshot {
     name: config.name,
     network: mainnetData.chainId,
     latestBlock: mainnetData.latestBlock,
-    size: mainnetData.sizes.full,
-    prunedSize: mainnetData.sizes.pruned,
+    size: mainnetData.snapshots?.[0]?.size ?? "N/A",
+    prunedSize: mainnetData.snapshots?.[0]?.size ?? "N/A",
     updated: mainnetData.lastUpdated,
+    nodeVersion: config.binary.version,
+    minimumGasPrice: `0.001${config.token.denom}`,
+    symbol: config.token.symbol,
+    denom: config.token.denom,
+    description: config.description,
+    logo: config.logo,
+    blockExplorerUrl: undefined,
+    github: config.github,
+    services: {
+      rpc: true,
+      api: true,
+      grpc: false,
+      stateSync: true,
+      snapshot: true,
+    },
+    endpoints: {
+      rpc: mainnetData.rpcEndpoints.primary,
+      api: mainnetData.restEndpoints?.primary,
+      grpc: undefined,
+      stateSync: undefined,
+      snapshot: mainnetData.snapshots?.[0]?.url,
+    },
   };
-}
-
-// Transform network data to snapshot options for detail page table
-export function toSnapshotOptions(
-  config: ChainConfig,
-  networkType: string = "mainnet"
-): SnapshotOption[] {
-  const networkKey = networkType.toLowerCase() as keyof typeof config.networks;
-  const networkData = config.networks[networkKey];
-
-  if (!networkData) {
-    return [];
-  }
-
-  const baseBlock = networkData.latestBlock;
-
-  return [
-    {
-      type: "Latest",
-      blockHeight: baseBlock,
-      size: networkData.sizes.full,
-      lastUpdated: networkData.lastUpdated,
-      description: "Full node with complete transaction history",
-    },
-    {
-      type: "Pruned",
-      blockHeight: baseBlock,
-      size: networkData.sizes.pruned,
-      lastUpdated: networkData.lastUpdated,
-      description: "Pruned node with recent blocks only",
-    },
-    {
-      type: "Archive",
-      blockHeight: baseBlock - 50000, // Archive is slightly behind
-      size: networkData.sizes.archive,
-      lastUpdated: "2 days ago",
-      description: "Complete historical data archive",
-    },
-    {
-      type: "State Sync",
-      blockHeight: baseBlock - 1000, // State sync is recent but not latest
-      size: networkData.sizes.stateSync,
-      lastUpdated: "3 hours ago",
-      description: "Minimal snapshot for state sync",
-    },
-  ];
 }
 
 // Get all chain snapshots for home page (uses mainnet data)
@@ -616,10 +539,12 @@ export function generateQuickStartCommands(
   networkType: string = "mainnet"
 ) {
   const networkData = getNetworkData(chainId, networkType);
-  const networkSuffix = networkType === "mainnet" ? "" : `-${networkType}`;
+  const snapshotUrl = networkData?.snapshots?.[0]?.url;
 
   return {
-    download: `wget https://snapshots.bryanlabs.net/${chainId}${networkSuffix}/latest.tar.gz`,
+    download: snapshotUrl
+      ? `wget ${snapshotUrl}`
+      : `# Download snapshot from your preferred provider`,
     extract: `tar -xzf latest.tar.gz`,
     stop: `sudo systemctl stop ${binaryName}`,
     backup: `cp -r ~/.${binaryName}/data ~/.${binaryName}/data_backup`,
@@ -637,5 +562,4 @@ export const NETWORK_OPTIONS = ["Mainnet", "Testnet", "Archive"] as const;
 export const GLOBAL_STATS = {
   totalChains: getAllChains().length,
   updateFrequency: "Daily",
-  uptime: "99.9%",
 } as const;
