@@ -1,0 +1,24 @@
+export const config = {
+  minio: {
+    endPoint: process.env.MINIO_ENDPOINT || 'localhost',
+    port: parseInt(process.env.MINIO_PORT || '9000'),
+    useSSL: process.env.MINIO_USE_SSL === 'true',
+    accessKey: process.env.MINIO_ACCESS_KEY || 'minioadmin',
+    secretKey: process.env.MINIO_SECRET_KEY || 'minioadmin',
+    bucketName: process.env.MINIO_BUCKET_NAME || 'snapshots',
+  },
+  auth: {
+    cookieName: 'snapshot-session',
+    password: process.env.SESSION_PASSWORD || 'complex_password_at_least_32_characters_long',
+    cookieOptions: {
+      maxAge: 60 * 60 * 24 * 7, // 1 week
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax' as const,
+      path: '/',
+    },
+  },
+  api: {
+    baseUrl: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000',
+  },
+};

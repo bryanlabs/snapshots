@@ -1,0 +1,87 @@
+export const mockChains = {
+  'cosmos-hub': {
+    id: 'cosmos-hub',
+    name: 'Cosmos Hub',
+    network: 'cosmoshub-4',
+    description: 'The Cosmos Hub is the first of thousands of interconnected blockchains.',
+    logoUrl: '/chains/cosmos.png',
+  },
+  'osmosis': {
+    id: 'osmosis',
+    name: 'Osmosis',
+    network: 'osmosis-1',
+    description: 'Osmosis is an advanced AMM protocol for interchain assets.',
+    logoUrl: '/chains/osmosis.png',
+  },
+  'juno': {
+    id: 'juno',
+    name: 'Juno',
+    network: 'juno-1',
+    description: 'Juno is a sovereign public blockchain in the Cosmos ecosystem.',
+    logoUrl: '/chains/juno.png',
+  },
+};
+
+export const mockSnapshots = {
+  'cosmos-hub': [
+    {
+      id: 'cosmos-snapshot-1',
+      chainId: 'cosmos-hub',
+      height: 19234567,
+      size: 450 * 1024 * 1024 * 1024,
+      fileName: 'cosmoshub-4-15234567.tar.lz4',
+      createdAt: new Date('2024-01-15'),
+      updatedAt: new Date('2024-01-15'),
+      type: 'pruned' as const,
+      compressionType: 'lz4' as const,
+    },
+    {
+      id: 'cosmos-snapshot-2',
+      chainId: 'cosmos-hub',
+      height: 19200000,
+      size: 850 * 1024 * 1024 * 1024,
+      fileName: 'cosmoshub-4-15200000.tar.lz4',
+      createdAt: new Date('2024-01-10'),
+      updatedAt: new Date('2024-01-10'),
+      type: 'archive' as const,
+      compressionType: 'lz4' as const,
+    },
+  ],
+  'osmosis': [
+    {
+      id: 'osmosis-snapshot-1',
+      chainId: 'osmosis',
+      height: 12345678,
+      size: 128849018880,
+      fileName: 'osmosis-1-12345678.tar.lz4',
+      createdAt: new Date('2024-01-10'),
+      updatedAt: new Date('2024-01-10'),
+      type: 'pruned' as const,
+      compressionType: 'lz4' as const,
+    },
+    {
+      id: 'osmosis-snapshot-2',
+      chainId: 'osmosis',
+      height: 12300000,
+      size: 127312345600,
+      fileName: 'osmosis-1-12300000.tar.lz4',
+      createdAt: new Date('2024-01-09'),
+      updatedAt: new Date('2024-01-09'),
+      type: 'pruned' as const,
+      compressionType: 'lz4' as const,
+    },
+  ],
+  'juno': [
+    {
+      id: 'juno-snapshot-1',
+      chainId: 'juno',
+      height: 12345678,
+      size: 250 * 1024 * 1024 * 1024,
+      fileName: 'juno-1-9876543.tar.lz4',
+      createdAt: new Date('2024-01-13'),
+      updatedAt: new Date('2024-01-13'),
+      type: 'pruned' as const,
+      compressionType: 'lz4' as const,
+    },
+  ],
+};

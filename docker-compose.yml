@@ -1,0 +1,100 @@
+services:
+  # MinIO Object Storage
+  minio:
+    image: minio/minio:latest
+    container_name: snapshots-minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+      MINIO_PROMETHEUS_AUTH_TYPE: public
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    networks:
+      - snapshots-network
+
+  # Create MinIO buckets and setup
+  minio-setup:
+    image: minio/mc:latest
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      /usr/bin/mc alias set myminio http://minio:9000 minioadmin minioadmin;
+      /usr/bin/mc mb myminio/snapshots --ignore-existing;
+      /usr/bin/mc anonymous set download myminio/snapshots;
+      /usr/bin/mc cp /mock-data/* myminio/snapshots/ --recursive || true;
+      echo 'MinIO setup complete';
+      "
+    volumes:
+      - ./mock-data:/mock-data:ro
+    networks:
+      - snapshots-network
+
+  # Next.js Application
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: snapshots-app
+    ports:
+      - "3000:3000"
+    environment:
+      # MinIO Configuration
+      MINIO_ENDPOINT: minio
+      MINIO_PORT: "9000"
+      MINIO_USE_SSL: "false"
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: minioadmin
+      MINIO_BUCKET_NAME: snapshots
+      
+      # Auth Configuration
+      JWT_SECRET: your-development-jwt-secret-change-in-production
+      PREMIUM_USERNAME: premium@example.com
+      PREMIUM_PASSWORD_HASH: $2a$10$8.YmV7qCOReC1U6hLLeXLO8lwQUmwQvTYqjzaWV3noKXSALGGAFGi # password: premium123
+      
+      # Bandwidth Configuration
+      BANDWIDTH_FREE_TOTAL: "50"
+      BANDWIDTH_PREMIUM_TOTAL: "250"
+      
+      # API Configuration
+      INTERNAL_API_URL: http://localhost:3000
+      
+      # Session Configuration
+      SESSION_PASSWORD: your-32-character-session-password-change
+      
+      # App Configuration
+      NEXT_PUBLIC_API_URL: http://localhost:3000
+      NODE_ENV: development
+      
+      # Real Snapshots Configuration (uncomment to use real snapshots from K8s)
+      # USE_REAL_SNAPSHOTS: "true"
+      # SNAPSHOT_SERVER_URL: http://snapshot-server.snapshots.svc.cluster.local
+    depends_on:
+      minio:
+        condition: service_healthy
+      minio-setup:
+        condition: service_completed_successfully
+    networks:
+      - snapshots-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  snapshots-network:
+    driver: bridge
+
+volumes:
+  minio_data:
