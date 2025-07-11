@@ -3,7 +3,6 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/components/providers/AuthProvider";
 import { Header } from "@/components/common/Header";
-import { BandwidthIndicator } from "@/components/common/BandwidthIndicator";
 import { LayoutProvider } from "@/components/providers/LayoutProvider";
 
 const inter = Inter({
@@ -81,7 +80,6 @@ export default function RootLayout({
           <LayoutProvider>
             {children}
           </LayoutProvider>
-          <BandwidthIndicator />
         </AuthProvider>
       </body>
     </html>
