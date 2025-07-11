@@ -1,1 +1,0 @@
-export { SnapshotsGrid } from "./SnapshotsGrid";

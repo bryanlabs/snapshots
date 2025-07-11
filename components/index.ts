@@ -4,5 +4,17 @@ export * from "./icons";
 // UI Components
 export * from "./ui";
 
-// Sections
-export * from "./sections";
+// Providers
+export * from "./providers";
+
+// Common Components
+export * from "./common";
+
+// Auth Components
+export * from "./auth";
+
+// Chain Components
+export * from "./chains";
+
+// Snapshot Components
+export * from "./snapshots";

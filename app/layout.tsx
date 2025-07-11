@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import { AuthProvider } from "@/components/providers/AuthProvider";
+import { Header } from "@/components/common/Header";
+import { BandwidthIndicator } from "@/components/common/BandwidthIndicator";
+import { LayoutProvider } from "@/components/providers/LayoutProvider";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -70,10 +74,15 @@ export default function RootLayout({
   return (
     <html lang="en" className="scroll-smooth">
       <head>
-        <link rel="preconnect" href="https://polkachu.com" />
       </head>
-      <body className={`${inter.variable} font-sans antialiased`}>
-        {children}
+      <body className={`${inter.variable} font-sans antialiased bg-gray-50 dark:bg-gray-900`}>
+        <AuthProvider>
+          <Header />
+          <LayoutProvider>
+            {children}
+          </LayoutProvider>
+          <BandwidthIndicator />
+        </AuthProvider>
       </body>
     </html>
   );

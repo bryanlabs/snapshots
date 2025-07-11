@@ -1,218 +1,103 @@
-"use client";
+import { ChainListServer } from '@/components/chains/ChainListServer';
+import Image from 'next/image';
+import { Suspense } from 'react';
+import { UpgradePrompt } from '@/components/common/UpgradePrompt';
+import { getUser } from '@/lib/auth/session';
 
-import Image from "next/image";
-import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import {
-  SearchIcon,
-  HeroStats,
-  SnapshotsGrid,
-  StatusIndicator,
-} from "@/components";
-import {
-  getMigrationStatus,
-  MigrationStatus,
-} from "@/lib/utils/data-migration";
-
-// Animation variants
-const heroVariants = {
-  hidden: { opacity: 0, y: 30 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      duration: 0.8,
-    },
-  },
-};
-
-const searchVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      duration: 0.6,
-      delay: 0.3,
-    },
-  },
-};
-
-const statsVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      duration: 0.6,
-      delay: 0.5,
-      staggerChildren: 0.1,
-    },
-  },
-};
-
-const gridVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      duration: 0.6,
-      delay: 0.7,
-    },
-  },
-};
-
-export default function Home() {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [migrationStatus, setMigrationStatus] =
-    useState<MigrationStatus | null>(null);
-  const [isInitialLoading, setIsInitialLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchStatus = async () => {
-      try {
-        // Minimum loading time to show the orange indicator
-        const [status] = await Promise.all([
-          getMigrationStatus(),
-          new Promise((resolve) => setTimeout(resolve, 800)), // Minimum 800ms loading
-        ]);
-        setMigrationStatus(status);
-      } catch (error) {
-        console.error("Error fetching migration status:", error);
-      } finally {
-        setIsInitialLoading(false);
-      }
-    };
-
-    fetchStatus();
-  }, []);
-
+export default async function Home() {
+  const user = await getUser();
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
-      <motion.main
-        initial="hidden"
-        animate="visible"
-        variants={heroVariants}
-        className="flex-1 flex items-center justify-center px-6 py-16 md:py-24"
-      >
-        <div className="max-w-4xl mx-auto text-center">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.6 }}
-          >
-            <Image
-              src="/bryanlabs_banner.png"
-              alt="BryanLabs Logo"
-              width={200}
-              height={200}
-              className="mx-auto mb-4"
-            />
-          </motion.div>
-
-          {/* Hero Title */}
-          <motion.h1
-            variants={heroVariants}
-            className="text-4xl md:text-6xl lg:text-7xl font-extrabold text-foreground mb-6 leading-tight tracking-tight"
-          >
-            Blockchain Snapshots
-          </motion.h1>
-
-          {/* Hero Subtitle */}
-          <motion.p
-            variants={heroVariants}
-            className="text-xl md:text-2xl text-muted-foreground mb-8 leading-relaxed max-w-3xl mx-auto"
-          >
-            Fast, reliable blockchain snapshots for Cosmos ecosystem chains
-          </motion.p>
-
-          {/* Feature Highlights */}
-          <motion.div
-            variants={searchVariants}
-            className="flex flex-wrap justify-center items-center gap-3 md:gap-4 mb-12 text-muted-foreground"
-          >
-            <motion.span whileHover={{ scale: 1.05 }} className="font-medium">
-              Updated daily
-            </motion.span>
-            <span className="text-muted font-semibold hidden sm:inline">•</span>
-            <motion.span whileHover={{ scale: 1.05 }} className="font-medium">
-              Pruned options available
-            </motion.span>
-            <span className="text-muted font-semibold hidden sm:inline">•</span>
-            <motion.span whileHover={{ scale: 1.05 }} className="font-medium">
-              Global CDN delivery
-            </motion.span>
-          </motion.div>
-
-          {/* Hero Statistics */}
-          <motion.div variants={statsVariants}>
-            <HeroStats />
-          </motion.div>
-
-          {/* Data Source Status */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.8 }}
-            className="flex justify-center mt-6"
-          >
-            <StatusIndicator
-              isLive={migrationStatus?.isUsingLiveData || false}
-              isLoading={isInitialLoading || !migrationStatus}
-            />
-          </motion.div>
+    <div className="min-h-screen">
+      {/* Hero Section */}
+      <section className="bg-gradient-to-br from-gray-900 to-gray-800 text-white py-20">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto text-center">
+            <div className="mb-8">
+              <Image
+                src="/bryanlabs_banner.png"
+                alt="BryanLabs Logo"
+                width={200}
+                height={80}
+                className="mx-auto"
+              />
+            </div>
+            
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
+              Blockchain Snapshots
+            </h1>
+            
+            <p className="text-xl md:text-2xl text-gray-300 mb-8">
+              Fast, reliable blockchain snapshots for Cosmos ecosystem chains
+            </p>
+            
+            <div className="flex flex-wrap justify-center items-center gap-4 text-gray-400">
+              <span className="flex items-center gap-2">
+                <svg className="w-5 h-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+                Updated daily
+              </span>
+              <span className="hidden sm:inline">•</span>
+              <span className="flex items-center gap-2">
+                <svg className="w-5 h-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+                Pruned options available
+              </span>
+              <span className="hidden sm:inline">•</span>
+              <span className="flex items-center gap-2">
+                <svg className="w-5 h-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+                Global CDN delivery
+              </span>
+            </div>
+          </div>
         </div>
-      </motion.main>
+      </section>
 
-      {/* Snapshots Section */}
-      <motion.section
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, margin: "-100px" }}
-        variants={gridVariants}
-        className="py-16 px-6 bg-white"
-      >
-        <div className="max-w-7xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="text-center mb-12"
-          >
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Available Snapshots
+      {/* Chains Section */}
+      <section className="py-16 px-4">
+        <div className="container mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
+              Available Chains
             </h2>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-8">
+            <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
               Choose from our collection of daily-updated blockchain snapshots,
               available in both full and pruned versions
             </p>
+          </div>
 
-            {/* Search Bar */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="mb-8"
-            >
-              <div className="relative max-w-md mx-auto">
-                <SearchIcon />
-                <motion.input
-                  whileFocus={{ scale: 1.02 }}
-                  type="text"
-                  placeholder="Search chains..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-12 pr-6 py-4 text-lg border-2 border-border rounded-xl bg-white transition-all duration-200 focus:outline-none focus:border-accent focus:ring-4 focus:ring-accent/10 placeholder:text-muted font-medium"
-                  aria-label="Search blockchain chains"
-                />
+          {/* Upgrade prompt for non-premium users */}
+          {!user && (
+            <div className="mb-12">
+              <UpgradePrompt />
+            </div>
+          )}
+
+          <Suspense
+            fallback={
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {[1, 2, 3, 4, 5, 6].map((i) => (
+                  <div key={i} className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow">
+                    <div className="space-y-3">
+                      <div className="h-6 w-32 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+                      <div className="h-4 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+                      <div className="space-y-2">
+                        <div className="h-3 w-full bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+                        <div className="h-3 w-3/4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
-            </motion.div>
-          </motion.div>
-
-          <SnapshotsGrid searchQuery={searchQuery} />
+            }
+          >
+            <ChainListServer />
+          </Suspense>
         </div>
-      </motion.section>
+      </section>
     </div>
   );
 }
