@@ -13,8 +13,8 @@ class BandwidthManager {
   
   // Bandwidth limits in bytes per second (shared among all users of the same tier)
   private readonly BANDWIDTH_LIMITS = {
-    free: 50 * 1024 * 1024, // 50 MB/s for free tier (shared)
-    premium: 250 * 1024 * 1024, // 250 MB/s for premium tier (shared)
+    free: (parseInt(process.env.BANDWIDTH_FREE_TOTAL || '1')) * 1024 * 1024, // MB/s for free tier (shared)
+    premium: (parseInt(process.env.BANDWIDTH_PREMIUM_TOTAL || '250')) * 1024 * 1024, // MB/s for premium tier (shared)
   };
   
   // Monthly bandwidth limits in bytes

@@ -2,31 +2,45 @@ import { NextRequest, NextResponse } from 'next/server';
 import { ApiResponse, Chain } from '@/lib/types';
 import { collectResponseTime, trackRequest } from '@/lib/monitoring/metrics';
 import { extractRequestMetadata, logRequest } from '@/lib/middleware/logger';
+import { listChains, listSnapshots } from '@/lib/minio/operations';
+import { config } from '@/lib/config';
 
-// Mock data - replace with actual database queries
-const mockChains: Chain[] = [
-  {
-    id: 'cosmos-hub',
+
+// Chain metadata mapping - enhance MinIO data with names and logos
+const chainMetadata: Record<string, { name: string; logoUrl: string }> = {
+  'noble-1': {
+    name: 'Noble',
+    logoUrl: '/chains/noble.png',
+  },
+  'cosmoshub-4': {
     name: 'Cosmos Hub',
-    network: 'cosmoshub-4',
-    description: 'The Cosmos Hub is the first of thousands of interconnected blockchains.',
     logoUrl: '/chains/cosmos.png',
   },
-  {
-    id: 'osmosis',
+  'osmosis-1': {
     name: 'Osmosis',
-    network: 'osmosis-1',
-    description: 'Osmosis is an advanced AMM protocol for interchain assets.',
     logoUrl: '/chains/osmosis.png',
   },
-  {
-    id: 'juno',
+  'juno-1': {
     name: 'Juno',
-    network: 'juno-1',
-    description: 'Juno is a sovereign public blockchain in the Cosmos ecosystem.',
     logoUrl: '/chains/juno.png',
   },
-];
+  'kaiyo-1': {
+    name: 'Kujira',
+    logoUrl: '/chains/kujira.png',
+  },
+  'columbus-5': {
+    name: 'Terra Classic',
+    logoUrl: '/chains/terra.png',
+  },
+  'phoenix-1': {
+    name: 'Terra',
+    logoUrl: '/chains/terra2.png',
+  },
+  'thorchain-1': {
+    name: 'THORChain',
+    logoUrl: '/chains/thorchain.png',
+  },
+};
 
 export async function GET(request: NextRequest) {
   const endTimer = collectResponseTime('GET', '/api/v1/chains');
@@ -34,12 +48,78 @@ export async function GET(request: NextRequest) {
   const requestLog = extractRequestMetadata(request);
   
   try {
-    // TODO: Implement actual database query
-    // const chains = await db.chain.findMany();
+    let chains: Chain[];
+    
+    // Always try to fetch from MinIO first
+    try {
+      console.log('Attempting to fetch chains from MinIO...');
+      console.log('MinIO config:', {
+        endpoint: config.minio.endPoint,
+        port: config.minio.port,
+        bucket: config.minio.bucketName,
+      });
+      const chainIds = await listChains(config.minio.bucketName);
+      console.log('Chain IDs from MinIO:', chainIds);
+      
+      // Map chain IDs to Chain objects with metadata and snapshot counts
+      chains = await Promise.all(chainIds.map(async (chainId) => {
+        const metadata = chainMetadata[chainId] || {
+          name: chainId,
+          logoUrl: '/chains/placeholder.svg',
+        };
+        
+        // Fetch snapshots for this chain to get count and latest info
+        let snapshotCount = 0;
+        let latestSnapshot = undefined;
+        try {
+          const snapshots = await listSnapshots(config.minio.bucketName, chainId);
+          // Only count actual snapshot files (.tar.zst or .tar.lz4)
+          const validSnapshots = snapshots.filter(s => 
+            s.fileName.endsWith('.tar.zst') || s.fileName.endsWith('.tar.lz4')
+          );
+          snapshotCount = validSnapshots.length;
+          
+          // Get latest snapshot info
+          if (validSnapshots.length > 0) {
+            // Sort by last modified date to find the most recent
+            const sortedSnapshots = validSnapshots.sort((a, b) => 
+              new Date(b.lastModified).getTime() - new Date(a.lastModified).getTime()
+            );
+            
+            const latest = sortedSnapshots[0];
+            const compressionMatch = latest.fileName.match(/\.tar\.(zst|lz4)$/);
+            const compressionType = compressionMatch ? compressionMatch[1] : 'none';
+            
+            latestSnapshot = {
+              size: latest.size,
+              lastModified: latest.lastModified,
+              compressionType: compressionType as 'lz4' | 'zst' | 'none',
+            };
+          }
+        } catch (error) {
+          console.error(`Error fetching snapshots for ${chainId}:`, error);
+        }
+        
+        return {
+          id: chainId,
+          name: metadata.name,
+          network: chainId,
+          logoUrl: metadata.logoUrl,
+          // Include basic snapshot info for the chain card
+          snapshotCount: snapshotCount,
+          latestSnapshot: latestSnapshot,
+        };
+      }));
+    } catch (minioError) {
+      console.error('Error fetching from MinIO:', minioError);
+      console.error('Stack:', minioError instanceof Error ? minioError.stack : 'No stack');
+      // Return empty array on error
+      chains = [];
+    }
     
     const response = NextResponse.json<ApiResponse<Chain[]>>({
       success: true,
-      data: mockChains,
+      data: chains,
     });
     
     endTimer();

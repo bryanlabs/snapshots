@@ -138,6 +138,36 @@ Get available snapshots for a specific chain.
 }
 ```
 
+### GET /v1/chains/[chainId]/info
+Get metadata and statistics for a specific chain.
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "chain_id": "cosmoshub-4",
+    "latest_snapshot": {
+      "height": 19234567,
+      "size": 483183820800,
+      "age_hours": 6
+    },
+    "snapshot_schedule": "every 6 hours",
+    "average_size": 450000000000,
+    "compression_ratio": 0.35
+  }
+}
+```
+
+**Error Response (404):**
+```json
+{
+  "success": false,
+  "error": "Chain not found",
+  "message": "No snapshots found for chain ID invalid-chain"
+}
+```
+
 ### POST /v1/chains/[chainId]/download
 Generate a presigned download URL for a snapshot.
 

@@ -264,6 +264,43 @@ GET /api/v1/chains/cosmos-hub/snapshots
 }
 ```
 
+### GET /v1/chains/[chainId]/snapshots/latest
+
+Get the latest snapshot for a chain with a pre-signed download URL.
+
+#### Request
+```http
+GET /api/v1/chains/cosmos-hub/snapshots/latest
+Authorization: Bearer <token>  // Optional, for premium tier
+```
+
+#### Response
+```json
+{
+  "success": true,
+  "data": {
+    "chain_id": "cosmos-hub",
+    "height": 19234567,
+    "size": 483183820800,
+    "compression": "lz4",
+    "url": "https://minio.bryanlabs.net/snapshots/cosmoshub-4-19234567.tar.lz4?X-Amz-Algorithm=...",
+    "expires_at": "2024-01-15T11:00:00.000Z",
+    "tier": "free",
+    "checksum": "d2d2a8c2e45f1d9c3a4e5b6f7e8d9e0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7"
+  },
+  "message": "Latest snapshot URL generated successfully"
+}
+```
+
+#### Authentication
+- **No Authorization header**: Free tier (URL expires in 1 hour)
+- **Bearer token**: Premium tier (URL expires in 24 hours)
+
+#### Status Codes
+- `200 OK` - URL generated successfully
+- `404 Not Found` - No snapshots available for chain
+- `500 Internal Server Error` - Failed to generate URL
+
 ### POST /v1/chains/[chainId]/download
 
 Generate a pre-signed download URL for a snapshot.

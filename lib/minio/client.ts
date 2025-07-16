@@ -2,6 +2,7 @@ import * as Minio from 'minio';
 import { config } from '../config';
 
 let minioClient: Minio.Client | null = null;
+let minioClientExternal: Minio.Client | null = null;
 
 export function getMinioClient(): Minio.Client {
   if (!minioClient) {
@@ -14,6 +15,20 @@ export function getMinioClient(): Minio.Client {
     });
   }
   return minioClient;
+}
+
+// Separate client for generating presigned URLs with external endpoint
+export function getMinioClientExternal(): Minio.Client {
+  if (!minioClientExternal) {
+    minioClientExternal = new Minio.Client({
+      endPoint: config.minio.externalEndPoint,
+      port: config.minio.externalPort,
+      useSSL: config.minio.externalUseSSL,
+      accessKey: config.minio.accessKey,
+      secretKey: config.minio.secretKey,
+    });
+  }
+  return minioClientExternal;
 }
 
 export async function ensureBucketExists(bucketName: string): Promise<void> {
@@ -35,18 +50,29 @@ export async function getPresignedUrl(
     userId?: string;
   }
 ): Promise<string> {
-  const client = getMinioClient();
+  // Use external client to generate presigned URLs with proxy endpoint
+  const client = getMinioClientExternal();
   
   // Create request parameters with metadata
   const reqParams: Record<string, string> = {};
   
   if (metadata) {
     if (metadata.tier) reqParams['response-cache-control'] = `max-age=0, tier=${metadata.tier}`;
-    if (metadata.ip) reqParams['X-Amz-Meta-Allowed-IP'] = metadata.ip;
+    // IP restriction removed to allow cross-IP usage
     if (metadata.userId) reqParams['X-Amz-Meta-User-Id'] = metadata.userId;
   }
   
-  return await client.presignedGetObject(bucketName, objectName, expiry, reqParams);
+  try {
+    // Generate URL with external client pointing to nginx proxy
+    const presignedUrl = await client.presignedGetObject(bucketName, objectName, expiry, reqParams);
+    
+    console.log('Generated presigned URL:', presignedUrl);
+    
+    return presignedUrl;
+  } catch (error) {
+    console.error('Error generating presigned URL:', error);
+    throw error;
+  }
 }
 
 export async function listObjects(

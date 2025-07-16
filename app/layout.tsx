@@ -73,6 +73,22 @@ export default function RootLayout({
   return (
     <html lang="en" className="scroll-smooth">
       <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              // Prevent FOUC (Flash of Unstyled Content) for theme
+              (function() {
+                const savedTheme = localStorage.getItem('theme');
+                const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+                const theme = savedTheme || systemTheme;
+                
+                if (theme === 'dark') {
+                  document.documentElement.classList.add('dark');
+                }
+              })();
+            `,
+          }}
+        />
       </head>
       <body className={`${inter.variable} font-sans antialiased bg-gray-50 dark:bg-gray-900`}>
         <AuthProvider>

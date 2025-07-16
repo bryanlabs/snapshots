@@ -5,6 +5,12 @@ export interface Chain {
   description?: string;
   logoUrl?: string;
   snapshots?: Snapshot[];
+  snapshotCount?: number;
+  latestSnapshot?: {
+    size: number;
+    lastModified: Date;
+    compressionType: 'lz4' | 'zst' | 'none';
+  };
 }
 
 export interface Snapshot {
@@ -25,6 +31,7 @@ export interface User {
   email: string;
   name?: string;
   role: 'admin' | 'user';
+  tier?: 'free' | 'premium';
 }
 
 export interface LoginRequest {

@@ -393,7 +393,7 @@ This project is licensed under the MIT License - see the [LICENSE](./LICENSE) fi
 ## 🙏 Acknowledgments
 
 - BryanLabs team for infrastructure support
-- Polkachu for snapshot data integration
+- MinIO for object storage and snapshot hosting
 - Cosmos ecosystem for blockchain technology
 - Open source contributors
 

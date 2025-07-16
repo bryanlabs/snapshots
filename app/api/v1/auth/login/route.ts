@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ApiResponse, LoginRequest, User } from '@/lib/types';
 import { login } from '@/lib/auth/session';
+import { createJWT } from '@/lib/auth/jwt';
 import bcrypt from 'bcryptjs';
 import { z } from 'zod';
 import { withRateLimit } from '@/lib/middleware/rateLimiter';
@@ -8,27 +9,14 @@ import { collectResponseTime, trackRequest, trackAuthAttempt } from '@/lib/monit
 import { logAuth, extractRequestMetadata, logRequest } from '@/lib/middleware/logger';
 
 const loginSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(6),
+  email: z.string(), // Accept any string, not just email format
+  password: z.string().min(1),
+  return_token: z.boolean().optional(), // Optional flag to return JWT token
 });
 
-// Mock user data - replace with actual database queries
-const mockUsers = [
-  {
-    id: '1',
-    email: 'admin@example.com',
-    password: '$2a$10$YourHashedPasswordHere', // Use bcrypt.hash('password', 10) to generate
-    name: 'Admin User',
-    role: 'admin' as const,
-  },
-  {
-    id: '2',
-    email: 'user@example.com',
-    password: '$2a$10$YourHashedPasswordHere',
-    name: 'Regular User',
-    role: 'user' as const,
-  },
-];
+// Get premium user credentials from environment variables
+const PREMIUM_USERNAME = process.env.PREMIUM_USERNAME || 'premium_user';
+const PREMIUM_PASSWORD_HASH = process.env.PREMIUM_PASSWORD_HASH || '';
 
 async function handleLogin(request: NextRequest) {
   const endTimer = collectResponseTime('POST', '/api/v1/auth/login');
@@ -51,20 +39,15 @@ async function handleLogin(request: NextRequest) {
       );
     }
     
-    const { email, password } = validationResult.data;
+    const { email: username, password, return_token } = validationResult.data;
     
-    // TODO: Implement actual database query
-    // const user = await db.user.findUnique({ where: { email } });
-    
-    // Mock authentication
-    const user = mockUsers.find(u => u.email === email);
-    
-    if (!user) {
+    // Check if username matches premium user
+    if (username !== PREMIUM_USERNAME) {
       const response = NextResponse.json<ApiResponse>(
         {
           success: false,
           error: 'Invalid credentials',
-          message: 'Email or password is incorrect',
+          message: 'Username or password is incorrect',
         },
         { status: 401 }
       );
@@ -72,7 +55,7 @@ async function handleLogin(request: NextRequest) {
       endTimer();
       trackRequest('POST', '/api/v1/auth/login', 401);
       trackAuthAttempt('login', false);
-      logAuth('login', email, false, 'Invalid credentials');
+      logAuth('login', username, false, 'Invalid credentials');
       logRequest({
         ...requestLog,
         responseStatus: 401,
@@ -83,44 +66,71 @@ async function handleLogin(request: NextRequest) {
       return response;
     }
     
-    // For demo purposes, accept any password
-    // In production, use: const isValidPassword = await bcrypt.compare(password, user.password);
-    const isValidPassword = true;
+    // Verify password against hash
+    const isValidPassword = await bcrypt.compare(password, PREMIUM_PASSWORD_HASH);
     
     if (!isValidPassword) {
-      return NextResponse.json<ApiResponse>(
+      const response = NextResponse.json<ApiResponse>(
         {
           success: false,
           error: 'Invalid credentials',
-          message: 'Email or password is incorrect',
+          message: 'Username or password is incorrect',
         },
         { status: 401 }
       );
+      
+      endTimer();
+      trackRequest('POST', '/api/v1/auth/login', 401);
+      trackAuthAttempt('login', false);
+      logAuth('login', username, false, 'Invalid password');
+      logRequest({
+        ...requestLog,
+        responseStatus: 401,
+        responseTime: Date.now() - startTime,
+        error: 'Invalid password',
+      });
+      
+      return response;
     }
     
-    // Create session
+    // Create session for premium user
     const sessionUser: User = {
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      role: user.role,
+      id: 'premium-user',
+      email: `${username}@snapshots.bryanlabs.net`, // Create a fake email for compatibility
+      name: 'Premium User',
+      role: 'admin', // Premium users get admin role for full access
+      tier: 'premium', // Set premium tier for bandwidth benefits
     };
     
     await login(sessionUser);
     
-    const response = NextResponse.json<ApiResponse<User>>({
+    // Generate JWT token if requested
+    let responseData: any = sessionUser;
+    if (return_token) {
+      const token = await createJWT(sessionUser);
+      responseData = {
+        user: sessionUser,
+        token: {
+          access_token: token,
+          token_type: 'Bearer',
+          expires_in: 604800, // 7 days in seconds
+        },
+      };
+    }
+    
+    const response = NextResponse.json<ApiResponse<typeof responseData>>({
       success: true,
-      data: sessionUser,
+      data: responseData,
       message: 'Login successful',
     });
     
     endTimer();
     trackRequest('POST', '/api/v1/auth/login', 200);
     trackAuthAttempt('login', true);
-    logAuth('login', email, true);
+    logAuth('login', username, true);
     logRequest({
       ...requestLog,
-      userId: user.id,
+      userId: sessionUser.id,
       responseStatus: 200,
       responseTime: Date.now() - startTime,
     });

@@ -1,6 +1,5 @@
-import { minioClient, getPresignedUrl } from './client';
+import { getMinioClient, getPresignedUrl } from './client';
 import { BucketItem } from 'minio';
-import { fetchChains, fetchSnapshots, formatSnapshotForUI, getSnapshotDownloadUrl } from '@/lib/snapshot-fetcher';
 
 export interface Snapshot {
   fileName: string;
@@ -10,16 +9,9 @@ export interface Snapshot {
   metadata?: Record<string, string>;
 }
 
-// Use real snapshots if configured, otherwise fall back to MinIO
-const USE_REAL_SNAPSHOTS = process.env.USE_REAL_SNAPSHOTS === 'true';
-
 export async function listChains(bucketName: string): Promise<string[]> {
-  if (USE_REAL_SNAPSHOTS) {
-    return fetchChains();
-  }
-  
   const chains = new Set<string>();
-  const stream = minioClient.listObjectsV2(bucketName, '', true);
+  const stream = getMinioClient().listObjectsV2(bucketName, '', true);
   
   return new Promise((resolve, reject) => {
     stream.on('data', (obj) => {
@@ -36,39 +28,47 @@ export async function listChains(bucketName: string): Promise<string[]> {
 }
 
 export async function listSnapshots(bucketName: string, chain: string): Promise<Snapshot[]> {
-  if (USE_REAL_SNAPSHOTS) {
-    const realSnapshots = await fetchSnapshots(chain);
-    return realSnapshots.map(formatSnapshotForUI).map(s => ({
-      fileName: s.fileName,
-      size: s.size,
-      lastModified: s.timestamp,
-      etag: '',
-      metadata: {
-        height: s.height.toString(),
-        compressionRatio: s.compressionRatio.toString()
-      }
-    }));
-  }
-  
+  console.log(`MinIO listSnapshots: bucket=${bucketName}, chain=${chain}, prefix=${chain}/`);
   const snapshots: Snapshot[] = [];
-  const stream = minioClient.listObjectsV2(bucketName, `${chain}/`, true);
+  const stream = getMinioClient().listObjectsV2(bucketName, `${chain}/`, true);
   
   return new Promise((resolve, reject) => {
-    stream.on('data', async (obj) => {
-      // Get object metadata
-      const stat = await minioClient.statObject(bucketName, obj.name);
+    stream.on('data', (obj) => {
+      console.log(`MinIO object found: ${obj.name}, size: ${obj.size}`);
       
-      snapshots.push({
-        fileName: obj.name.split('/').pop() || obj.name,
-        size: obj.size,
-        lastModified: obj.lastModified,
-        etag: obj.etag,
-        metadata: stat.metaData
-      });
+      // Only include actual files, not directories or hidden files
+      if (obj.size > 0 && !obj.name.endsWith('/') && !obj.name.includes('/.')) {
+        const fileName = obj.name.split('/').pop() || obj.name;
+        
+        // Extract metadata from filename if possible
+        const metadata: Record<string, string> = {};
+        
+        // Extract height from filename (e.g., noble-1-0.tar.zst -> height: 0)
+        const heightMatch = fileName.match(/(\d+)\.tar\.(zst|lz4)$/);
+        if (heightMatch) {
+          metadata.height = heightMatch[1];
+          metadata.compressionType = heightMatch[2];
+        }
+        
+        snapshots.push({
+          fileName,
+          size: obj.size,
+          lastModified: obj.lastModified,
+          etag: obj.etag,
+          metadata
+        });
+        console.log(`Added snapshot: ${fileName} with metadata:`, metadata);
+      }
     });
     
-    stream.on('error', reject);
-    stream.on('end', () => resolve(snapshots));
+    stream.on('error', (error) => {
+      console.error('MinIO stream error:', error);
+      reject(error);
+    });
+    stream.on('end', () => {
+      console.log(`MinIO stream ended. Total snapshots found: ${snapshots.length}`);
+      resolve(snapshots);
+    });
   });
 }
 
@@ -78,21 +78,13 @@ export async function generateDownloadUrl(
   tier: 'free' | 'premium',
   userIp?: string
 ): Promise<string> {
-  if (USE_REAL_SNAPSHOTS) {
-    // For real snapshots, return direct nginx URL
-    // The bandwidth limiting would be handled at nginx/ingress level
-    const chainId = objectName.split('/')[0];
-    const fileName = objectName.split('/').pop()!;
-    return getSnapshotDownloadUrl(chainId, fileName.replace('.tar.lz4', ''));
-  }
-  
   const metadata = {
     tier,
     ...(userIp && { ip: userIp })
   };
   
-  // 5 minute expiry for download URLs
-  const expiry = 5 * 60;
+  // 24 hour expiry for download URLs
+  const expiry = 24 * 60 * 60; // 86400 seconds
   
   return getPresignedUrl(bucketName, objectName, expiry, metadata);
 }

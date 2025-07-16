@@ -213,7 +213,7 @@ mc ls myminio/
 
 ## Important Notes
 
-1. **No Polkachu API** - This replaces the prototype. All data comes from MinIO
+1. **MinIO Storage** - All snapshot data comes from MinIO object storage
 2. **BryanLabs Style** - Maintain professional design aesthetic
 3. **Performance First** - Optimize for speed and reliability
 4. **Security Critical** - Properly implement auth and access controls

@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+/* Configure Tailwind v4 dark mode */
+@variant dark (&:where(.dark, .dark *));
+
+/* Light mode colors */
 :root {
   --background: #ffffff;
   --foreground: #1a1a1a;
@@ -7,6 +11,16 @@
   --muted-foreground: #4b5563;
   --border: #e5e7eb;
   --accent: #3b82f6;
+}
+
+/* Dark mode colors */
+.dark {
+  --background: #111827;
+  --foreground: #f9fafb;
+  --muted: #9ca3af;
+  --muted-foreground: #d1d5db;
+  --border: #374151;
+  --accent: #60a5fa;
 }
 
 @theme inline {

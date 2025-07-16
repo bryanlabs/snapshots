@@ -1,8 +1,92 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { mockChains, mockSnapshots } from '@/lib/mock-data';
+import Image from 'next/image';
 import { SnapshotListClient } from '@/components/snapshots/SnapshotListClient';
 import type { Metadata } from 'next';
+import { Chain, Snapshot } from '@/lib/types';
+
+// Chain metadata mapping - same as in the API route
+const chainMetadata: Record<string, { name: string; logoUrl: string }> = {
+  'noble-1': {
+    name: 'Noble',
+    logoUrl: '/chains/noble.png',
+  },
+  'cosmoshub-4': {
+    name: 'Cosmos Hub',
+    logoUrl: '/chains/cosmos.png',
+  },
+  'osmosis-1': {
+    name: 'Osmosis',
+    logoUrl: '/chains/osmosis.png',
+  },
+  'juno-1': {
+    name: 'Juno',
+    logoUrl: '/chains/juno.png',
+  },
+  'kaiyo-1': {
+    name: 'Kujira',
+    logoUrl: '/chains/kujira.png',
+  },
+  'columbus-5': {
+    name: 'Terra Classic',
+    logoUrl: '/chains/terra.png',
+  },
+  'phoenix-1': {
+    name: 'Terra',
+    logoUrl: '/chains/terra2.png',
+  },
+  'thorchain-1': {
+    name: 'THORChain',
+    logoUrl: '/chains/thorchain.png',
+  },
+};
+
+async function getChain(chainId: string): Promise<Chain | null> {
+  try {
+    // For server-side requests, use internal URL
+    const apiUrl = process.env.NODE_ENV === 'production' 
+      ? 'http://webapp:3000'  // Internal Kubernetes service URL
+      : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000');
+      
+    const response = await fetch(`${apiUrl}/api/v1/chains`, {
+      next: { revalidate: 60 }
+    });
+    
+    if (!response.ok) {
+      return null;
+    }
+    
+    const data = await response.json();
+    const chains = data.success ? data.data : [];
+    return chains.find((chain: Chain) => chain.id === chainId) || null;
+  } catch (error) {
+    console.error('Failed to fetch chain:', error);
+    return null;
+  }
+}
+
+async function getSnapshots(chainId: string): Promise<Snapshot[]> {
+  try {
+    // For server-side requests, use internal URL
+    const apiUrl = process.env.NODE_ENV === 'production' 
+      ? 'http://webapp:3000'  // Internal Kubernetes service URL
+      : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000');
+      
+    const response = await fetch(`${apiUrl}/api/v1/chains/${chainId}/snapshots`, {
+      next: { revalidate: 60 }
+    });
+    
+    if (!response.ok) {
+      return [];
+    }
+    
+    const data = await response.json();
+    return data.success ? data.data : [];
+  } catch (error) {
+    console.error('Failed to fetch snapshots:', error);
+    return [];
+  }
+}
 
 export async function generateMetadata({
   params,
@@ -10,7 +94,7 @@ export async function generateMetadata({
   params: Promise<{ chainId: string }>;
 }): Promise<Metadata> {
   const { chainId } = await params;
-  const chain = mockChains[chainId as keyof typeof mockChains];
+  const chain = await getChain(chainId);
 
   if (!chain) {
     return {
@@ -30,8 +114,8 @@ export default async function ChainDetailPage({
   params: Promise<{ chainId: string }>;
 }) {
   const { chainId } = await params;
-  const chain = mockChains[chainId as keyof typeof mockChains];
-  const snapshots = mockSnapshots[chainId as keyof typeof mockSnapshots] || [];
+  const chain = await getChain(chainId);
+  const snapshots = await getSnapshots(chainId);
 
   if (!chain) {
     notFound();
@@ -55,9 +139,33 @@ export default async function ChainDetailPage({
       </div>
 
       {/* Header */}
-      <section className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
-        <div className="container mx-auto px-4 py-8">
+      <section className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 relative overflow-hidden">
+        {/* Background watermark logo */}
+        <div className="absolute inset-0 flex items-center justify-end opacity-5 dark:opacity-10">
+          <Image
+            src={chainMetadata[chain.id]?.logoUrl || '/chains/placeholder.svg'}
+            alt={`${chain.name} logo watermark`}
+            width={400}
+            height={400}
+            className="mr-20"
+          />
+        </div>
+        
+        <div className="container mx-auto px-4 py-8 relative z-10">
           <div className="flex items-start gap-6">
+            {/* Chain logo */}
+            <div className="flex-shrink-0">
+              <div className="w-20 h-20 md:w-24 md:h-24 rounded-lg bg-gray-100 dark:bg-gray-800 p-4 shadow-lg">
+                <Image
+                  src={chainMetadata[chain.id]?.logoUrl || '/chains/placeholder.svg'}
+                  alt={`${chain.name} logo`}
+                  width={96}
+                  height={96}
+                  className="w-full h-full object-contain"
+                />
+              </div>
+            </div>
+            
             <div className="flex-1">
               <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2">
                 {chain.name}
