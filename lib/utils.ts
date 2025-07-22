@@ -49,3 +49,48 @@ export function formatTimeAgo(date: Date | string): string {
   
   return displayParts.length > 0 ? `${displayParts.join(', ')} ago` : 'just now';
 }
+
+export function formatExactDateTime(date: Date | string): string {
+  const d = new Date(date);
+  const options: Intl.DateTimeFormatOptions = {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true
+  };
+  return d.toLocaleString('en-US', options);
+}
+
+export function calculateNextUpdateTime(lastUpdated: Date | string): Date {
+  const last = new Date(lastUpdated);
+  const updateInterval = 6 * 60 * 60 * 1000; // 6 hours in milliseconds
+  return new Date(last.getTime() + updateInterval);
+}
+
+export function copyToClipboard(text: string): Promise<void> {
+  if (navigator.clipboard && window.isSecureContext) {
+    return navigator.clipboard.writeText(text);
+  } else {
+    // Fallback for older browsers
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    textArea.style.position = 'fixed';
+    textArea.style.left = '-999999px';
+    textArea.style.top = '-999999px';
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    return new Promise((resolve, reject) => {
+      try {
+        document.execCommand('copy');
+        textArea.remove();
+        resolve();
+      } catch (error) {
+        textArea.remove();
+        reject(error);
+      }
+    });
+  }
+}

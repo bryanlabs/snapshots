@@ -4,6 +4,7 @@ export interface Chain {
   network: string;
   description?: string;
   logoUrl?: string;
+  accentColor?: string;
   snapshots?: Snapshot[];
   snapshotCount?: number;
   latestSnapshot?: {
