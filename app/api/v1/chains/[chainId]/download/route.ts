@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ApiResponse, DownloadRequest } from '@/lib/types';
-import { getPresignedUrl } from '@/lib/minio/client';
+import { generateDownloadUrl } from '@/lib/nginx/operations';
 import { config } from '@/lib/config';
 import { z } from 'zod';
 import { withRateLimit } from '@/lib/middleware/rateLimiter';
@@ -120,21 +120,15 @@ async function handleDownload(
       );
     }
     
-    // Generate presigned URL from MinIO as per PRD
-    const objectName = `${chainId}/${snapshot.fileName}`;
-    
-    // Generate presigned URL with MinIO (24 hour expiry)
-    const downloadUrl = await getPresignedUrl(
-      config.minio.bucketName,
-      objectName,
-      300, // 5 minutes (300 seconds) - testing if shorter expiry works
-      {
-        tier: tier,
-        userId: userId,
-      }
+    // Generate secure link URL with nginx (12 hour expiry by default)
+    const downloadUrl = await generateDownloadUrl(
+      chainId,
+      snapshot.fileName,
+      tier as 'free' | 'premium',
+      userId
     );
     
-    console.log(`Generated presigned URL for file: ${objectName}`);
+    console.log(`Generated secure link URL for file: ${chainId}/${snapshot.fileName}`);
     
     // Increment download counter for free tier
     if (tier === 'free') {

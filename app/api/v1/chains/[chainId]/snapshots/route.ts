@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ApiResponse, Snapshot } from '@/lib/types';
-import { listSnapshots } from '@/lib/minio/operations';
+import { listSnapshots } from '@/lib/nginx/operations';
 import { config } from '@/lib/config';
 
 export async function GET(
@@ -10,29 +10,28 @@ export async function GET(
   try {
     const { chainId } = await params;
     
-    // Fetch real snapshots from MinIO
-    console.log(`Fetching snapshots for chain: ${chainId} from bucket: ${config.minio.bucketName}`);
-    const minioSnapshots = await listSnapshots(config.minio.bucketName, chainId);
-    console.log(`Found ${minioSnapshots.length} snapshots from MinIO`);
+    // Fetch real snapshots from nginx
+    console.log(`Fetching snapshots for chain: ${chainId}`);
+    const nginxSnapshots = await listSnapshots(chainId);
+    console.log(`Found ${nginxSnapshots.length} snapshots from nginx`);
     
-    // Transform MinIO snapshots to match our Snapshot type
-    const snapshots = minioSnapshots
-      .filter(s => s.fileName.endsWith('.tar.zst') || s.fileName.endsWith('.tar.lz4'))
+    // Transform nginx snapshots to match our Snapshot type
+    const snapshots = nginxSnapshots
       .map((s, index) => {
         // Extract height from filename (e.g., noble-1-0.tar.zst -> 0)
-        const heightMatch = s.fileName.match(/(\d+)\.tar\.(zst|lz4)$/);
-        const height = heightMatch ? parseInt(heightMatch[1]) : 0;
+        const heightMatch = s.filename.match(/(\d+)\.tar\.(zst|lz4)$/);
+        const height = heightMatch ? parseInt(heightMatch[1]) : s.height || 0;
         
         return {
           id: `${chainId}-snapshot-${index}`,
           chainId: chainId,
           height: height,
           size: s.size,
-          fileName: s.fileName,
-          createdAt: s.lastModified,
-          updatedAt: s.lastModified,
+          fileName: s.filename,
+          createdAt: s.lastModified.toISOString(),
+          updatedAt: s.lastModified.toISOString(),
           type: 'pruned' as const, // Default to pruned, could be determined from metadata
-          compressionType: s.fileName.endsWith('.zst') ? 'zst' as const : 'lz4' as const,
+          compressionType: s.compressionType || 'zst' as const,
         };
       })
       .sort((a, b) => b.height - a.height); // Sort by height descending

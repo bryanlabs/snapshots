@@ -1,25 +1,25 @@
 import { NextResponse } from 'next/server';
 import { ApiResponse, HealthCheckResponse } from '@/lib/types';
-import { getMinioClient } from '@/lib/minio/client';
+import { listChains } from '@/lib/nginx/operations';
 
 export async function GET() {
   try {
-    // Check MinIO connection
-    let minioHealthy = false;
+    // Check nginx connection
+    let nginxHealthy = false;
     try {
-      const client = getMinioClient();
-      await client.listBuckets();
-      minioHealthy = true;
+      // Try to list chains as a health check
+      await listChains();
+      nginxHealthy = true;
     } catch (error) {
-      console.error('MinIO health check failed:', error);
+      console.error('nginx health check failed:', error);
     }
 
     const response: HealthCheckResponse = {
-      status: minioHealthy ? 'healthy' : 'unhealthy',
+      status: nginxHealthy ? 'healthy' : 'unhealthy',
       timestamp: new Date().toISOString(),
       services: {
         database: true, // Placeholder - implement actual database check
-        minio: minioHealthy,
+        minio: nginxHealthy, // Keep the key for compatibility, but it's actually nginx
       },
     };
 

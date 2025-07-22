@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ApiResponse } from '@/lib/types';
-import { listSnapshots } from '@/lib/minio/operations';
-import { config } from '@/lib/config';
+import { listSnapshots } from '@/lib/nginx/operations';
 import { collectResponseTime, trackRequest } from '@/lib/monitoring/metrics';
 import { extractRequestMetadata, logRequest } from '@/lib/middleware/logger';
 
@@ -28,13 +27,13 @@ export async function GET(
   try {
     const { chainId } = await params;
     
-    // Fetch all snapshots for this chain from MinIO
+    // Fetch all snapshots for this chain from nginx
     console.log(`Fetching chain metadata for: ${chainId}`);
-    const minioSnapshots = await listSnapshots(config.minio.bucketName, chainId);
+    const nginxSnapshots = await listSnapshots(chainId);
     
     // Filter only actual snapshot files
-    const validSnapshots = minioSnapshots.filter(s => 
-      s.fileName.endsWith('.tar.zst') || s.fileName.endsWith('.tar.lz4')
+    const validSnapshots = nginxSnapshots.filter(s => 
+      s.filename.endsWith('.tar.zst') || s.filename.endsWith('.tar.lz4')
     );
     
     if (validSnapshots.length === 0) {
@@ -63,7 +62,7 @@ export async function GET(
     
     // Get latest snapshot info
     const latestSnapshot = validSnapshots[0];
-    const heightMatch = latestSnapshot.fileName.match(/(\d+)\.tar\.(zst|lz4)$/);
+    const heightMatch = latestSnapshot.filename.match(/(\d+)\.tar\.(zst|lz4)$/);
     const height = heightMatch ? parseInt(heightMatch[1]) : 0;
     
     // Calculate age in hours
@@ -78,9 +77,9 @@ export async function GET(
     // Typical blockchain data compresses to about 30-40% of original size
     // We'll use the file extension to provide a more accurate estimate
     let compressionRatio = 0.35; // Default 35%
-    if (latestSnapshot.fileName.endsWith('.zst')) {
+    if (latestSnapshot.filename.endsWith('.zst')) {
       compressionRatio = 0.30; // Zstandard typically achieves better compression
-    } else if (latestSnapshot.fileName.endsWith('.lz4')) {
+    } else if (latestSnapshot.filename.endsWith('.lz4')) {
       compressionRatio = 0.40; // LZ4 prioritizes speed over compression ratio
     }
     
