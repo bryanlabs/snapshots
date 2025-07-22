@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import Image from 'next/image';
 import { Snapshot } from '@/lib/types';
 import { useAuth } from '../providers/AuthProvider';
 import { LoadingSpinner } from '../common/LoadingSpinner';
@@ -9,6 +11,7 @@ import { DownloadModal } from '../common/DownloadModal';
 interface DownloadButtonProps {
   snapshot: Snapshot;
   chainName: string;
+  chainLogoUrl?: string;
 }
 
 function formatFileSize(bytes: number): string {
@@ -21,7 +24,7 @@ function formatFileSize(bytes: number): string {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
 }
 
-export function DownloadButton({ snapshot, chainName }: DownloadButtonProps) {
+export function DownloadButton({ snapshot, chainName, chainLogoUrl }: DownloadButtonProps) {
   const { user } = useAuth();
   const [isDownloading, setIsDownloading] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -29,6 +32,7 @@ export function DownloadButton({ snapshot, chainName }: DownloadButtonProps) {
   const [showModal, setShowModal] = useState(false);
   const [showUrlModal, setShowUrlModal] = useState(false);
   const [downloadUrl, setDownloadUrl] = useState<string>('');
+  const [showCopySuccess, setShowCopySuccess] = useState(false);
 
   const handleDownloadClick = () => {
     // Show modal for free users, proceed directly for premium users
@@ -88,10 +92,12 @@ export function DownloadButton({ snapshot, chainName }: DownloadButtonProps) {
   return (
     <>
       <div className="flex flex-col items-end gap-2">
-        <button
+        <motion.button
           onClick={handleDownloadClick}
           disabled={isDownloading}
           className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-lg transition-colors disabled:cursor-not-allowed"
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
         >
         {isDownloading ? (
           <>
@@ -100,13 +106,20 @@ export function DownloadButton({ snapshot, chainName }: DownloadButtonProps) {
           </>
         ) : (
           <>
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <motion.svg 
+              className="w-5 h-5" 
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24"
+              animate={{ y: [0, 2, 0] }}
+              transition={{ duration: 2, repeat: Infinity }}
+            >
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
-            </svg>
+            </motion.svg>
             <span>Download</span>
           </>
         )}
-      </button>
+      </motion.button>
 
       {isDownloading && (
         <div className="w-full space-y-1">
@@ -138,53 +151,126 @@ export function DownloadButton({ snapshot, chainName }: DownloadButtonProps) {
       isLoading={isDownloading}
     />
 
-    {/* URL Modal */}
-    {showUrlModal && (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-        <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-lg w-full mx-4">
-          <h3 className="text-lg font-semibold mb-4">Download Ready</h3>
-          <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-            Your download URL has been generated. For large files, we recommend using a download manager or command-line tool.
-          </p>
-          
-          <div className="bg-gray-100 dark:bg-gray-700 rounded p-3 mb-4">
-            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Download URL:</p>
-            <input
-              type="text"
-              readOnly
-              value={downloadUrl}
-              className="w-full bg-transparent text-sm font-mono text-gray-800 dark:text-gray-200 outline-none"
-              onClick={(e) => e.currentTarget.select()}
-            />
-          </div>
-
-          <div className="bg-blue-50 dark:bg-blue-900/20 rounded p-3 mb-4">
-            <p className="text-xs font-semibold text-blue-800 dark:text-blue-200 mb-1">Recommended: Use curl or wget</p>
-            <code className="text-xs font-mono text-gray-700 dark:text-gray-300 block overflow-x-auto">
-              curl -LO "{downloadUrl}"
-            </code>
-          </div>
-
-          <div className="flex gap-2">
-            <button
-              onClick={() => {
-                navigator.clipboard.writeText(downloadUrl);
-                alert('URL copied to clipboard!');
-              }}
-              className="flex-1 px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded transition-colors"
-            >
-              Copy URL
-            </button>
+    {/* URL Modal - Redesigned */}
+    <AnimatePresence>
+      {showUrlModal && (
+      <motion.div 
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={() => setShowUrlModal(false)}
+      >
+        <motion.div 
+          className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4 shadow-2xl"
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          exit={{ scale: 0.9, opacity: 0 }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="flex justify-between items-start mb-6">
+            <div className="flex items-center gap-3">
+              {chainLogoUrl && (
+                <div className="w-12 h-12 rounded-lg bg-gray-100 dark:bg-gray-700 p-2 flex-shrink-0">
+                  <Image
+                    src={chainLogoUrl}
+                    alt={`${chainName} logo`}
+                    width={48}
+                    height={48}
+                    className="w-full h-full object-contain"
+                  />
+                </div>
+              )}
+              <div>
+                <h3 className="text-lg font-semibold mb-1">Download Ready</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Your snapshot is ready to download
+                </p>
+              </div>
+            </div>
             <button
               onClick={() => setShowUrlModal(false)}
-              className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors"
+              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+              aria-label="Close"
             >
-              Close
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
             </button>
           </div>
-        </div>
-      </div>
-    )}
+          
+          {/* Action Buttons */}
+          <div className="flex gap-3">
+            <motion.button
+              onClick={() => {
+                navigator.clipboard.writeText(downloadUrl);
+                setShowCopySuccess(true);
+                setTimeout(() => setShowCopySuccess(false), 2000);
+              }}
+              className={`
+                flex-1 px-4 py-2 rounded-lg font-medium transition-all duration-300
+                flex items-center justify-center gap-2
+                ${showCopySuccess 
+                  ? 'bg-green-500 hover:bg-green-600 text-white' 
+                  : 'bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300'
+                }
+              `}
+              whileTap={{ scale: 0.98 }}
+            >
+              <AnimatePresence mode="wait">
+                {showCopySuccess ? (
+                  <>
+                    <motion.svg
+                      key="check"
+                      initial={{ scale: 0, rotate: -180 }}
+                      animate={{ scale: 1, rotate: 0 }}
+                      exit={{ scale: 0, rotate: 180 }}
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </motion.svg>
+                    <span>Copied!</span>
+                  </>
+                ) : (
+                  <>
+                    <motion.svg
+                      key="copy"
+                      initial={{ scale: 0, rotate: 180 }}
+                      animate={{ scale: 1, rotate: 0 }}
+                      exit={{ scale: 0, rotate: -180 }}
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </motion.svg>
+                    <span>Copy URL</span>
+                  </>
+                )}
+              </AnimatePresence>
+            </motion.button>
+            
+            <a
+              href={downloadUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
+              </svg>
+              Download
+            </a>
+          </div>
+
+        </motion.div>
+      </motion.div>
+      )}
+    </AnimatePresence>
     </>
   );
 }

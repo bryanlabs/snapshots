@@ -4,9 +4,10 @@ import { DownloadButton } from './DownloadButton';
 interface SnapshotCardProps {
   snapshot: Snapshot;
   chainName: string;
+  chainLogoUrl?: string;
 }
 
-export function SnapshotItem({ snapshot, chainName }: SnapshotCardProps) {
+export function SnapshotItem({ snapshot, chainName, chainLogoUrl }: SnapshotCardProps) {
   const formatSize = (bytes: number): string => {
     const gb = bytes / (1024 * 1024 * 1024);
     return `${gb.toFixed(2)} GB`;
@@ -72,6 +73,7 @@ export function SnapshotItem({ snapshot, chainName }: SnapshotCardProps) {
           <DownloadButton 
             snapshot={snapshot}
             chainName={chainName}
+            chainLogoUrl={chainLogoUrl}
           />
         </div>
       </div>

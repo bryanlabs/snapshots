@@ -13,7 +13,7 @@ export function UpgradePrompt({ variant = 'card', className = '' }: UpgradePromp
           <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
         </svg>
         <span className="text-gray-600 dark:text-gray-400">
-          <Link href="/login" className="text-purple-600 dark:text-purple-400 hover:underline">
+          <Link href="/premium" className="text-purple-600 dark:text-purple-400 hover:underline">
             Upgrade to Premium
           </Link>
           {' '}for 5x faster downloads
@@ -31,11 +31,11 @@ export function UpgradePrompt({ variant = 'card', className = '' }: UpgradePromp
               <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
             </svg>
             <span className="font-medium">
-              Premium users get 250 MB/s download speeds!
+              Premium users get 250 Mbps download speeds!
             </span>
           </div>
           <Link
-            href="/login"
+            href="/premium"
             className="bg-white text-purple-600 px-4 py-1.5 rounded-lg text-sm font-medium hover:bg-gray-100 transition-colors"
           >
             Upgrade Now
@@ -63,7 +63,7 @@ export function UpgradePrompt({ variant = 'card', className = '' }: UpgradePromp
               <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
               </svg>
-              250 MB/s download speeds (5x faster)
+              250 Mbps download speeds (5x faster)
             </li>
             <li className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
               <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
@@ -79,7 +79,7 @@ export function UpgradePrompt({ variant = 'card', className = '' }: UpgradePromp
             </li>
           </ul>
           <Link
-            href="/login"
+            href="/premium"
             className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors"
           >
             <span>Get Premium Access</span>

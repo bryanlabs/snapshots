@@ -1,22 +1,80 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Snapshot } from '@/lib/types';
 import { SnapshotItem } from './SnapshotItem';
+import { DownloadModal } from '@/components/common/DownloadModal';
+import { useAuth } from '@/hooks/useAuth';
 
 interface SnapshotListClientProps {
   chainId: string;
   chainName: string;
+  chainLogoUrl?: string;
   initialSnapshots: Snapshot[];
 }
 
-export function SnapshotListClient({ chainId, chainName, initialSnapshots }: SnapshotListClientProps) {
+export function SnapshotListClient({ chainId, chainName, chainLogoUrl, initialSnapshots }: SnapshotListClientProps) {
   const [selectedType, setSelectedType] = useState<string>('all');
+  const [showDownloadModal, setShowDownloadModal] = useState(false);
+  const [selectedSnapshot, setSelectedSnapshot] = useState<Snapshot | null>(null);
+  const searchParams = useSearchParams();
+  const { user } = useAuth();
+
+  // Handle download query parameter
+  useEffect(() => {
+    const download = searchParams.get('download');
+    if (download === 'latest' && initialSnapshots.length > 0) {
+      // Find the latest snapshot
+      const latestSnapshot = initialSnapshots.reduce((latest, current) => {
+        return new Date(current.updatedAt) > new Date(latest.updatedAt) ? current : latest;
+      }, initialSnapshots[0]);
+      
+      setSelectedSnapshot(latestSnapshot);
+      setShowDownloadModal(true);
+      
+      // Remove the query parameter from URL without reload
+      const url = new URL(window.location.href);
+      url.searchParams.delete('download');
+      window.history.replaceState({}, '', url.toString());
+    }
+  }, [searchParams, initialSnapshots]);
 
   const filteredSnapshots = useMemo(() => {
     if (selectedType === 'all') return initialSnapshots;
     return initialSnapshots.filter(snapshot => snapshot.type === selectedType);
   }, [initialSnapshots, selectedType]);
+
+  const handleDownload = async () => {
+    if (!selectedSnapshot) return;
+    
+    try {
+      // Get the download URL from the API
+      const response = await fetch(`/api/v1/chains/${chainId}/download`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          snapshotId: selectedSnapshot.id,
+          email: user?.email 
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to get download URL');
+      }
+
+      const data = await response.json();
+      
+      if (data.success && data.data?.downloadUrl) {
+        window.location.href = data.data.downloadUrl;
+      }
+    } catch (error) {
+      console.error('Download failed:', error);
+    }
+    
+    setShowDownloadModal(false);
+    setSelectedSnapshot(null);
+  };
 
   if (initialSnapshots.length === 0) {
     return (
@@ -58,9 +116,28 @@ export function SnapshotListClient({ chainId, chainName, initialSnapshots }: Sna
             key={snapshot.id} 
             snapshot={snapshot}
             chainName={chainName}
+            chainLogoUrl={chainLogoUrl}
           />
         ))}
       </div>
+      
+      {/* Download Modal */}
+      {selectedSnapshot && (
+        <DownloadModal
+          isOpen={showDownloadModal}
+          onClose={() => {
+            setShowDownloadModal(false);
+            setSelectedSnapshot(null);
+          }}
+          onConfirm={handleDownload}
+          snapshot={{
+            chainId: chainId,
+            filename: selectedSnapshot.fileName,
+            size: `${(selectedSnapshot.size / (1024 * 1024 * 1024)).toFixed(1)} GB`,
+            blockHeight: selectedSnapshot.height,
+          }}
+        />
+      )}
     </div>
   );
 }

@@ -1,58 +1,70 @@
 'use client';
 
 import Link from 'next/link';
-import { useAuth } from '../providers/AuthProvider';
-import { useState } from 'react';
+import Image from 'next/image';
+import { useState, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 import { UpgradePrompt } from './UpgradePrompt';
 import { ThemeToggle } from './ThemeToggle';
+import { UserDropdown } from './UserDropdown';
+import { useSession, signOut } from 'next-auth/react';
 
 export function Header() {
-  const { user, logout } = useAuth();
+  const sessionData = useSession();
+  const session = sessionData?.data;
+  const pathname = usePathname();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+  
+  // Hide login button on auth pages
+  const isAuthPage = pathname?.startsWith('/auth/');
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 0);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   return (
     <>
       {/* Upgrade banner for free users */}
-      {!user && <UpgradePrompt variant="banner" className="fixed top-0 left-0 right-0 z-50" />}
+      {session?.user?.tier === 'free' && <UpgradePrompt variant="banner" className="fixed top-0 left-0 right-0 z-50" />}
       
-      <header className={`fixed left-0 right-0 z-40 bg-gray-900/95 backdrop-blur-sm border-b border-gray-800 ${!user ? 'top-12' : 'top-0'}`}>
+      <header className={`fixed left-0 right-0 z-40 backdrop-blur-md border-b transition-all duration-300 ${
+        isScrolled 
+          ? 'bg-gray-900/95 border-gray-700/50 shadow-lg' 
+          : 'bg-gray-900/80 border-transparent'
+      } ${session?.user?.tier === 'free' ? 'top-12' : 'top-0'}`}>
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link href="/" className="flex items-center space-x-2">
-            <span className="text-xl font-bold text-white">BryanLabs</span>
-            <span className="text-sm text-gray-400">Snapshots</span>
+          <Link href="/" className="flex items-center">
+            <Image
+              src="/bryanlabs_banner.png"
+              alt="BryanLabs"
+              width={150}
+              height={60}
+              className="h-10 w-auto"
+              priority
+            />
           </Link>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-6">
-            <Link 
-              href="/"
-              className="text-gray-300 hover:text-white transition-colors"
-            >
-              Chains
-            </Link>
             <ThemeToggle />
-            {user ? (
-              <>
-                <span className="text-gray-400">
-                  Welcome, {user.name || user.email}
-                </span>
-                <button
-                  onClick={() => logout()}
-                  className="text-gray-300 hover:text-white transition-colors"
-                >
-                  Logout
-                </button>
-              </>
-            ) : (
+            {session ? (
+              <UserDropdown user={session.user} />
+            ) : !isAuthPage ? (
               <Link
-                href="/login"
+                href="/auth/signin"
                 className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
               >
                 Login
               </Link>
-            )}
+            ) : null}
           </nav>
 
           {/* Mobile Menu Button */}
@@ -72,27 +84,27 @@ export function Header() {
 
         {/* Mobile Menu */}
         {isMenuOpen && (
-          <div className="md:hidden py-4 border-t border-gray-800">
+          <div className="md:hidden py-4 border-t border-gray-700/50">
             <nav className="flex flex-col space-y-4">
-              <Link 
-                href="/"
-                className="text-gray-300 hover:text-white transition-colors"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Chains
-              </Link>
               <div className="flex items-center justify-between">
                 <span className="text-gray-300">Theme</span>
                 <ThemeToggle />
               </div>
-              {user ? (
+              {session ? (
                 <>
                   <span className="text-gray-400">
-                    Welcome, {user.name || user.email}
+                    Welcome, {session.user?.name || session.user?.email}
                   </span>
+                  <Link
+                    href="/account"
+                    className="text-gray-300 hover:text-white transition-colors"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Account
+                  </Link>
                   <button
                     onClick={() => {
-                      logout();
+                      signOut();
                       setIsMenuOpen(false);
                     }}
                     className="text-gray-300 hover:text-white transition-colors text-left"
@@ -100,15 +112,15 @@ export function Header() {
                     Logout
                   </button>
                 </>
-              ) : (
+              ) : !isAuthPage ? (
                 <Link
-                  href="/login"
+                  href="/auth/signin"
                   className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors text-center"
                   onClick={() => setIsMenuOpen(false)}
                 >
                   Login
                 </Link>
-              )}
+              ) : null}
             </nav>
           </div>
         )}
