@@ -1,6 +1,6 @@
-# CLAUDE.md
+# CLAUDE.md - Snapshots Service
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to Claude Code when working with the Blockchain Snapshots Service codebase.
 
 ## Design System & UI Theme
 
@@ -42,15 +42,141 @@ Apply this theme consistently across all authentication-related pages and simila
 
 ## Project Overview
 
-**Blockchain Snapshot Service** - A production-grade Next.js application that provides bandwidth-managed blockchain snapshot hosting with tiered user access (free: 50 Mbps shared, premium: 250 Mbps shared). Uses MinIO for object storage and implements comprehensive monitoring, security, and user management.
+**Production Blockchain Snapshot Service** - A Next.js 15 application providing bandwidth-managed blockchain snapshot hosting with tiered user access (free: 50 Mbps, premium: 250 Mbps). Uses nginx for file storage, NextAuth for authentication, and integrates with the snapshot-processor for automated snapshot creation and management.
 
-## Key Architecture Components
+## Current State (July 2025)
+
+- **Branch**: `feat_realsnaps` - Production-ready implementation
+- **Status**: Fully migrated to production with authentication, user management, and tiered access
+- **Recent Changes**: 
+  - Complete NextAuth v5 integration with database support
+  - Nginx storage backend with LZ4 compression
+  - Comprehensive test infrastructure
+  - API documentation moved to `/docs/`
+
+## Key Architecture
 
 1. **Next.js 15** - Full-stack application with App Router for both UI and API
-2. **MinIO Object Storage** - S3-compatible storage for snapshot files
-3. **JWT Authentication** - Simple auth system for premium tier access
-4. **Bandwidth Management** - Tiered speed limits enforced at MinIO level
-5. **Prometheus/Grafana** - Monitoring and observability
+2. **Nginx Storage** - Static file server with secure_link module for protected downloads
+3. **NextAuth.js v5** - Comprehensive auth system supporting email/password and wallet authentication
+4. **SQLite + Prisma** - User management and session storage
+5. **Redis** - Session caching, rate limiting, and URL tracking
+6. **Prometheus/Grafana** - Monitoring and observability
+
+## Nginx Storage Architecture & URL Signing
+
+### How Nginx Hosts Snapshots
+Nginx serves as the primary storage backend for all blockchain snapshots:
+- **Endpoint**: Internal service at `nginx:32708` in Kubernetes
+- **External URL**: `https://snapshots.bryanlabs.net`
+- **Storage Path**: `/snapshots/[chain-id]/`
+- **Autoindex**: JSON format for directory listings
+- **Secure Links**: MD5-based secure_link module for time-limited URLs
+
+The nginx server has direct access to a shared PVC where the snapshot-processor uploads compressed snapshots. When users download, they connect directly to nginx, bypassing the Next.js app for optimal performance.
+
+### Anatomy of a Secure Download URL
+```
+https://snapshots.bryanlabs.net/snapshots/noble-1/noble-1-20250722.tar.lz4?md5=abc123&expires=1234567890&tier=free
+```
+
+**Components:**
+- **Base URL**: `https://snapshots.bryanlabs.net/snapshots/`
+- **Chain Path**: `noble-1/`
+- **Filename**: `noble-1-20250722.tar.lz4`
+- **MD5 Hash**: `md5=abc123` - Hash of secret + expires + uri + IP + tier
+- **Expiration**: `expires=1234567890` - Unix timestamp (5 minutes from generation)
+- **Tier**: `tier=free` or `tier=premium` - Embedded bandwidth tier
+
+### URL Signing Process
+1. **Client requests download** via API endpoint
+2. **Server generates secure link**:
+   ```typescript
+   const expires = Math.floor(Date.now() / 1000) + 300; // 5 minutes
+   const string = `${expires}${uri}${clientIP}${tier} ${secret}`;
+   const md5 = crypto.createHash('md5').update(string).digest('base64url');
+   ```
+3. **Nginx validates** on request:
+   - Checks MD5 hash matches
+   - Verifies not expired
+   - Applies bandwidth limit based on tier parameter
+
+### Redis URL Tracking
+Redis prevents URL reuse and tracks active downloads:
+- **Key Format**: `download:${userId}:${filename}`
+- **TTL**: Set to URL expiration time
+- **Purpose**: 
+  - Prevents sharing URLs between users
+  - Tracks concurrent downloads
+  - Enforces daily download limits
+  - Monitors bandwidth usage per tier
+
+### Bandwidth Tiers in URLs
+The `tier` parameter in the URL controls nginx bandwidth limiting:
+```nginx
+map $arg_tier $limit_rate {
+    default      50m;  # 50MB/s for free tier
+    "free"       50m;
+    "premium"    250m; # 250MB/s for premium tier
+}
+```
+
+## Project Structure
+
+```
+app/
+├── api/                        # API routes
+│   ├── account/               # Account management
+│   ├── admin/                 # Admin endpoints
+│   ├── auth/                  # NextAuth endpoints
+│   ├── bandwidth/             # Bandwidth status
+│   ├── cron/                  # Scheduled tasks
+│   ├── metrics/               # Prometheus metrics
+│   ├── v1/                    # Public API v1
+│   │   ├── auth/             # Legacy JWT auth
+│   │   ├── chains/           # Chain management
+│   │   └── downloads/        # Download tracking
+│   └── health/               # Health check
+├── (auth)/                   # Auth pages layout group
+│   ├── signin/              # Sign in page
+│   └── signup/              # Sign up page
+├── (public)/                # Public pages layout group
+│   └── chains/              # Chain browsing
+├── account/                 # User account pages
+├── layout.tsx              # Root layout with providers
+└── page.tsx               # Homepage
+
+lib/
+├── auth/                    # Authentication logic
+│   ├── session.ts          # Session management
+│   ├── jwt.ts              # JWT utilities
+│   └── middleware.ts       # Auth middleware
+├── nginx/                  # Nginx integration
+│   ├── client.ts          # Nginx client for autoindex
+│   └── operations.ts      # Snapshot operations
+├── bandwidth/             # Bandwidth management
+│   ├── manager.ts        # Dynamic bandwidth calculation
+│   └── tracker.ts        # Download tracking
+├── prisma.ts             # Database client
+├── config/               # Configuration
+└── types/               # TypeScript types
+
+components/
+├── auth/                 # Auth components
+├── account/             # Account components
+├── chains/              # Chain browsing components
+├── snapshots/          # Snapshot UI components
+│   ├── SnapshotList.tsx
+│   ├── SnapshotItem.tsx
+│   └── DownloadButton.tsx
+├── common/             # Shared components
+└── ui/                # Base UI components
+
+prisma/
+├── schema.prisma       # Database schema
+├── migrations/         # Database migrations
+└── seed.ts            # Seed data
+```
 
 ## Development Commands
 
@@ -60,93 +186,159 @@ npm run dev          # Start development server with Turbopack
 npm run build        # Build for production
 npm run start        # Start production server
 npm run lint         # Run ESLint
+npm run typecheck    # TypeScript type checking
 
-# Testing (to be implemented)
+# Testing
 npm run test         # Run unit tests
+npm run test:watch   # Run tests in watch mode
 npm run test:e2e     # Run E2E tests with Playwright
-npm run test:load    # Run load tests with k6
+npm run test:coverage # Generate coverage report
+
+# Database Management
+npx prisma migrate dev    # Run migrations
+npx prisma studio        # Open database GUI
+npx prisma generate      # Generate Prisma client
+./scripts/init-db-proper.sh  # Initialize database with test data
 
 # Docker Build and Deploy (IMPORTANT)
 # Always use these flags for building Docker images:
 docker buildx build --builder cloud-bryanlabs-builder --platform linux/amd64 -t ghcr.io/bryanlabs/snapshots:VERSION --push .
 # This ensures the image is built for the correct platform (linux/amd64) using the cloud builder
-# IMPORTANT: Always use semantic versioning (e.g., v1.3.0) - NEVER use "latest" tag
-# Increment version numbers properly: v1.2.9 → v1.3.0 → v1.3.1
+# IMPORTANT: Always use semantic versioning (e.g., v1.5.0) - NEVER use "latest" tag
+# Increment version numbers properly: v1.4.9 → v1.5.0 → v1.5.1
 ```
 
-## Project Structure
+## Key Features
 
+1. **Tiered Bandwidth**: Free (50 Mbps) and Premium (250 Mbps) tiers
+2. **Authentication**: Email/password and Cosmos wallet support
+3. **Download Tracking**: Real-time bandwidth monitoring
+4. **Secure Downloads**: Pre-signed URLs with nginx secure_link
+5. **API Access**: Full REST API with OpenAPI documentation
+6. **Admin Dashboard**: User management and system statistics
+
+## API Routes Overview
+
+### Public API (v1)
+- `GET /api/v1/chains` - List all chains with metadata
+- `GET /api/v1/chains/[chainId]` - Get specific chain info
+- `GET /api/v1/chains/[chainId]/snapshots` - List snapshots (with compression type)
+- `GET /api/v1/chains/[chainId]/snapshots/latest` - Get latest snapshot
+- `POST /api/v1/chains/[chainId]/download` - Generate secure download URL
+- `POST /api/v1/auth/login` - Legacy JWT authentication
+- `POST /api/v1/auth/wallet` - Wallet-based authentication
+- `GET /api/v1/downloads/status` - Check download status
+
+### NextAuth API
+- `GET /api/auth/providers` - List auth providers
+- `POST /api/auth/signin` - Sign in endpoint
+- `GET /api/auth/signout` - Sign out endpoint
+- `GET /api/auth/session` - Get current session
+- `POST /api/auth/register` - Register new account
+- `GET /api/auth/csrf` - Get CSRF token
+
+### Account Management
+- `GET /api/account/avatar` - Get user avatar
+- `POST /api/account/link-email` - Link email to wallet account
+
+### Admin API
+- `GET /api/admin/stats` - System statistics
+- `GET /api/admin/downloads` - Download analytics
+
+### System API
+- `GET /api/health` - Health check endpoint
+- `GET /api/metrics` - Prometheus metrics
+- `GET /api/bandwidth/status` - Current bandwidth usage
+- `POST /api/cron/reset-bandwidth` - Reset daily limits (cron)
+
+## Programmatic API Access
+
+### Requesting Download URLs as Free User
+```bash
+# 1. List available snapshots for a chain
+curl https://snapshots.bryanlabs.net/api/v1/chains/noble-1/snapshots
+
+# 2. Request download URL for specific snapshot (no auth required)
+curl -X POST https://snapshots.bryanlabs.net/api/v1/chains/noble-1/download \
+  -H "Content-Type: application/json" \
+  -d '{"filename": "noble-1-20250722-175949.tar.lz4"}'
+
+# Response:
+{
+  "success": true,
+  "data": {
+    "url": "https://snapshots.bryanlabs.net/snapshots/noble-1/noble-1-20250722-175949.tar.lz4?md5=abc123&expires=1234567890&tier=free",
+    "expires": "2025-07-22T19:00:00Z",
+    "size": 7069740384,
+    "tier": "free"
+  }
+}
+
+# 3. Download the file (50 Mbps limit)
+curl -O "[generated-url]"
 ```
-app/
-├── api/v1/                     # API routes
-│   ├── chains/                 # Chain management endpoints
-│   │   └── [chainId]/         # Dynamic chain routes
-│   │       ├── snapshots/     # List snapshots
-│   │       └── download/      # Generate download URLs
-│   ├── auth/                  # Authentication endpoints
-│   │   ├── login/            # JWT login
-│   │   └── logout/           # Clear session
-│   └── health/               # Health check
-├── chains/                    # UI pages
-│   └── [chainId]/            # Chain-specific snapshot listing
-├── login/                     # Login page
-├── layout.tsx                # Root layout with auth context
-└── page.tsx                  # Homepage
 
-lib/
-├── auth/                     # Authentication utilities
-│   ├── session.ts           # Session management
-│   └── middleware.ts        # Auth middleware
-├── minio/                   # MinIO integration
-│   ├── client.ts           # MinIO client setup
-│   └── operations.ts       # MinIO operations
-├── bandwidth/              # Bandwidth management
-│   └── manager.ts         # Dynamic bandwidth calculation
-├── config/                # Configuration
-└── types/                # TypeScript types
+### Requesting Download URLs as Premium User
 
-components/
-├── auth/                  # Auth components
-├── snapshots/            # Snapshot UI components
-│   ├── SnapshotList.tsx
-│   └── DownloadButton.tsx
-└── common/               # Shared components
+#### Option 1: Legacy JWT Authentication
+```bash
+# 1. Login with credentials to get JWT token
+curl -X POST https://snapshots.bryanlabs.net/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username": "premium_user", "password": "your_password"}'
+
+# Response:
+{
+  "success": true,
+  "data": {
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "user": {"username": "premium_user", "tier": "premium"}
+  }
+}
+
+# 2. Request download URL with JWT token
+curl -X POST https://snapshots.bryanlabs.net/api/v1/chains/noble-1/download \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." \
+  -d '{"filename": "noble-1-20250722-175949.tar.lz4"}'
+
+# Response includes tier=premium URL with 250 Mbps limit
 ```
 
-## Implementation Order (From GitHub Issues)
+#### Option 2: Wallet Authentication
+```bash
+# 1. Sign message with Keplr wallet and authenticate
+curl -X POST https://snapshots.bryanlabs.net/api/v1/auth/wallet \
+  -H "Content-Type: application/json" \
+  -d '{
+    "address": "cosmos1...",
+    "pubkey": "...",
+    "signature": "...",
+    "message": "Sign this message to authenticate with Snapshots Service"
+  }'
 
-### Phase 1: Backend API (Priority)
-1. **API Routes** - Implement all `/api/v1/*` endpoints
-2. **MinIO Integration** - Connect to MinIO for object operations
-3. **Authentication** - JWT-based auth system
-4. **URL Generation** - Pre-signed URLs with security
+# 2. Use returned JWT token for download requests
+```
 
-### Phase 2: Frontend UI
-5. **Snapshot Browsing** - List chains and snapshots
-6. **Login/Auth UI** - User authentication interface
-7. **Download Experience** - Bandwidth indicators and UX
+#### Option 3: NextAuth Session (Web Browser)
+```bash
+# 1. Get CSRF token
+CSRF=$(curl -s -c cookies.txt https://snapshots.bryanlabs.net/api/auth/csrf | jq -r .csrfToken)
 
-### Phase 3: Infrastructure
-8. **Monitoring** - Prometheus metrics and Grafana dashboards
-9. **CI/CD** - GitHub Actions pipeline
-10. **Testing** - Comprehensive test suite
-11. **Documentation** - User and ops docs
+# 2. Sign in with email/password
+curl -X POST https://snapshots.bryanlabs.net/api/auth/callback/credentials \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -b cookies.txt \
+  -c cookies.txt \
+  -L \
+  -d "csrfToken=$CSRF&email=premium@example.com&password=password123"
 
-## Critical Implementation Details
-
-### MinIO Configuration
-- Endpoint: `http://minio.apps.svc.cluster.local:9000` (K8s internal)
-- Bucket: `snapshots`
-- Pre-signed URLs: 5-minute expiration, IP-restricted
-
-### Authentication Flow
-- NextAuth.js v5 with dual authentication:
-  - Email/password (credentials provider)
-  - Cosmos wallet (Keplr integration)
-- SQLite database with Prisma ORM
-- Sessions stored in JWT tokens
-- 7-day session duration
-- Middleware validates on protected routes
+# 3. Request download URL with session cookie
+curl -X POST https://snapshots.bryanlabs.net/api/v1/chains/noble-1/download \
+  -H "Content-Type: application/json" \
+  -b cookies.txt \
+  -d '{"filename": "noble-1-20250722-175949.tar.lz4"}'
+```
 
 ### Testing NextAuth Authentication with CSRF
 When testing NextAuth authentication endpoints, you must obtain and use CSRF tokens:
@@ -170,33 +362,15 @@ curl -X POST https://snapshots.bryanlabs.net/api/auth/callback/credentials \
 
 **Important**: NextAuth requires CSRF tokens for all authentication requests. The token is stored in the `__Host-authjs.csrf-token` cookie and must be included in the request body.
 
-### Bandwidth Management
-- Free tier: 50 Mbps shared among all free users (~6.25 MB/s)
-- Premium tier: 250 Mbps shared among all premium users (~31.25 MB/s)
-- Total cap: 500 Mbps
-- Enforced at MinIO level via metadata
+## Environment Variables
 
-### API Response Format
-```typescript
-// Success response
-{
-  data: any,
-  success: true
-}
-
-// Error response
-{
-  error: string,
-  status: number
-}
-```
-
-### Environment Variables
 ```bash
-# MinIO
-MINIO_ENDPOINT=http://minio.apps.svc.cluster.local:9000
-MINIO_ACCESS_KEY=<from-secret>
-MINIO_SECRET_KEY=<from-secret>
+# Nginx Storage
+NGINX_ENDPOINT=nginx
+NGINX_PORT=32708
+NGINX_USE_SSL=false
+NGINX_EXTERNAL_URL=https://snapshots.bryanlabs.net
+SECURE_LINK_SECRET=<secret-for-secure-links>
 
 # Auth (NextAuth)
 NEXTAUTH_SECRET=<generated>
@@ -208,97 +382,228 @@ PREMIUM_USERNAME=premium_user
 PREMIUM_PASSWORD_HASH=<bcrypt-hash>
 JWT_SECRET=<generated>
 
+# Redis
+REDIS_HOST=redis
+REDIS_PORT=6379
+
 # Config
 BANDWIDTH_FREE_TOTAL=50
 BANDWIDTH_PREMIUM_TOTAL=250
-AUTH_SESSION_DURATION=7d
-DOWNLOAD_URL_EXPIRY=5m
+DAILY_DOWNLOAD_LIMIT=10
+NODE_ENV=production
 ```
 
-### Database Initialization
-The app uses SQLite with Prisma ORM. The database schema includes:
-- Users (email/wallet auth)
-- Teams with role-based access
-- Tiers (free, premium, enterprise)
-- Download tracking and analytics
-- Snapshot requests and access control
+## API Response Format
+```typescript
+// Success response
+{
+  data: any,
+  success: true
+}
 
-**Important**: The database is initialized automatically via `scripts/init-db-proper.sh` which creates all required tables with correct column names and includes a test user (test@example.com / snapshot123).
+// Error response
+{
+  error: string,
+  success: false,
+  message?: string  // Optional detailed message
+}
+```
 
-## Key Features to Implement
+## Database Schema
+The app uses SQLite with Prisma ORM. Key tables:
+- **User**: Authentication and profile data
+- **Account**: OAuth/wallet account links
+- **Session**: Active user sessions
+- **Download**: Download history and tracking
+- **Team**: Multi-user organizations (future)
 
-### Core Features
-1. **List all chains with snapshots** - Homepage showing available chains
-2. **Browse chain snapshots** - Detailed view with metadata
-3. **Generate download URLs** - Secure, time-limited URLs
-4. **User authentication** - Login for premium tier access
-5. **Bandwidth enforcement** - Tier-based speed limits
+**Important**: Database initialized via `scripts/init-db-proper.sh` with test user (test@example.com / snapshot123).
 
-### Security Features
-- JWT authentication with secure cookies
-- Pre-signed URLs with IP restriction
-- Rate limiting (10 downloads/minute)
-- CORS configuration
-- Input validation on all endpoints
+## Common Tasks
 
-### Monitoring
-- API request metrics
-- Bandwidth usage tracking
-- Download analytics
-- Error rate monitoring
-- Storage usage alerts
+### Adding a New Chain
+1. Update `config/chains.ts` with chain metadata
+2. Add logo to `public/chains/[chain-id].png`
+3. Ensure snapshot-processor is configured for the chain
+
+### Updating Bandwidth Limits
+1. Update environment variables
+2. Update nginx ConfigMap in Kubernetes
+3. Restart nginx pods
+
+### Database Schema Changes
+1. Update `prisma/schema.prisma`
+2. Run `npx prisma migrate dev`
+3. Update relevant API endpoints
+
+## Integration with Snapshot Processor
+
+The webapp expects snapshots in the nginx storage with this structure:
+```
+/snapshots/
+├── [chain-id]/
+│   ├── [chain-id]-[height].tar.zst
+│   ├── [chain-id]-[height].tar.lz4
+│   └── latest.json
+```
+
+The `latest.json` file should contain:
+```json
+{
+  "chain_id": "noble-1",
+  "height": 20250722,
+  "size": 7069740384,
+  "created_at": "2025-07-22T17:59:49Z",
+  "filename": "noble-1-20250722.tar.lz4",
+  "compression": "lz4"
+}
+```
+
+## Security Considerations
+
+1. **Authentication**: Always use NextAuth session for user identification
+2. **Download URLs**: Pre-signed with expiration and tier metadata
+3. **Rate Limiting**: Implemented at nginx level
+4. **Input Validation**: Use Zod schemas for all API inputs
+5. **Database Queries**: Use Prisma ORM to prevent SQL injection
+
+## Monitoring
+
+- Health endpoint: `/api/health`
+- Metrics endpoint: `/api/metrics` (Prometheus format)
+- Bandwidth status: `/api/bandwidth/status`
+- Admin stats: `/api/admin/stats` (requires admin role)
+
+## Deployment
+
+Production deployment uses Kubernetes:
+```bash
+# Build and push image
+docker buildx build --platform linux/amd64 -t ghcr.io/bryanlabs/snapshots:latest .
+docker push ghcr.io/bryanlabs/snapshots:latest
+
+# Deploy to Kubernetes
+kubectl apply -f deploy/k8s/
+```
+
+## Troubleshooting
+
+1. **Download Issues**: Check nginx logs and secure_link configuration
+2. **Auth Problems**: Verify NEXTAUTH_SECRET and database connection
+3. **Performance**: Monitor Redis connection and nginx worker limits
+4. **Storage**: Ensure nginx PVC has sufficient space
+
+## Design System
+
+### UI Theme
+- Dark theme with gray-900 backgrounds
+- Blue-500 to purple-600 gradient accents
+- Glassmorphic cards with backdrop blur
+- Consistent spacing and rounded corners
+
+### Component Library
+- Radix UI primitives for accessibility
+- Tailwind CSS for styling
+- Custom components in `components/ui/`
+- Consistent loading and error states
+
+## Common Development Tasks
+
+### Adding a New Chain
+1. Snapshot processor creates files in nginx storage
+2. Files follow naming: `[chain-id]-[timestamp].tar.[compression]`
+3. Web app automatically discovers via nginx autoindex
+
+### Testing Download URLs
+```bash
+# Generate download URL
+curl -X POST http://localhost:3000/api/v1/chains/noble-1/download \
+  -H "Content-Type: application/json" \
+  -d '{"filename": "noble-1-20250722-174634.tar.zst"}'
+
+# Test download with bandwidth limit
+curl -O "[generated-url]"
+```
+
+### Debugging Nginx Connection
+```bash
+# Check nginx autoindex
+curl http://nginx:32708/snapshots/noble-1/
+
+# Test secure link generation
+node -e "console.log(require('./lib/nginx/client').generateSecureLink('/noble-1/snapshot.tar.zst'))"
+```
+
+## Deployment Notes
+
+### Kubernetes Deployment
+- Deployed in `fullnodes` namespace
+- Uses Kustomize for configuration management
+- Manifests in: `bare-metal/cluster/chains/cosmos/fullnode/snapshot-service/webapp/`
+- PVC for SQLite database persistence
+- ConfigMap for non-sensitive config
+- Secrets for sensitive values
+
+### Required Resources
+- **CPU**: 200m request, 1000m limit
+- **Memory**: 512Mi request, 1Gi limit
+- **Storage**: 10Gi PVC for database
+- **Replicas**: 1 (SQLite limitation)
+
+### Integration Points
+1. **Nginx Storage**: Mounted at `/snapshots` in processor
+2. **Redis**: For session storage and rate limiting
+3. **Snapshot Processor**: Creates and uploads snapshots
+4. **Prometheus**: Scrapes `/api/metrics`
+5. **Grafana**: Visualizes metrics
 
 ## Development Guidelines
 
 ### API Development
 - Use Next.js Route Handlers (App Router)
-- Implement proper error handling
+- Implement proper error handling with try/catch
 - Return consistent response formats
-- Add request validation
+- Add zod validation for request bodies
 - Keep response times <200ms
+- Use proper HTTP status codes
 
 ### Frontend Development
-- Use TypeScript for type safety
+- Use TypeScript for all components
 - Implement loading and error states
-- Make responsive for all devices
-- Follow accessibility standards
-- Use Tailwind CSS for styling
+- Make components responsive-first
+- Follow accessibility standards (WCAG)
+- Use Tailwind CSS utility classes
+- Implement proper SEO with metadata
 
 ### Testing Requirements
-- Unit tests for API logic (>80% coverage)
-- Integration tests with MinIO
-- E2E tests for critical flows
-- Load tests for bandwidth limits
-- Security tests for auth system
+- Unit tests for all API routes
+- Component tests with React Testing Library
+- Integration tests for auth flows
+- E2E tests for critical user journeys
+- Maintain >80% code coverage
 
-## Common Tasks
+## Security Features
+- NextAuth.js authentication with CSRF protection
+- Secure download URLs with expiration
+- Rate limiting on API endpoints
+- Input validation and sanitization
+- SQL injection protection via Prisma
+- XSS protection via React
 
-### Adding a New Chain
-1. Upload snapshot files to MinIO bucket
-2. Create metadata JSON file
-3. Chain will appear automatically in API/UI
-
-### Testing Bandwidth Limits
-```bash
-# Test free tier (should be ~50MB/s)
-curl -O [generated-url]
-
-# Test premium tier (should be ~250MB/s)
-curl -H "Cookie: auth-token=[jwt]" -O [generated-url]
-```
-
-### Debugging MinIO Connection
-```bash
-# Check MinIO health
-curl http://minio.apps.svc.cluster.local:9000/minio/health/live
-
-# List buckets (with mc CLI)
-mc ls myminio/
-```
+## Monitoring
+- Prometheus metrics at `/api/metrics`
+- Health endpoint at `/api/health`
+- Download analytics tracking
+- Error rate monitoring
+- Bandwidth usage metrics
 
 ## Important Notes
 
-1. **MinIO Storage** - All snapshot data comes from MinIO object storage
-2. **BryanLabs Style** - Maintain professional design aesthetic
-3. **Performance First** - Optimize for speed and reliability
-4. **Security Critical** - Properly implement auth and access controls
+1. **Compression Support** - Must handle both .tar.zst and .tar.lz4 files
+2. **Performance First** - Optimize for fast page loads and downloads
+3. **Security Critical** - Properly implement auth and access controls
+4. **User Experience** - Maintain clean, professional design
+5. **Database Limits** - SQLite limits to single replica deployment
+6. **Docker Versioning** - NEVER use "latest" tag, always semantic versioning
+
+Always run `npm run lint` and `npm run typecheck` before committing changes.

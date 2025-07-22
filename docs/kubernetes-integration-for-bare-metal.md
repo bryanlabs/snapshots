@@ -1,348 +1,329 @@
-# Kubernetes Integration for Bare-Metal Repository
+# Kubernetes Integration for Bare-Metal Infrastructure
 
-This document describes the Kubernetes manifests and scripts created for processing VolumeSnapshots in the bare-metal repository. These should be created in the actual bare-metal repo.
+This document describes how the Snapshots service is integrated into the BryanLabs bare-metal Kubernetes infrastructure.
 
-## Files to Create
+## Overview
 
-### 1. `/kubernetes/snapshot-processor/namespace.yaml`
-```yaml
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: snapshots
-  labels:
-    tier: infrastructure
-    purpose: snapshot-creation
----
-apiVersion: v1
-kind: ResourceQuota
-metadata:
-  name: snapshot-quota
-  namespace: snapshots
-spec:
-  hard:
-    requests.cpu: "50"
-    requests.memory: "200Gi"
-    requests.storage: "10Ti"
-    persistentvolumeclaims: "20"
+The Snapshots web application is deployed as part of a comprehensive snapshot service ecosystem within the bare-metal repository. It works in conjunction with:
+
+1. **Snapshot Processor** - Request-based system that creates and compresses blockchain snapshots
+2. **Nginx Storage** - Static file server that hosts snapshot files  
+3. **Redis** - Caching and session storage
+4. **TopoLVM** - Dynamic volume provisioning for storage
+
+## Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                        fullnodes namespace                           │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                      │
+│  ┌──────────────┐     ┌──────────────┐     ┌──────────────┐       │
+│  │   Snapshot   │────▶│    Nginx     │◀────│   Web App    │       │
+│  │  Processor   │     │   Storage    │     │  (Next.js)   │       │
+│  └──────────────┘     └──────────────┘     └──────────────┘       │
+│         │                     │                     │                │
+│         ▼                     ▼                     ▼                │
+│  ┌──────────────┐     ┌──────────────┐     ┌──────────────┐       │
+│  │ Request API  │     │  Shared PVC  │     │    SQLite    │       │
+│  │   :8080      │     │  /snapshots  │     │   Database   │       │
+│  └──────────────┘     └──────────────┘     └──────────────┘       │
+│                                                    │                 │
+│                        ┌──────────────┐            ▼                │
+│                        │    Redis     │     ┌──────────────┐       │
+│                        │    Cache     │     │   TopoLVM    │       │
+│                        └──────────────┘     │     PVCs     │       │
+│                                             └──────────────┘       │
+└─────────────────────────────────────────────────────────────────────┘
 ```
 
-### 2. `/kubernetes/snapshot-processor/rbac.yaml`
-```yaml
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: snapshot-creator
-  namespace: snapshots
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: snapshot-creator
-rules:
-- apiGroups: ["snapshot.storage.k8s.io"]
-  resources: ["volumesnapshots"]
-  verbs: ["create", "get", "list", "watch", "delete"]
-- apiGroups: [""]
-  resources: ["persistentvolumeclaims"]
-  verbs: ["create", "get", "list", "watch", "delete"]
-- apiGroups: [""]
-  resources: ["pods"]
-  verbs: ["create", "get", "list", "watch", "delete"]
-- apiGroups: [""]
-  resources: ["pods/exec"]
-  verbs: ["create"]
-- apiGroups: ["batch"]
-  resources: ["jobs"]
-  verbs: ["create", "get", "list", "watch", "delete"]
-- apiGroups: ["cosmos.strange.love"]
-  resources: ["scheduledvolumesnapshots"]
-  verbs: ["get", "list", "watch"]
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: snapshot-creator
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: snapshot-creator
-subjects:
-- kind: ServiceAccount
-  name: snapshot-creator
-  namespace: snapshots
+## Repository Structure
+
+```
+bare-metal/
+└── cluster/
+    └── chains/
+        └── cosmos/
+            └── fullnode/
+                └── snapshot-service/
+                    ├── nginx/              # Nginx storage service
+                    │   ├── deployment.yaml
+                    │   ├── configmap.yaml
+                    │   ├── service.yaml
+                    │   ├── pvc.yaml
+                    │   └── kustomization.yaml
+                    ├── processor/          # Snapshot processor
+                    │   ├── deployment-unified.yaml
+                    │   ├── configmap.yaml
+                    │   ├── rbac-unified.yaml
+                    │   ├── service.yaml
+                    │   └── kustomization.yaml
+                    ├── webapp/             # Web application
+                    │   ├── deployment.yaml
+                    │   ├── configmap.yaml
+                    │   ├── secrets.yaml
+                    │   ├── pvc.yaml
+                    │   ├── service.yaml
+                    │   └── kustomization.yaml
+                    ├── redis/              # Redis cache
+                    │   ├── deployment.yaml
+                    │   ├── service.yaml
+                    │   └── kustomization.yaml
+                    └── kustomization.yaml  # Main kustomization
 ```
 
-### 3. `/kubernetes/snapshot-processor/storage.yaml`
+## Service Communication
+
+### Internal Service Discovery
+All services communicate using Kubernetes DNS within the `fullnodes` namespace:
+
+- **Nginx Storage**: `nginx.fullnodes.svc.cluster.local:32708`
+- **Snapshot Processor**: `snapshot-processor.fullnodes.svc.cluster.local:8080`
+- **Web App**: `webapp.fullnodes.svc.cluster.local:3000`
+- **Redis**: `redis.fullnodes.svc.cluster.local:6379`
+
+### External Access
+- **Public URL**: `https://snapshots.bryanlabs.net` (via Ingress)
+- **TLS**: Managed by cert-manager with Let's Encrypt
+
+## Storage Architecture
+
+### Shared Storage PVC
+The nginx service uses a shared PVC that's mounted by both nginx and the snapshot processor:
+
 ```yaml
+# nginx/pvc.yaml
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: snapshot-storage
-  namespace: snapshots
+  name: nginx-storage
+  namespace: fullnodes
 spec:
   accessModes:
-    - ReadWriteOnce
-  storageClassName: topolvm-ssd-xfs
+    - ReadWriteMany  # Allows multiple pods to mount
   resources:
     requests:
-      storage: 5Ti
+      storage: 10Ti
+  storageClassName: topolvm-ssd-xfs
 ```
 
-### 4. `/kubernetes/snapshot-processor/nginx-server.yaml`
+### Storage Layout
+```
+/snapshots/
+├── noble-1/
+│   ├── noble-1-20250722-175949.tar.lz4
+│   ├── noble-1-20250722-174634.tar.zst
+│   └── latest.json
+├── osmosis-1/
+│   ├── osmosis-1-20250722-180000.tar.lz4
+│   └── latest.json
+└── [other-chains]/
+```
+
+## Integration Flow
+
+### 1. Snapshot Creation
+```
+User Request → Web App → Processor API → Create Snapshot Job
+                                      ↓
+                                 Compress (ZST/LZ4)
+                                      ↓
+                                 Upload to Shared PVC
+                                      ↓
+                                 Update latest.json
+```
+
+### 2. Snapshot Browsing
+```
+User Browse → Web App → Nginx Autoindex API → Parse JSON
+                                           ↓
+                                    Display Snapshots
+                                           ↓
+                                    Generate Secure URLs
+```
+
+### 3. Snapshot Download
+```
+User Click → Web App → Generate Secure Link → Redirect to Nginx
+                                           ↓
+                                    Direct Download
+                                    (with bandwidth limits)
+```
+
+## Request-Based Snapshot System
+
+The snapshot processor implements a request-based system:
+
+### API Endpoints
+- `POST /api/v1/request` - Submit snapshot request
+- `GET /api/v1/requests` - List all requests
+- `GET /api/v1/request/{id}` - Get request status
+
+### Request Types
+1. **Scheduled** - Created by internal scheduler
+2. **On-Demand** - Created by user request via web app
+
+### Request Flow
+```json
+{
+  "chain_id": "noble-1",
+  "compression": "lz4",
+  "compression_level": 1,
+  "request_type": "on_demand",
+  "requested_by": "user@example.com"
+}
+```
+
+## Deployment Process
+
+### 1. Build Images
+```bash
+# Web App
+docker buildx build --builder cloud-bryanlabs-builder \
+  --platform linux/amd64 \
+  -t ghcr.io/bryanlabs/snapshots:v1.5.0 \
+  --push .
+
+# Processor
+docker buildx build --builder cloud-bryanlabs-builder \
+  --platform linux/amd64 \
+  -t ghcr.io/bryanlabs/snapshot-processor:v1.2.3 \
+  --push .
+```
+
+### 2. Update Kustomization
 ```yaml
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: nginx-config
-  namespace: snapshots
-data:
-  default.conf: |
-    server {
-        listen 80;
-        server_name _;
-        root /usr/share/nginx/html;
+# webapp/kustomization.yaml
+images:
+  - name: ghcr.io/bryanlabs/snapshots
+    newTag: v1.5.0
 
-        location / {
-            autoindex on;
-            autoindex_exact_size off;
-            autoindex_localtime on;
-            autoindex_format json;
-
-            # Enable CORS for API access
-            add_header Access-Control-Allow-Origin *;
-
-            # Cache control
-            add_header Cache-Control "public, max-age=3600";
-
-            # Custom headers for snapshot metadata
-            location ~ \.json$ {
-                add_header Content-Type application/json;
-            }
-        }
-
-        # Health check endpoint
-        location /health {
-            return 200 "OK\n";
-            add_header Content-Type text/plain;
-        }
-
-        # Snapshot listing API endpoint
-        location /api/snapshots {
-            default_type application/json;
-            autoindex on;
-            autoindex_format json;
-        }
-    }
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: snapshot-server
-  namespace: snapshots
-spec:
-  replicas: 2
-  selector:
-    matchLabels:
-      app: snapshot-server
-  template:
-    metadata:
-      labels:
-        app: snapshot-server
-    spec:
-      containers:
-      - name: nginx
-        image: nginx:alpine
-        ports:
-        - containerPort: 80
-        volumeMounts:
-        - name: snapshots
-          mountPath: /usr/share/nginx/html
-          readOnly: true
-        - name: config
-          mountPath: /etc/nginx/conf.d
-        livenessProbe:
-          httpGet:
-            path: /health
-            port: 80
-          periodSeconds: 10
-        readinessProbe:
-          httpGet:
-            path: /health
-            port: 80
-          periodSeconds: 5
-        resources:
-          requests:
-            cpu: 100m
-            memory: 128Mi
-          limits:
-            cpu: 500m
-            memory: 512Mi
-      volumes:
-      - name: snapshots
-        persistentVolumeClaim:
-          claimName: snapshot-storage
-      - name: config
-        configMap:
-          name: nginx-config
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: snapshot-server
-  namespace: snapshots
-spec:
-  selector:
-    app: snapshot-server
-  ports:
-  - port: 80
-    targetPort: 80
-  type: ClusterIP
+# processor/kustomization.yaml  
+images:
+  - name: ghcr.io/bryanlabs/snapshot-processor
+    newTag: v1.2.3
 ```
 
-### 5. `/kubernetes/snapshot-processor/scheduled-cronjob.yaml`
+### 3. Deploy via Kustomize
+```bash
+# CRITICAL: Always deploy from repository root
+cd /Users/danb/code/github.com/bryanlabs/bare-metal
+kubectl diff -k cluster
+kubectl apply -k cluster
+```
+
+## Configuration Management
+
+### ConfigMaps
+Each service has its own ConfigMap for non-sensitive configuration:
+
 ```yaml
-apiVersion: batch/v1
-kind: CronJob
-metadata:
-  name: scheduled-snapshot-processor
-  namespace: snapshots
-spec:
-  schedule: "0 */6 * * *"  # Every 6 hours
-  concurrencyPolicy: Forbid
-  successfulJobsHistoryLimit: 3
-  failedJobsHistoryLimit: 3
-  jobTemplate:
-    spec:
-      template:
-        spec:
-          serviceAccountName: snapshot-creator
-          containers:
-          - name: snapshot-processor
-            image: ghcr.io/bryanlabs/cosmos-snapshotter:v1.0.0
-            command: ["/scripts/process-snapshots.sh"]
-            env:
-            - name: MIN_RETAIN_BLOCKS
-              value: "1000"
-            - name: MIN_RETAIN_VERSIONS
-              value: "1000"
-            - name: COMPRESSION_LEVEL
-              value: "9"
-            volumeMounts:
-            - name: storage
-              mountPath: /storage
-            - name: scripts
-              mountPath: /scripts
-            resources:
-              requests:
-                cpu: 2
-                memory: 8Gi
-              limits:
-                cpu: 8
-                memory: 32Gi
-          volumes:
-          - name: storage
-            persistentVolumeClaim:
-              claimName: snapshot-storage
-          - name: scripts
-            configMap:
-              name: snapshot-scripts
-              defaultMode: 0755
-          restartPolicy: OnFailure
+# webapp-config
+NGINX_ENDPOINT: nginx
+NGINX_PORT: "32708"
+BANDWIDTH_FREE_TOTAL: "50"
+BANDWIDTH_PREMIUM_TOTAL: "250"
+
+# processor-config
+MODE: unified
+DRY_RUN: "false"
+WORKER_COUNT: "1"
 ```
 
-### 6. `/kubernetes/snapshot-processor/scripts-configmap.yaml`
-This is a large file containing the processing scripts. Key scripts:
-- `process-snapshots.sh`: Main script that finds and processes VolumeSnapshots
-- `process-single-snapshot.sh`: Processes individual snapshots
-- `cleanup-old-snapshots.sh`: Removes old snapshots based on retention
+### Secrets
+Sensitive data is stored in Kubernetes secrets:
 
-The scripts:
-1. Find VolumeSnapshots in the `fullnodes` namespace
-2. Create a PVC from the snapshot
-3. Mount it in a processing pod
-4. Run cosmprund to prune the data
-5. Create tar.lz4 archive
-6. Store in the snapshot-storage PVC
-7. Generate metadata JSON files
-8. Update symlinks for latest snapshots
-
-### 7. `/kubernetes/snapshot-processor/kustomization.yaml`
 ```yaml
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
+# webapp-secrets
+NEXTAUTH_SECRET: <generated>
+DATABASE_URL: file:/app/prisma/dev.db
+SECURE_LINK_SECRET: <shared-with-nginx>
 
-namespace: snapshots
-
-resources:
-  - namespace.yaml
-  - rbac.yaml
-  - storage.yaml
-  - nginx-server.yaml
-  - scripts-configmap.yaml
-  - scheduled-cronjob.yaml
+# processor-secrets
+# Currently none required
 ```
 
-## Docker Image Required
+## Monitoring and Observability
 
-Create `Dockerfile.cosmos-snapshotter`:
-```dockerfile
-FROM golang:1.21-alpine AS builder
+### Health Checks
+All services implement health endpoints:
+- Web App: `/api/health`
+- Processor: `/api/health`
+- Nginx: TCP port check
 
-RUN apk add --no-cache git make gcc musl-dev
+### Prometheus Metrics
+- Web App exports metrics at `/api/metrics`
+- Processor exports metrics at `/metrics`
+- Nginx metrics via nginx-prometheus-exporter
 
-RUN git clone https://github.com/binaryholdings/cosmprund /cosmprund && \
-    cd /cosmprund && \
-    go build -o /usr/local/bin/cosmprund ./cmd/cosmprund
+### Logging
+- All services log to stdout/stderr
+- Logs collected by cluster logging infrastructure
+- Available in Grafana Loki
 
-FROM alpine:3.19
+## Security Considerations
 
-RUN apk add --no-cache \
-    bash \
-    lz4 \
-    jq \
-    curl \
-    bc
+### Network Policies
+- Services only accessible within cluster
+- External access only via Ingress
+- Redis not exposed externally
 
-RUN wget https://dl.k8s.io/release/v1.28.0/bin/linux/amd64/kubectl && \
-    chmod +x kubectl && \
-    mv kubectl /usr/local/bin/
+### Authentication
+- Web app uses NextAuth.js v5
+- Processor trusts all requests (internal only)
+- Nginx uses secure_link for download protection
 
-COPY --from=builder /usr/local/bin/cosmprund /usr/local/bin/cosmprund
-
-RUN chmod +x /usr/local/bin/cosmprund
-
-ENTRYPOINT ["/bin/bash"]
+### RBAC
+The processor requires specific permissions:
+```yaml
+rules:
+- apiGroups: ["snapshot.storage.k8s.io"]
+  resources: ["volumesnapshots"]
+  verbs: ["get", "list", "watch", "delete"]
+- apiGroups: ["batch"]
+  resources: ["jobs"]
+  verbs: ["create", "get", "list", "watch", "delete"]
 ```
 
-## Integration with Next.js App
+## Troubleshooting
 
-The Next.js app connects to this infrastructure by:
-1. Setting `USE_REAL_SNAPSHOTS=true` environment variable
-2. Setting `SNAPSHOT_SERVER_URL=http://snapshot-server.snapshots.svc.cluster.local`
-3. The app will then fetch snapshot data from the nginx server instead of MinIO
+### Common Issues
 
-## Key Design Decisions
+1. **Web app can't connect to nginx**
+   ```bash
+   kubectl exec -n fullnodes deployment/webapp -- \
+     wget -O- http://nginx:32708/
+   ```
 
-1. **Namespace**: Uses `snapshots` namespace to isolate from other workloads
-2. **Storage**: 5TB PVC for processed snapshots (adjustable)
-3. **Processing**: Runs every 6 hours via CronJob
-4. **Pruning**: Uses cosmprund with configurable block/version retention
-5. **Format**: tar.lz4 compression for efficient storage
-6. **Serving**: nginx with JSON autoindex for easy API consumption
-7. **Metadata**: Each chain gets a metadata.json with all snapshots listed
+2. **Processor can't create snapshots**
+   ```bash
+   kubectl logs -n fullnodes deployment/snapshot-processor
+   kubectl get volumesnapshots -n fullnodes
+   ```
 
-## How It Works
+3. **Redis connection issues**
+   ```bash
+   kubectl exec -n fullnodes deployment/webapp -- \
+     nc -zv redis 6379
+   ```
 
-1. Your existing ScheduledVolumeSnapshots create VolumeSnapshots
-2. The CronJob finds these snapshots
-3. For each snapshot:
-   - Creates a temporary PVC from the snapshot
-   - Mounts it in a processing pod
-   - Runs cosmprund to prune unnecessary data
-   - Compresses to tar.lz4
-   - Stores in central storage with metadata
-4. Nginx serves the files with directory listing
-5. Next.js app reads the JSON metadata and provides UI
+### Debug Commands
+```bash
+# Check all snapshot service pods
+kubectl get pods -n fullnodes -l 'app in (webapp,nginx,snapshot-processor,redis)'
 
-This integrates seamlessly with your existing infrastructure while providing the modern UI requested in the PRD.
+# View recent logs
+kubectl logs -n fullnodes -l app=webapp --tail=50
+kubectl logs -n fullnodes -l app=snapshot-processor --tail=50
+
+# Check PVC usage
+kubectl exec -n fullnodes deployment/nginx -- df -h /usr/share/nginx/html
+```
+
+## Future Enhancements
+
+1. **Multi-region support** - Replicate snapshots across regions
+2. **S3 compatibility** - Add S3 backend option alongside nginx
+3. **Automated cleanup** - Remove old snapshots based on retention policies
+4. **Metrics dashboard** - Dedicated Grafana dashboard for snapshot services
+5. **Webhook notifications** - Notify when snapshots are ready

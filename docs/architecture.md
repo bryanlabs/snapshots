@@ -23,61 +23,72 @@ The BryanLabs Snapshot Service is a production-grade blockchain snapshot hosting
   - Enforces 50MB/s for free tier
   - Enforces 250MB/s for premium tier
   - IP-based access logging (no longer enforced)
-  - Routes requests to MinIO backend
+  - Routes requests to nginx storage backend
 
-### 3. MinIO Object Storage
-- **Endpoint**: `minio.apps.svc.cluster.local:9000` (internal)
-- **External**: `minio.bryanlabs.net`
-- **Purpose**: S3-compatible storage for snapshot files
+### 3. Nginx Storage Backend
+- **Endpoint**: `nginx.fullnodes.svc.cluster.local:32708` (internal)
+- **External**: `https://snapshots.bryanlabs.net`
+- **Purpose**: Static file serving with secure_link module
+- **Features**:
+  - Autoindex JSON format for programmatic access
+  - Secure link validation for bandwidth enforcement
+  - Shared PVC with snapshot processor
 - **Structure**:
   ```
-  snapshots/
+  /snapshots/
   ├── osmosis-1/
   │   ├── osmosis-1-25261834.tar.zst
-  │   ├── osmosis-1-25261834.json
-  │   └── osmosis-1-25261834.sha256
+  │   ├── osmosis-1-25261834.tar.lz4
+  │   └── latest.json
   ├── noble-1/
-  │   └── noble-1-0.tar.zst
+  │   ├── noble-1-20250722.tar.zst
+  │   └── noble-1-20250722.tar.lz4
   └── cosmoshub-4/
       └── cosmoshub-4-22806278.tar.zst
   ```
 
 ### 4. Snapshot Processor
-- **Location**: `ghcr.io/bryanlabs/cosmos-snapshotter`
-- **Purpose**: Creates compressed snapshots from running nodes
+- **Location**: `ghcr.io/bryanlabs/snapshot-processor`
+- **Purpose**: Request-based snapshot creation and management
+- **Features**:
+  - Request queue system for scheduled and on-demand snapshots
+  - Dual compression support (ZST and LZ4)
+  - Retention policy enforcement (deletes old VolumeSnapshots)
+  - Dynamic resource allocation for compression jobs
 - **Process**:
-  1. Stops the blockchain node
-  2. Creates tar archive of data directory
-  3. Compresses with zstd (level 3)
-  4. Generates metadata and checksums
-  5. Uploads to MinIO
-  6. Restarts the node
+  1. Receives request (scheduled or on-demand)
+  2. Creates VolumeSnapshot from PVC
+  3. Mounts snapshot and compresses with shell commands
+  4. Uploads to shared PVC (nginx storage)
+  5. Updates latest.json pointer
+  6. Applies retention policy
 
 ### 5. Redis Cache
-- **Purpose**: Session storage and rate limiting
+- **Purpose**: Session storage and caching
 - **Usage**:
-  - JWT session management
-  - Download rate limiting (10/minute)
-  - Future: bandwidth metrics tracking
+  - NextAuth v5 session storage
+  - Download tracking and counting
+  - Bandwidth usage metrics
+  - Rate limiting
 
 ## Data Flow
 
 ### Download Flow (Free Tier)
 ```
-User Browser → WebApp API → Generate Pre-signed URL (tier=free) → 
-→ User Downloads → Nginx Proxy (50MB/s limit) → MinIO Storage
+User Browser → WebApp API → Generate Secure URL (tier=free) → 
+→ User Downloads → Nginx Storage (50MB/s limit, secure_link validation)
 ```
 
 ### Download Flow (Premium Tier)
 ```
-User Login → JWT Cookie → WebApp API → Generate Pre-signed URL (tier=premium) → 
-→ User Downloads → Nginx Proxy (250MB/s limit) → MinIO Storage
+User Login → NextAuth Session → WebApp API → Generate Secure URL (tier=premium) → 
+→ User Downloads → Nginx Storage (250MB/s limit, secure_link validation)
 ```
 
 ### Snapshot Creation Flow
 ```
-Kubernetes CronJob → Snapshot Processor → Stop Node → 
-→ Compress Data → Upload to MinIO → Restart Node
+Scheduler/User Request → Processor API → Create VolumeSnapshot → 
+→ Mount & Compress (ZST/LZ4) → Upload to Nginx Storage → Apply Retention Policy
 ```
 
 ## Kubernetes Architecture
@@ -94,41 +105,47 @@ Kubernetes CronJob → Snapshot Processor → Stop Node →
 
 ### Ingress
 - **snapshots.bryanlabs.net**: Routes to webapp
-- **minio.bryanlabs.net**: Direct MinIO access (with nginx proxy)
+- **snapshots.bryanlabs.net**: Direct nginx storage access
 
 ## Security Model
 
 ### Authentication
-- Single premium user with bcrypt password hash
-- JWT tokens in httpOnly cookies
-- 7-day session duration
-- No user registration (by design)
+- NextAuth v5 with email/password and wallet support
+- Database-backed sessions (SQLite)
+- Legacy JWT support for API compatibility
+- User registration enabled
+- Account linking between email and wallet
 
 ### URL Security
-- Pre-signed URLs expire in 24 hours
-- URLs include tier metadata for bandwidth enforcement
-- Download tracking via MinIO access logs
+- Secure URLs with nginx secure_link module
+- URLs expire in 5 minutes
+- MD5 hash includes IP, expiration, and tier
+- Download tracking via nginx logs and Redis
 
 ### Network Security
 - All internal communication over cluster network
 - TLS termination at ingress
-- No direct MinIO exposure (except through nginx)
+- Secure download URLs with nginx secure_link module
 
 ## Configuration
 
 ### Environment Variables (WebApp)
 ```bash
-# MinIO Configuration
-MINIO_ENDPOINT=minio.apps.svc.cluster.local
-MINIO_PORT=9000
-MINIO_BUCKET_NAME=snapshots
-MINIO_ACCESS_KEY=<secret>
-MINIO_SECRET_KEY=<secret>
+# Nginx Configuration
+NGINX_ENDPOINT=nginx
+NGINX_PORT=32708
+NGINX_USE_SSL=false
+NGINX_EXTERNAL_URL=https://snapshots.bryanlabs.net
+SECURE_LINK_SECRET=<secret>
 
 # Authentication
+NEXTAUTH_SECRET=<secret>
+NEXTAUTH_URL=https://snapshots.bryanlabs.net
+DATABASE_URL=file:/app/prisma/dev.db
+# Legacy API support
 PREMIUM_USERNAME=premium_user
 PREMIUM_PASSWORD_HASH=<bcrypt>
-SESSION_PASSWORD=<secret>
+JWT_SECRET=<secret>
 
 # Bandwidth Limits
 BANDWIDTH_FREE_TOTAL=50
@@ -142,7 +159,12 @@ REDIS_PORT=6379
 ### Nginx Configuration
 ```nginx
 # Bandwidth limits enforced via limit_rate
-map $arg_X-Amz-Meta-Tier $limit_rate {
+# Secure link validation
+secure_link $arg_md5,$arg_expires;
+secure_link_md5 "$secure_link_expires$uri$remote_addr$arg_tier $secret";
+
+# Bandwidth limits based on tier
+map $arg_tier $limit_rate {
     default      50m;  # 50MB/s for free tier
     "free"       50m;
     "premium"    250m; # 250MB/s for premium tier
@@ -154,12 +176,13 @@ map $arg_X-Amz-Meta-Tier $limit_rate {
 ### Current Metrics
 - Nginx access logs for download tracking
 - Kubernetes pod metrics (CPU, memory)
-- MinIO storage usage
+- Nginx storage usage (shared PVC)
 
 ### Health Checks
 - WebApp: `/api/health` endpoint
 - Nginx: TCP port checks
-- MinIO: Built-in health endpoints
+- Nginx: TCP port checks
+- Processor: `/api/health` endpoint
 
 ## Snapshot Storage Format
 
@@ -169,17 +192,16 @@ map $arg_X-Amz-Meta-Tier $limit_rate {
 Example: osmosis-1-25261834.tar.zst
 ```
 
-### Metadata Files
+### Metadata Files (latest.json)
 ```json
 {
   "chain_id": "osmosis-1",
   "height": 25261834,
   "size": 91547443618,
   "created_at": "2024-12-16T08:30:00Z",
-  "pruning": "default",
-  "indexer": "kv",
-  "compression": "zstd",
-  "compression_level": 3
+  "filename": "osmosis-1-25261834.tar.lz4",
+  "compression": "lz4",
+  "compression_level": 1
 }
 ```
 
@@ -187,22 +209,23 @@ Example: osmosis-1-25261834.tar.zst
 
 ### Current Limits
 - Total bandwidth: 500MB/s (infrastructure limit)
-- Storage: ~500TB available in MinIO
+- Storage: 10TB PVC (expandable with TopoLVM)
 - Concurrent downloads: ~100 (nginx worker limits)
 
 ### Bottlenecks
 1. Single Redis instance (can be clustered)
 2. Nginx bandwidth enforcement (CPU intensive)
-3. MinIO IOPS for many concurrent reads
+3. Nginx static file serving for high performance
 
 ## Disaster Recovery
 
 ### Backup Strategy
-- MinIO data replicated across multiple drives
+- TopoLVM provides redundant storage
+- Snapshot processor retention policies prevent overflow
 - Kubernetes etcd backed up daily
 - Configuration stored in Git
 
 ### Recovery Procedures
 1. **WebApp failure**: Kubernetes auto-restarts pods
-2. **MinIO failure**: Restore from drive replicas
-3. **Complete failure**: Restore from Git + MinIO backups
+2. **Nginx failure**: Kubernetes auto-restarts, data persists on PVC
+3. **Complete failure**: Restore from Git + PVC backups

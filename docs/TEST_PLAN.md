@@ -1,22 +1,35 @@
 # Snapshots Service API Test Plan
 
 ## Overview
-This test plan covers all API endpoints and authentication flows for the snapshots service.
+This test plan covers all API endpoints and authentication flows for the snapshots service, including support for both ZST and LZ4 compression formats.
 
 ## Test Environment
 - Base URL: `https://snapshots.bryanlabs.net`
 - API Base: `https://snapshots.bryanlabs.net/api/v1`
+- Storage Backend: Nginx with secure_link module
+- Authentication: NextAuth v5
 
 ## 1. Authentication Tests
 
-### 1.1 Email/Password Login
+### 1.1 Email/Password Login (NextAuth)
 ```bash
-# Test valid login
-curl -X POST https://snapshots.bryanlabs.net/api/auth/signin \
-  -H "Content-Type: application/json" \
-  -d '{"email": "test@example.com", "password": "testpassword"}'
+# Test valid login with NextAuth
+curl -X POST https://snapshots.bryanlabs.net/api/auth/callback/credentials \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -b cookies.txt -c cookies.txt \
+  -d "email=test@example.com&password=snapshot123&csrfToken=[CSRF_TOKEN]"
 
-# Expected: Set-Cookie header with session token
+# Expected: Set-Cookie header with next-auth session
+```
+
+### 1.1b Legacy JWT Login (API compatibility)
+```bash
+# Test legacy API login
+curl -X POST https://snapshots.bryanlabs.net/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username": "premium_user", "password": "password"}'
+
+# Expected: JWT token in response
 ```
 
 ### 1.2 Wallet (Keplr) Login
@@ -95,6 +108,7 @@ curl https://snapshots.bryanlabs.net/api/v1/chains/cosmoshub-4/snapshots
     {
       "id": "...",
       "fileName": "cosmoshub-4-20240315.tar.lz4",
+      "compressionType": "lz4",
       "blockHeight": "19500000",
       "size": "150GB",
       "timestamp": "2024-03-15T00:00:00Z"
@@ -118,20 +132,32 @@ curl https://snapshots.bryanlabs.net/api/v1/health
 
 ### 3.1 Generate Download URL (Free Tier)
 ```bash
-# First create a free user account or use wallet login
-# Then test download URL generation
-curl https://snapshots.bryanlabs.net/api/v1/chains/cosmoshub-4/snapshots/[snapshot-id]/download \
-  -H "Cookie: [session-cookie]"
+# First authenticate, then generate download URL
+curl -X POST https://snapshots.bryanlabs.net/api/v1/chains/cosmoshub-4/download \
+  -H "Content-Type: application/json" \
+  -H "Cookie: [session-cookie]" \
+  -d '{"fileName": "cosmoshub-4-20240315.tar.lz4"}'
 
 # Expected:
 {
   "data": {
-    "url": "https://snaps.bryanlabs.net/snapshots/cosmoshub-4/file.tar.lz4?md5=...&expires=...",
+    "url": "https://snapshots.bryanlabs.net/snapshots/cosmoshub-4/cosmoshub-4-20240315.tar.lz4?md5=...&expires=...&tier=free",
     "expires_at": "2024-03-15T12:30:00Z",
     "tier": "free",
     "bandwidth_limit": "50 Mbps"
   }
 }
+```
+
+### 3.1b Test ZST Download URL
+```bash
+# Test ZST format download
+curl -X POST https://snapshots.bryanlabs.net/api/v1/chains/noble-1/download \
+  -H "Content-Type: application/json" \
+  -H "Cookie: [session-cookie]" \
+  -d '{"fileName": "noble-1-20240315.tar.zst"}'
+
+# Expected: Similar response with .tar.zst file
 ```
 
 ### 3.2 Get User Dashboard Data
@@ -183,10 +209,10 @@ SELECT * FROM system_config;
 ### 5.1 Full Download Flow
 1. Sign in (email or wallet)
 2. Browse chains
-3. Select snapshot
+3. Select snapshot (test both .tar.lz4 and .tar.zst)
 4. Generate download URL
-5. Verify URL works with nginx
-6. Check bandwidth limiting
+5. Verify URL works with nginx secure_link
+6. Check bandwidth limiting (50 Mbps free, 250 Mbps premium)
 
 ### 5.2 Tier Verification
 1. Create free user -> verify 50 Mbps limit
@@ -247,9 +273,13 @@ curl https://snapshots.bryanlabs.net/api/v1/chains/invalid-chain
 - [ ] All public APIs return expected data
 - [ ] Email/password login works
 - [ ] Wallet login works with Keplr
+- [ ] NextAuth v5 sessions work correctly
 - [ ] Sessions persist across requests
 - [ ] Protected endpoints require auth
-- [ ] Download URLs are generated correctly
+- [ ] Download URLs are generated correctly for both LZ4 and ZST formats
+- [ ] Nginx secure_link validation works
 - [ ] Bandwidth limits are enforced
 - [ ] Error responses are consistent
 - [ ] Performance meets targets
+- [ ] Both compression formats are displayed in UI
+- [ ] Integration with snapshot-processor works
