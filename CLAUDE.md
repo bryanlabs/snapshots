@@ -2,9 +2,47 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Design System & UI Theme
+
+### Authentication Pages Theme
+The authentication pages (signin/signup) use a consistent split-screen design:
+
+**Layout:**
+- Left side (50%): Feature showcase with gradient overlay
+- Right side (50%): Authentication form centered in viewport
+- Mobile: Stacks vertically with form only
+
+**Color Palette:**
+- Background: Gradient from gray-900 via gray-800 to gray-900
+- Left panel overlay: Blue-600/20 to purple-600/20 gradient
+- Card background: Gray-800/50 with backdrop blur
+- Primary accents: Blue-500 to purple-600 gradients
+- Success accents: Green-500 to blue-600 gradients
+
+**Design Elements:**
+- Glassmorphic cards with backdrop-blur-xl
+- Rounded corners (rounded-lg, rounded-2xl)
+- Subtle shadows (shadow-2xl)
+- Gradient text for emphasis
+- Decorative blur circles for depth
+
+**Typography:**
+- Headers: Bold, white text
+- Subheaders: Gray-400
+- Body text: Gray-300/400
+- Interactive elements: Blue-400 hover:blue-300
+
+**Interactive Components:**
+- Buttons with gradient backgrounds
+- Hover states with color transitions
+- Loading states with spinners
+- Form inputs with gray-700/50 backgrounds
+
+Apply this theme consistently across all authentication-related pages and similar full-page experiences.
+
 ## Project Overview
 
-**Blockchain Snapshot Service** - A production-grade Next.js application that provides bandwidth-managed blockchain snapshot hosting with tiered user access (free: 50MB/s shared, premium: 250MB/s shared). Uses MinIO for object storage and implements comprehensive monitoring, security, and user management.
+**Blockchain Snapshot Service** - A production-grade Next.js application that provides bandwidth-managed blockchain snapshot hosting with tiered user access (free: 50 Mbps shared, premium: 250 Mbps shared). Uses MinIO for object storage and implements comprehensive monitoring, security, and user management.
 
 ## Key Architecture Components
 
@@ -27,6 +65,13 @@ npm run lint         # Run ESLint
 npm run test         # Run unit tests
 npm run test:e2e     # Run E2E tests with Playwright
 npm run test:load    # Run load tests with k6
+
+# Docker Build and Deploy (IMPORTANT)
+# Always use these flags for building Docker images:
+docker buildx build --builder cloud-bryanlabs-builder --platform linux/amd64 -t ghcr.io/bryanlabs/snapshots:VERSION --push .
+# This ensures the image is built for the correct platform (linux/amd64) using the cloud builder
+# IMPORTANT: Always use semantic versioning (e.g., v1.3.0) - NEVER use "latest" tag
+# Increment version numbers properly: v1.2.9 → v1.3.0 → v1.3.1
 ```
 
 ## Project Structure
@@ -95,15 +140,40 @@ components/
 - Pre-signed URLs: 5-minute expiration, IP-restricted
 
 ### Authentication Flow
-- Single premium user (credentials in env vars)
-- JWT tokens in httpOnly cookies
+- NextAuth.js v5 with dual authentication:
+  - Email/password (credentials provider)
+  - Cosmos wallet (Keplr integration)
+- SQLite database with Prisma ORM
+- Sessions stored in JWT tokens
 - 7-day session duration
 - Middleware validates on protected routes
 
+### Testing NextAuth Authentication with CSRF
+When testing NextAuth authentication endpoints, you must obtain and use CSRF tokens:
+
+```bash
+# 1. Get CSRF token from the API
+curl -s -c cookies.txt -L https://snapshots.bryanlabs.net/api/auth/csrf
+# Response: {"csrfToken":"abc123..."}
+
+# 2. Extract CSRF token from cookies (alternative method)
+cat cookies.txt | grep csrf-token | awk -F'\t' '{print $7}' | cut -d'%' -f1 > csrf.txt
+
+# 3. Use CSRF token in authentication request
+curl -X POST https://snapshots.bryanlabs.net/api/auth/callback/credentials \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -b cookies.txt \
+  -c cookies.txt \
+  -L \
+  -d "csrfToken=$(cat csrf.txt)&email=test@example.com&password=password123"
+```
+
+**Important**: NextAuth requires CSRF tokens for all authentication requests. The token is stored in the `__Host-authjs.csrf-token` cookie and must be included in the request body.
+
 ### Bandwidth Management
-- Free tier: 50MB/s shared among all free users
-- Premium tier: 250MB/s shared among all premium users
-- Total cap: 500MB/s
+- Free tier: 50 Mbps shared among all free users (~6.25 MB/s)
+- Premium tier: 250 Mbps shared among all premium users (~31.25 MB/s)
+- Total cap: 500 Mbps
 - Enforced at MinIO level via metadata
 
 ### API Response Format
@@ -128,7 +198,12 @@ MINIO_ENDPOINT=http://minio.apps.svc.cluster.local:9000
 MINIO_ACCESS_KEY=<from-secret>
 MINIO_SECRET_KEY=<from-secret>
 
-# Auth
+# Auth (NextAuth)
+NEXTAUTH_SECRET=<generated>
+NEXTAUTH_URL=https://snapshots.bryanlabs.net
+DATABASE_URL=file:/app/prisma/dev.db
+
+# Legacy Auth (for API compatibility)
 PREMIUM_USERNAME=premium_user
 PREMIUM_PASSWORD_HASH=<bcrypt-hash>
 JWT_SECRET=<generated>
@@ -139,6 +214,16 @@ BANDWIDTH_PREMIUM_TOTAL=250
 AUTH_SESSION_DURATION=7d
 DOWNLOAD_URL_EXPIRY=5m
 ```
+
+### Database Initialization
+The app uses SQLite with Prisma ORM. The database schema includes:
+- Users (email/wallet auth)
+- Teams with role-based access
+- Tiers (free, premium, enterprise)
+- Download tracking and analytics
+- Snapshot requests and access control
+
+**Important**: The database is initialized automatically via `scripts/init-db-proper.sh` which creates all required tables with correct column names and includes a test user (test@example.com / snapshot123).
 
 ## Key Features to Implement
 

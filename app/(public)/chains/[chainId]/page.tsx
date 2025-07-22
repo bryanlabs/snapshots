@@ -2,42 +2,51 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { SnapshotListClient } from '@/components/snapshots/SnapshotListClient';
+import { DownloadLatestButton } from '@/components/chains/DownloadLatestButton';
 import type { Metadata } from 'next';
 import { Chain, Snapshot } from '@/lib/types';
 
 // Chain metadata mapping - same as in the API route
-const chainMetadata: Record<string, { name: string; logoUrl: string }> = {
+const chainMetadata: Record<string, { name: string; logoUrl: string; accentColor?: string }> = {
   'noble-1': {
     name: 'Noble',
     logoUrl: '/chains/noble.png',
+    accentColor: '#FFB800',
   },
   'cosmoshub-4': {
     name: 'Cosmos Hub',
     logoUrl: '/chains/cosmos.png',
+    accentColor: '#5E72E4',
   },
   'osmosis-1': {
     name: 'Osmosis',
     logoUrl: '/chains/osmosis.png',
+    accentColor: '#9945FF',
   },
   'juno-1': {
     name: 'Juno',
     logoUrl: '/chains/juno.png',
+    accentColor: '#F0827D',
   },
   'kaiyo-1': {
     name: 'Kujira',
     logoUrl: '/chains/kujira.png',
+    accentColor: '#DC3545',
   },
   'columbus-5': {
     name: 'Terra Classic',
     logoUrl: '/chains/terra.png',
+    accentColor: '#FF6B6B',
   },
   'phoenix-1': {
     name: 'Terra',
     logoUrl: '/chains/terra2.png',
+    accentColor: '#FF6B6B',
   },
   'thorchain-1': {
     name: 'THORChain',
     logoUrl: '/chains/thorchain.png',
+    accentColor: '#00D4AA',
   },
 };
 
@@ -167,17 +176,30 @@ export default async function ChainDetailPage({
             </div>
             
             <div className="flex-1">
-              <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2">
-                {chain.name}
-              </h1>
-              <p className="text-lg text-gray-600 dark:text-gray-400">
-                {chain.network}
-              </p>
-              {chain.description && (
-                <p className="mt-4 text-gray-700 dark:text-gray-300 max-w-3xl">
-                  {chain.description}
-                </p>
-              )}
+              <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+                <div>
+                  <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2">
+                    {chain.name}
+                  </h1>
+                  <p className="text-lg text-gray-600 dark:text-gray-400">
+                    {chain.network}
+                  </p>
+                  {chain.description && (
+                    <p className="mt-4 text-gray-700 dark:text-gray-300 max-w-3xl">
+                      {chain.description}
+                    </p>
+                  )}
+                </div>
+                {chain.latestSnapshot && snapshots.length > 0 && (
+                  <div className="flex-shrink-0">
+                    <DownloadLatestButton 
+                      chainId={chain.id}
+                      size={chain.latestSnapshot.size}
+                      accentColor={chainMetadata[chain.id]?.accentColor}
+                    />
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -198,6 +220,7 @@ export default async function ChainDetailPage({
           <SnapshotListClient 
             chainId={chain.id} 
             chainName={chain.name} 
+            chainLogoUrl={chainMetadata[chain.id]?.logoUrl}
             initialSnapshots={snapshots} 
           />
         </div>

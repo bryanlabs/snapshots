@@ -1,9 +1,10 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/components/providers/AuthProvider";
 import { Header } from "@/components/common/Header";
 import { LayoutProvider } from "@/components/providers/LayoutProvider";
+import { Providers } from "@/components/providers";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -58,11 +59,12 @@ export const metadata: Metadata = {
     index: true,
     follow: true,
   },
-  viewport: {
-    width: "device-width",
-    initialScale: 1,
-    maximumScale: 5,
-  },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
 };
 
 export default function RootLayout({
@@ -91,12 +93,14 @@ export default function RootLayout({
         />
       </head>
       <body className={`${inter.variable} font-sans antialiased bg-gray-50 dark:bg-gray-900`}>
-        <AuthProvider>
-          <Header />
-          <LayoutProvider>
-            {children}
-          </LayoutProvider>
-        </AuthProvider>
+        <Providers>
+          <AuthProvider>
+            <Header />
+            <LayoutProvider>
+              {children}
+            </LayoutProvider>
+          </AuthProvider>
+        </Providers>
       </body>
     </html>
   );

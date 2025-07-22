@@ -9,44 +9,35 @@ export default async function Home() {
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-gray-900 to-gray-800 text-white py-12">
-        <div className="container mx-auto px-4">
+      <section className="hero-gradient text-white py-8">
+        <div className="container mx-auto px-4 hero-content">
           <div className="max-w-4xl mx-auto text-center">
-            <div className="mb-8">
-              <Image
-                src="/bryanlabs_banner.png"
-                alt="BryanLabs Logo"
-                width={200}
-                height={80}
-                className="mx-auto"
-              />
-            </div>
             
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
               Blockchain Snapshots
             </h1>
             
-            <p className="text-xl md:text-2xl text-gray-300 mb-8">
+            <p className="text-xl md:text-2xl text-gray-200 mb-8">
               Fast, reliable blockchain snapshots for Cosmos ecosystem chains
             </p>
             
-            <div className="flex flex-wrap justify-center items-center gap-4 text-gray-400">
+            <div className="flex flex-wrap justify-center items-center gap-4 text-gray-300">
               <span className="flex items-center gap-2">
-                <svg className="w-5 h-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                <svg className="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                 </svg>
                 Updated 4x daily
               </span>
-              <span className="hidden sm:inline">•</span>
+              <span className="hidden sm:inline text-gray-400">•</span>
               <span className="flex items-center gap-2">
-                <svg className="w-5 h-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                <svg className="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                 </svg>
                 Latest zstd compression
               </span>
-              <span className="hidden sm:inline">•</span>
+              <span className="hidden sm:inline text-gray-400">•</span>
               <span className="flex items-center gap-2">
-                <svg className="w-5 h-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                <svg className="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                 </svg>
                 Powered by DACS-IX

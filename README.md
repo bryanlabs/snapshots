@@ -6,7 +6,7 @@ A production-grade blockchain snapshot hosting service providing reliable, bandw
 
 The Blockchain Snapshots Service provides high-speed access to blockchain node snapshots for the Cosmos ecosystem. It features:
 
-- **Tiered Access**: Free tier (50MB/s shared) and Premium tier (250MB/s shared)
+- **Tiered Access**: Free tier (50 Mbps shared) and Premium tier (250 Mbps shared)
 - **Resume Support**: Interrupted downloads can be resumed
 - **Real-time Monitoring**: Prometheus metrics and Grafana dashboards
 - **High Availability**: Redundant deployments with automatic failover
