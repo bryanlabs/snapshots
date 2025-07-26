@@ -1,5 +1,7 @@
 # BryanLabs Snapshot Service Architecture
 
+> **Note**: For specific architectural decisions, see our [Architecture Decision Records (ADRs)](./adr/)
+
 ## Overview
 
 The BryanLabs Snapshot Service is a production-grade blockchain snapshot hosting platform that provides tiered bandwidth access (free and premium) for Cosmos ecosystem chains. The system is designed for high availability, security, and optimal performance.
