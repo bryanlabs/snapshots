@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server';
 import { bandwidthManager } from '@/lib/bandwidth/manager';
-import { getUser } from '@/lib/auth/session';
+import { auth } from '@/auth';
 
 export async function GET() {
   try {
-    const user = await getUser();
-    const tier = user ? 'premium' : 'free';
+    const session = await auth();
+    const tier = session?.user?.tier || 'free';
     const stats = bandwidthManager.getStats();
     
     // Calculate current speed based on active connections

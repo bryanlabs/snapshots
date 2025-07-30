@@ -1,10 +1,7 @@
 import { RateLimiterMemory, RateLimiterRes } from 'rate-limiter-flexible';
 import { NextRequest, NextResponse } from 'next/server';
 import { trackRateLimitHit } from '@/lib/monitoring/metrics';
-import { getIronSession } from 'iron-session';
-import { User } from '@/types/user';
-import { sessionOptions } from '@/lib/session';
-import { cookies } from 'next/headers';
+import { auth } from '@/auth';
 
 // Rate limiter for download URL generation - 10 requests per minute
 const downloadRateLimiter = new RateLimiterMemory({
@@ -55,12 +52,11 @@ export async function rateLimitMiddleware(
 ): Promise<NextResponse | null> {
   try {
     // Get user session to determine tier
-    const cookieStore = await cookies();
-    const session = await getIronSession<User>(cookieStore, sessionOptions);
-    const isPremium = session?.tier === 'premium';
+    const session = await auth();
+    const isPremium = session?.user?.tier === 'premium';
     
     // Get client identifier (user ID if logged in, otherwise IP)
-    const clientId = session?.username || 
+    const clientId = session?.user?.id || 
       request.headers.get('x-forwarded-for') || 
       request.headers.get('x-real-ip') || 
       'anonymous';

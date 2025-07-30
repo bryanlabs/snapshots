@@ -2,10 +2,11 @@ import { ChainListServer } from '@/components/chains/ChainListServer';
 import Image from 'next/image';
 import { Suspense } from 'react';
 import { UpgradePrompt } from '@/components/common/UpgradePrompt';
-import { getUser } from '@/lib/auth/session';
+import { auth } from '@/auth';
 
 export default async function Home() {
-  const user = await getUser();
+  const session = await auth();
+  const user = session?.user;
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
@@ -61,7 +62,7 @@ export default async function Home() {
           </div>
 
           {/* Upgrade prompt for non-premium users */}
-          {!user && (
+          {user?.tier !== 'premium' && (
             <div className="mb-8">
               <UpgradePrompt />
             </div>

@@ -13,6 +13,33 @@ export default async function MyDownloadsPage() {
     redirect("/auth/signin");
   }
 
+  // Handle premium user specially
+  if (session.user.id === 'premium-user') {
+    return (
+      <div className="container mx-auto py-8 px-4 max-w-6xl">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold">My Downloads</h1>
+          <p className="text-muted-foreground">View your download history</p>
+        </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Premium Account</CardTitle>
+            <CardDescription>
+              Download history is not tracked for premium accounts
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-muted-foreground">
+              As a premium user, you have unlimited access to all snapshots.
+              Visit the <Link href="/chains" className="text-blue-600 hover:underline">chains page</Link> to browse and download snapshots.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   const downloads = await prisma.download.findMany({
     where: { userId: session.user.id },
     include: {

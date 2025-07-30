@@ -7,10 +7,7 @@ import { withRateLimit } from '@/lib/middleware/rateLimiter';
 import { collectResponseTime, trackRequest, trackDownload } from '@/lib/monitoring/metrics';
 import { logDownload as logDownloadMetric, extractRequestMetadata, logRequest } from '@/lib/middleware/logger';
 import { bandwidthManager } from '@/lib/bandwidth/manager';
-import { getIronSession } from 'iron-session';
-import { User } from '@/lib/types';
-import { sessionOptions } from '@/lib/auth/session';
-import { cookies } from 'next/headers';
+import { auth } from '@/auth';
 import { checkDownloadAllowed, incrementDailyDownload, logDownload } from '@/lib/download/tracker';
 
 const downloadRequestSchema = z.object({
@@ -30,9 +27,8 @@ async function handleDownload(
     const { chainId } = await params;
     const body = await request.json();
     
-    // Get user session
-    const cookieStore = await cookies();
-    const session = await getIronSession<{ user?: User; isLoggedIn: boolean }>(cookieStore, sessionOptions);
+    // Get user session from NextAuth
+    const session = await auth();
     const userId = session?.user?.id || 'anonymous';
     const tier = session?.user?.tier || 'free';
     

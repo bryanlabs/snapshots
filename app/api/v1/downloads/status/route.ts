@@ -1,17 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ApiResponse } from '@/lib/types';
 import { checkDownloadAllowed } from '@/lib/download/tracker';
-import { getIronSession } from 'iron-session';
-import { User } from '@/types/user';
-import { sessionOptions } from '@/lib/session';
-import { cookies } from 'next/headers';
+import { auth } from '@/auth';
 
 export async function GET(request: NextRequest) {
   try {
-    // Get user session
-    const cookieStore = await cookies();
-    const session = await getIronSession<User>(cookieStore, sessionOptions);
-    const tier = session?.tier || 'free';
+    // Get user session from NextAuth
+    const session = await auth();
+    const tier = session?.user?.tier || 'free';
     
     // Get client IP
     const clientIp = request.headers.get('x-forwarded-for') || 

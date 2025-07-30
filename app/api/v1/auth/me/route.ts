@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server';
 import { ApiResponse, User } from '@/lib/types';
-import { getUser } from '@/lib/auth/session';
+import { auth } from '@/auth';
 
 export async function GET() {
   try {
-    const user = await getUser();
+    const session = await auth();
+    const user = session?.user;
     
     if (!user) {
       return NextResponse.json<ApiResponse>(

@@ -1,18 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ApiResponse } from '@/lib/types';
 import { getDownloadStats, getRecentDownloads } from '@/lib/download/tracker';
-import { getIronSession } from 'iron-session';
-import { User } from '@/types/user';
-import { sessionOptions } from '@/lib/session';
-import { cookies } from 'next/headers';
+import { auth } from '@/auth';
 
 export async function GET(request: NextRequest) {
   try {
     // Check if user is authenticated as premium (admin)
-    const cookieStore = await cookies();
-    const session = await getIronSession<User>(cookieStore, sessionOptions);
+    const session = await auth();
     
-    if (!session || session.tier !== 'premium') {
+    if (!session?.user || session.user.tier !== 'premium') {
       return NextResponse.json<ApiResponse>(
         {
           success: false,

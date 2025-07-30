@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 import { Snapshot } from '@/lib/types';
-import { useAuth } from '../providers/AuthProvider';
+import { useAuth } from '@/hooks/useAuth';
 import { LoadingSpinner } from '../common/LoadingSpinner';
 import { DownloadModal } from '../common/DownloadModal';
 
@@ -35,11 +35,11 @@ export function DownloadButton({ snapshot, chainName, chainLogoUrl }: DownloadBu
   const [showCopySuccess, setShowCopySuccess] = useState(false);
 
   const handleDownloadClick = () => {
-    // Show modal for free users, proceed directly for premium users
-    if (!user) {
-      setShowModal(true);
-    } else {
+    // Premium users get instant download, others see modal
+    if (user?.tier === 'premium') {
       handleDownload();
+    } else {
+      setShowModal(true);
     }
   };
 

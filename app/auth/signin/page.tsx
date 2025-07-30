@@ -358,11 +358,11 @@ export default function SignInPage() {
                 {mode === 'signin' ? (
                   <form onSubmit={handleCredentialsSignIn} className="space-y-5">
                     <div className="space-y-2">
-                      <Label htmlFor="email" className="text-gray-300">Email</Label>
+                      <Label htmlFor="email" className="text-gray-300">Username or Email</Label>
                       <Input
                         id="email"
-                        type="email"
-                        placeholder="you@example.com"
+                        type="text"
+                        placeholder="premium_user or you@example.com"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         required

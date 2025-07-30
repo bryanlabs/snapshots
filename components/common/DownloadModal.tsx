@@ -27,7 +27,68 @@ export function DownloadModal({
   isLoading = false 
 }: DownloadModalProps) {
   const { user } = useAuth();
-  const tier = user ? 'premium' : 'free';
+  const tier = user?.tier || 'free';
+  
+  // Premium users get a simplified modal
+  if (tier === 'premium') {
+    return (
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Premium Download</DialogTitle>
+            <DialogDescription>
+              {snapshot.chainId} - {snapshot.filename}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            {/* File info */}
+            <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-4 border border-purple-200 dark:border-purple-800">
+              <div className="flex justify-between text-sm mb-2">
+                <span className="text-gray-600 dark:text-gray-400">File size:</span>
+                <span className="font-medium">{snapshot.size}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-600 dark:text-gray-400">Download speed:</span>
+                <span className="font-medium text-purple-600 dark:text-purple-400">250 Mbps</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-600 dark:text-gray-400">Estimated time:</span>
+                <span className="font-medium">{calculateDownloadTime(snapshot.size, 250)}</span>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={onClose}
+              disabled={isLoading}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={onConfirm}
+              disabled={isLoading}
+              className="bg-purple-600 hover:bg-purple-700"
+            >
+              {isLoading ? (
+                <>
+                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  </svg>
+                  Generating URL...
+                </>
+              ) : (
+                <>Download Now</>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    );
+  }
   
   const bandwidthInfo = {
     free: {

@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import { AuthProvider } from "@/components/providers/AuthProvider";
 import { Header } from "@/components/common/Header";
 import { LayoutProvider } from "@/components/providers/LayoutProvider";
 import { Providers } from "@/components/providers";
@@ -94,12 +93,10 @@ export default function RootLayout({
       </head>
       <body className={`${inter.variable} font-sans antialiased bg-gray-50 dark:bg-gray-900`}>
         <Providers>
-          <AuthProvider>
-            <Header />
-            <LayoutProvider>
-              {children}
-            </LayoutProvider>
-          </AuthProvider>
+          <Header />
+          <LayoutProvider>
+            {children}
+          </LayoutProvider>
         </Providers>
       </body>
     </html>

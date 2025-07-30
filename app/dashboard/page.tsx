@@ -12,6 +12,105 @@ export default async function DashboardPage() {
     redirect("/auth/signin");
   }
 
+  // Handle premium user specially
+  if (session.user.id === 'premium-user') {
+    const stats = {
+      completed: 0,
+      active: 0,
+      queued: 0,
+    };
+    
+    return (
+      <div className="container mx-auto py-8 px-4">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold">Dashboard</h1>
+          <p className="text-muted-foreground">
+            Welcome back, {session.user.email || session.user.walletAddress}
+          </p>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-sm font-medium">Current Tier</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">Premium</div>
+              <p className="text-xs text-muted-foreground">
+                Unlimited bandwidth
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-sm font-medium">Credit Balance</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">Unlimited</div>
+              <p className="text-xs text-muted-foreground">Premium account</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-sm font-medium">Downloads</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.completed}</div>
+              <p className="text-xs text-muted-foreground">
+                {stats.active > 0 && `${stats.active} active, `}
+                {stats.queued > 0 && `${stats.queued} queued`}
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-sm font-medium">Download Credits</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">Unlimited</div>
+              <p className="text-xs text-muted-foreground">No limit</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="mt-8 grid gap-4 md:grid-cols-2">
+          <Card>
+            <CardHeader>
+              <CardTitle>Quick Actions</CardTitle>
+              <CardDescription>Common tasks and shortcuts</CardDescription>
+            </CardHeader>
+            <CardContent className="grid gap-2">
+              <Button asChild>
+                <Link href="/chains">Browse Chains</Link>
+              </Button>
+              <Button asChild variant="outline">
+                <Link href="/my-downloads">View Downloads</Link>
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Account</CardTitle>
+              <CardDescription>Manage your account settings</CardDescription>
+            </CardHeader>
+            <CardContent className="grid gap-2">
+              <Button asChild variant="outline">
+                <Link href="/account">Account Settings</Link>
+              </Button>
+              <Button asChild variant="outline">
+                <Link href="/billing">Billing</Link>
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
   // Get user's download stats
   const [downloadStats, creditBalance, tier] = await Promise.all([
     prisma.download.groupBy({

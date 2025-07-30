@@ -8,8 +8,8 @@ import { authConfig } from "./auth.config";
 
 // Validation schemas
 const LoginSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(8),
+  email: z.string().min(1), // Accept any string, not just email format
+  password: z.string().min(1), // Minimum 1 character to match API requirements
 });
 
 const WalletLoginSchema = z.object({
@@ -34,11 +34,29 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         const parsed = LoginSchema.safeParse(credentials);
         if (!parsed.success) return null;
 
-        const { email, password } = parsed.data;
+        const { email: username, password } = parsed.data;
 
-        // Find user by email
+        // Check if this is the premium user
+        const PREMIUM_USERNAME = process.env.PREMIUM_USERNAME || 'premium_user';
+        const PREMIUM_PASSWORD_HASH = process.env.PREMIUM_PASSWORD_HASH || '';
+        
+        if (username === PREMIUM_USERNAME) {
+          // Verify password for premium user
+          const isValid = await bcrypt.compare(password, PREMIUM_PASSWORD_HASH);
+          if (!isValid) return null;
+          
+          // Return premium user data
+          return {
+            id: 'premium-user',
+            email: `${username}@snapshots.bryanlabs.net`,
+            name: 'Premium User',
+            image: null,
+          };
+        }
+
+        // Otherwise, find user by email in database
         const user = await prisma.user.findUnique({
-          where: { email },
+          where: { email: username }, // username might be an email
           include: {
             personalTier: true,
           },
@@ -140,6 +158,20 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     async session({ session, token }) {
       if (token && session.user) {
         session.user.id = token.id as string;
+        
+        // Handle premium user specially
+        if (token.id === 'premium-user') {
+          session.user.name = 'Premium User';
+          session.user.email = 'premium_user@snapshots.bryanlabs.net';
+          session.user.tier = 'premium';
+          session.user.tierId = 'premium-tier'; // Add a dummy tier ID
+          session.user.creditBalance = 9999; // Unlimited for premium
+          session.user.teams = [];
+          session.user.walletAddress = undefined;
+          session.user.image = undefined;
+          session.user.avatarUrl = undefined;
+          return session;
+        }
         
         // Fetch fresh user data including tier info
         const user = await prisma.user.findUnique({

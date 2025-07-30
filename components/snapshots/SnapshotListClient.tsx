@@ -31,19 +31,53 @@ export function SnapshotListClient({ chainId, chainName, chainLogoUrl, initialSn
       }, initialSnapshots[0]);
       
       setSelectedSnapshot(latestSnapshot);
-      setShowDownloadModal(true);
+      
+      // Premium users get instant download without modal
+      if (user?.tier === 'premium') {
+        // Directly trigger download
+        handleInstantDownload(latestSnapshot);
+      } else {
+        // Show modal for free users
+        setShowDownloadModal(true);
+      }
       
       // Remove the query parameter from URL without reload
       const url = new URL(window.location.href);
       url.searchParams.delete('download');
       window.history.replaceState({}, '', url.toString());
     }
-  }, [searchParams, initialSnapshots]);
+  }, [searchParams, initialSnapshots, user]);
 
   const filteredSnapshots = useMemo(() => {
     if (selectedType === 'all') return initialSnapshots;
     return initialSnapshots.filter(snapshot => snapshot.type === selectedType);
   }, [initialSnapshots, selectedType]);
+
+  const handleInstantDownload = async (snapshot: Snapshot) => {
+    try {
+      // Get the download URL from the API
+      const response = await fetch(`/api/v1/chains/${chainId}/download`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          snapshotId: snapshot.id,
+          email: user?.email 
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to get download URL');
+      }
+
+      const data = await response.json();
+      
+      if (data.success && data.data?.downloadUrl) {
+        window.location.href = data.data.downloadUrl;
+      }
+    } catch (error) {
+      console.error('Download failed:', error);
+    }
+  };
 
   const handleDownload = async () => {
     if (!selectedSnapshot) return;

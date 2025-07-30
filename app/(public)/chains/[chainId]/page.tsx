@@ -48,6 +48,11 @@ const chainMetadata: Record<string, { name: string; logoUrl: string; accentColor
     logoUrl: '/chains/thorchain.png',
     accentColor: '#00D4AA',
   },
+  'agoric-3': {
+    name: 'Agoric',
+    logoUrl: '/chains/agoric.png',
+    accentColor: '#DB2777',
+  },
 };
 
 async function getChain(chainId: string): Promise<Chain | null> {
