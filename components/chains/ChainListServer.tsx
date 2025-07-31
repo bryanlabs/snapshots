@@ -1,5 +1,5 @@
 import { Chain } from '@/lib/types';
-import { ChainListClient } from './ChainListClient';
+import { ChainListRealtime } from './ChainListRealtime';
 
 async function getChains(): Promise<Chain[]> {
   try {
@@ -27,5 +27,5 @@ async function getChains(): Promise<Chain[]> {
 export async function ChainListServer() {
   const chains = await getChains();
   
-  return <ChainListClient initialChains={chains} />;
+  return <ChainListRealtime initialChains={chains} pollInterval={60000} />;
 }

@@ -1,0 +1,1940 @@
+
+> snapshots@0.1.0 start
+> next start
+
+   ▲ Next.js 15.3.4
+   - Local:        http://localhost:3000
+   - Network:      http://192.168.1.41:3000
+
+ ✓ Starting...
+ ⚠ "next start" does not work with "output: standalone" configuration. Use "node .next/standalone/server.js" instead.
+ ✓ Ready in 320ms
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Error listing objects: TypeError: fetch failed
+    at async a (.next/server/app/api/health/route.js:1:443)
+    at async o (.next/server/app/api/health/route.js:1:1041)
+    at async p (.next/server/app/api/health/route.js:1:2956) {
+  [cause]: [Error: getaddrinfo ENOTFOUND nginx] {
+    errno: -3008,
+    code: 'ENOTFOUND',
+    syscall: 'getaddrinfo',
+    hostname: 'nginx'
+  }
+}
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Fetching chains from nginx...
+Error listing objects: TypeError: fetch failed
+    at async a (.next/server/app/api/health/route.js:1:443)
+    at async o (.next/server/app/api/health/route.js:1:1041)
+    at async p.PP.staleWhileRevalidate.ttl (.next/server/app/api/v1/chains/route.js:1:4392)
+    at async n.staleWhileRevalidate (.next/server/app/api/v1/chains/route.js:1:10309)
+    at async d (.next/server/app/api/v1/chains/route.js:1:4285) {
+  [cause]: [Error: getaddrinfo ENOTFOUND nginx] {
+    errno: -3008,
+    code: 'ENOTFOUND',
+    syscall: 'getaddrinfo',
+    hostname: 'nginx'
+  }
+}
+Chain infos from nginx: []
+[32minfo[39m: API Request {"ip":"::1","method":"GET","path":"/api/v1/chains","responseStatus":200,"responseTime":4,"service":"snapshot-service","timestamp":"2025-07-30T16:20:58.762Z","userAgent":"curl/8.7.1"}
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+[Redis] Checking download allowed for IP: ::1, tier: free, limit: 5
+[Redis] Getting download count for IP: ::1, key: downloads:daily:::1:2025-07-30
+[Redis] Creating new Redis client - host: localhost, port: 6379
+Error getting daily download count: Error: Stream isn't writeable and enableOfflineQueue options is false
+    at EventEmitter.sendCommand (.next/server/chunks/300.js:139:11319)
+    at EventEmitter.get (.next/server/chunks/300.js:139:103017)
+    at n (.next/server/app/api/admin/downloads/route.js:1:1329)
+    at u (.next/server/app/api/admin/downloads/route.js:1:2898)
+    at w (.next/server/app/api/v1/chains/[chainId]/download/route.js:1:6845)
+[Redis] Download check result: {"allowed":true,"remaining":5,"resetTime":"2025-07-31T00:00:00.000Z"}
+Redis Client Error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+[Redis] Retry attempt 1, delay: 50ms
+Redis Client Error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+[Redis] Retry attempt 2, delay: 100ms
+Redis Client Error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+[Redis] Retry attempt 3, delay: 150ms
+Redis Client Error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+[Redis] Retry attempt 4, delay: 200ms
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis Client Error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+[Redis] Retry attempt 5, delay: 250ms
+Redis Client Error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+[Redis] Retry attempt 6, delay: 300ms
+Redis Client Error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+[Redis] Retry attempt 7, delay: 350ms
+Redis Client Error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+[Redis] Retry attempt 8, delay: 400ms
+Redis Client Error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+[Redis] Retry attempt 9, delay: 450ms
+Redis Client Error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+[Redis] Retry attempt 10, delay: 500ms
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis Client Error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+[Redis] Retry attempt 11, delay: 550ms
+Redis Client Error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+[Redis] Retry attempt 12, delay: 600ms
+Redis Client Error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+[Redis] Retry attempt 13, delay: 650ms
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis Client Error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+[Redis] Retry attempt 14, delay: 700ms
+Redis Client Error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+[Redis] Retry attempt 15, delay: 750ms
+Redis Client Error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+[Redis] Retry attempt 16, delay: 800ms
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis Client Error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+[Redis] Retry attempt 17, delay: 850ms
+Redis Client Error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+[Redis] Retry attempt 18, delay: 900ms
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis Client Error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+[Redis] Retry attempt 19, delay: 950ms
+Redis Client Error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+[Redis] Retry attempt 20, delay: 1000ms
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis Client Error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+[Redis] Retry attempt 21, delay: 1050ms
+[Redis] Checking download allowed for IP: ::1, tier: free, limit: 5
+[Redis] Getting download count for IP: ::1, key: downloads:daily:::1:2025-07-30
+Error getting daily download count: Error: Stream isn't writeable and enableOfflineQueue options is false
+    at EventEmitter.sendCommand (.next/server/chunks/300.js:139:11319)
+    at EventEmitter.get (.next/server/chunks/300.js:139:103017)
+    at n (.next/server/app/api/admin/downloads/route.js:1:1329)
+    at u (.next/server/app/api/admin/downloads/route.js:1:2898)
+    at w (.next/server/app/api/v1/chains/[chainId]/download/route.js:1:6845)
+[Redis] Download check result: {"allowed":true,"remaining":5,"resetTime":"2025-07-31T00:00:00.000Z"}
+[31merror[39m: API Request {"error":"fetch failed","ip":"::1","method":"POST","path":"/api/v1/chains/noble-1/download","responseStatus":500,"responseTime":20,"service":"snapshot-service","timestamp":"2025-07-30T16:22:56.920Z","userAgent":"curl/8.7.1"}
+Redis Client Error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+[Redis] Retry attempt 22, delay: 1100ms
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis Client Error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+[Redis] Retry attempt 23, delay: 1150ms
+Redis Client Error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+[Redis] Retry attempt 24, delay: 1200ms
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis Client Error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+[Redis] Retry attempt 25, delay: 1250ms
+Redis Client Error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+[Redis] Retry attempt 26, delay: 1300ms
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis Client Error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+[Redis] Retry attempt 27, delay: 1350ms
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis Client Error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+[Redis] Retry attempt 28, delay: 1400ms
+Redis Client Error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+[Redis] Retry attempt 29, delay: 1450ms
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis Client Error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+[Redis] Retry attempt 30, delay: 1500ms
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis Client Error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+[Redis] Retry attempt 31, delay: 1550ms
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis Client Error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+[Redis] Retry attempt 32, delay: 1600ms
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis Client Error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+[Redis] Retry attempt 33, delay: 1650ms
+[Web Vital] undefined: undefinedms (undefined) - unknown
+Redis Client Error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+[Redis] Retry attempt 34, delay: 1700ms
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis Client Error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+[Redis] Retry attempt 35, delay: 1750ms
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis Client Error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+[Redis] Retry attempt 36, delay: 1800ms
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis Client Error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+[Redis] Retry attempt 37, delay: 1850ms
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis Client Error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+[Redis] Retry attempt 38, delay: 1900ms
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis Client Error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+[Redis] Retry attempt 39, delay: 1950ms
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis Client Error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+[Redis] Retry attempt 40, delay: 2000ms
+Failed to fetch chains: TypeError: fetch failed
+    at async i (.next/server/app/page.js:1:480)
+    at async n (.next/server/app/page.js:1:734) {
+  [cause]: [Error: getaddrinfo ENOTFOUND webapp] {
+    errno: -3008,
+    code: 'ENOTFOUND',
+    syscall: 'getaddrinfo',
+    hostname: 'webapp'
+  }
+}
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis Client Error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+[Redis] Retry attempt 41, delay: 2000ms
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis Client Error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+[Redis] Retry attempt 42, delay: 2000ms
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis Client Error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+[Redis] Retry attempt 43, delay: 2000ms
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis Client Error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+[Redis] Retry attempt 44, delay: 2000ms
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis Client Error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+[Redis] Retry attempt 45, delay: 2000ms
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis Client Error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+[Redis] Retry attempt 46, delay: 2000ms
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis Client Error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+[Redis] Retry attempt 47, delay: 2000ms
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis Client Error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+[Redis] Retry attempt 48, delay: 2000ms
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis Client Error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+[Redis] Retry attempt 49, delay: 2000ms
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis Client Error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+[Redis] Retry attempt 50, delay: 2000ms
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis Client Error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+[Redis] Retry attempt 51, delay: 2000ms
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis Client Error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+[Redis] Retry attempt 52, delay: 2000ms
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis Client Error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+[Redis] Retry attempt 53, delay: 2000ms
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis Client Error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+[Redis] Retry attempt 54, delay: 2000ms
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis Client Error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+[Redis] Retry attempt 55, delay: 2000ms
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis Client Error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+[Redis] Retry attempt 56, delay: 2000ms
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis Client Error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+[Redis] Retry attempt 57, delay: 2000ms
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis Client Error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+[Redis] Retry attempt 58, delay: 2000ms
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis Client Error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+[Redis] Retry attempt 59, delay: 2000ms
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis Client Error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+[Redis] Retry attempt 60, delay: 2000ms
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis Client Error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+[Redis] Retry attempt 61, delay: 2000ms
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis Client Error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+[Redis] Retry attempt 62, delay: 2000ms
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis Client Error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+[Redis] Retry attempt 63, delay: 2000ms
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis Client Error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+[Redis] Retry attempt 64, delay: 2000ms
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis Client Error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+[Redis] Retry attempt 65, delay: 2000ms
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis Client Error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+[Redis] Retry attempt 66, delay: 2000ms
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis Client Error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+[Redis] Retry attempt 67, delay: 2000ms
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis Client Error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+[Redis] Retry attempt 68, delay: 2000ms
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis Client Error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+[Redis] Retry attempt 69, delay: 2000ms
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis Client Error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+[Redis] Retry attempt 70, delay: 2000ms
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis Client Error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+[Redis] Retry attempt 71, delay: 2000ms
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis Client Error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+[Redis] Retry attempt 72, delay: 2000ms
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis Client Error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+[Redis] Retry attempt 73, delay: 2000ms
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis Client Error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+[Redis] Retry attempt 74, delay: 2000ms
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis Client Error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+[Redis] Retry attempt 75, delay: 2000ms
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis Client Error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+[Redis] Retry attempt 76, delay: 2000ms
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis Client Error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+[Redis] Retry attempt 77, delay: 2000ms
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis Client Error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+[Redis] Retry attempt 78, delay: 2000ms
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Redis Client Error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+[Redis] Retry attempt 79, delay: 2000ms
+Redis error: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}

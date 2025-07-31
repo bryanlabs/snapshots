@@ -38,8 +38,8 @@ if (process.env.NODE_ENV === 'production') {
 
 // Request logging interface
 interface RequestLog {
-  method: string;
-  path: string;
+  method?: string;
+  path?: string;
   query?: Record<string, string>;
   headers?: Record<string, string>;
   userId?: string;

@@ -3,14 +3,18 @@
 /* Configure Tailwind v4 dark mode */
 @variant dark (&:where(.dark, .dark *));
 
-/* Light mode colors */
+/* Light mode colors - similar to BryanLabs website */
 :root {
-  --background: #ffffff;
-  --foreground: #1a1a1a;
-  --muted: #6b7280;
-  --muted-foreground: #4b5563;
-  --border: #e5e7eb;
+  --background: #f8fafc;
+  --foreground: #1e293b;
+  --card: #ffffff;
+  --card-foreground: #1e293b;
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
+  --border: #e2e8f0;
   --accent: #3b82f6;
+  --primary: #60a5fa;
+  --secondary: #8b5cf6;
   
   /* Chain accent colors */
   --accent-osmosis: #9945FF;
@@ -21,23 +25,31 @@
   --accent-thorchain: #00D4AA;
 }
 
-/* Dark mode colors */
+/* Dark mode colors - matching BryanLabs dark theme */
 .dark {
-  --background: #111827;
-  --foreground: #f9fafb;
-  --muted: #9ca3af;
-  --muted-foreground: #d1d5db;
-  --border: #374151;
-  --accent: #60a5fa;
+  --background: #1a1b26;
+  --foreground: #e0e7ff;
+  --card: #242538;
+  --card-foreground: #e0e7ff;
+  --muted: #2a2b3d;
+  --muted-foreground: #94a3b8;
+  --border: #3a3b4d;
+  --accent: #8b5cf6;
+  --primary: #60a5fa;
+  --secondary: #8b5cf6;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
   --color-border: var(--border);
   --color-accent: var(--accent);
+  --color-primary: var(--primary);
+  --color-secondary: var(--secondary);
   --font-sans: var(--font-inter);
 }
 

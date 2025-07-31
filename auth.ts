@@ -37,8 +37,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         const { email: username, password } = parsed.data;
 
         // Check if this is the premium user
-        const PREMIUM_USERNAME = process.env.PREMIUM_USERNAME || 'premium_user';
-        const PREMIUM_PASSWORD_HASH = process.env.PREMIUM_PASSWORD_HASH || '';
+        const PREMIUM_USERNAME = process.env.PREMIUM_USERNAME;
+        const PREMIUM_PASSWORD_HASH = process.env.PREMIUM_PASSWORD_HASH;
+        
+        if (!PREMIUM_USERNAME || !PREMIUM_PASSWORD_HASH) {
+          // Premium user not configured, skip this check
+          // This is not an error - premium user is optional
+        } else
         
         if (username === PREMIUM_USERNAME) {
           // Verify password for premium user
@@ -99,9 +104,26 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
         const { walletAddress, signature, message } = parsed.data;
 
-        // TODO: Verify signature with Cosmos SDK
-        // For now, we trust the client-side verification done by graz
-        // In production, implement server-side signature verification
+        // Import verification functions
+        const { verifyCosmosSignature, validateSignatureMessage } = await import("@/lib/auth/cosmos-verify");
+
+        // Validate message format and timestamp
+        if (!validateSignatureMessage(message)) {
+          console.error("Invalid signature message format or expired timestamp");
+          return null;
+        }
+
+        // Verify the signature server-side
+        const isValidSignature = await verifyCosmosSignature({
+          walletAddress,
+          signature,
+          message,
+        });
+
+        if (!isValidSignature) {
+          console.error("Invalid wallet signature");
+          return null;
+        }
 
         // Find or create user by wallet address
         let user = await prisma.user.findUnique({
@@ -192,6 +214,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           session.user.avatarUrl = user.avatarUrl || undefined;
           session.user.tier = effectiveTier?.name || "free";
           session.user.tierId = effectiveTier?.id;
+          session.user.role = user.role;
           session.user.creditBalance = user.creditBalance;
           session.user.teams = []; // Empty for now
         } else {

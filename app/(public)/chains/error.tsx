@@ -40,7 +40,7 @@ export default function ChainsError({
             Failed to load chains
           </h2>
           <p className="text-gray-600 dark:text-gray-400">
-            We couldn't fetch the list of available chains. This might be a temporary issue.
+            We couldn&apos;t fetch the list of available chains. This might be a temporary issue.
           </p>
           {error.message && (
             <p className="text-sm text-gray-500 dark:text-gray-500 bg-gray-100 dark:bg-gray-800 p-3 rounded-lg font-mono">

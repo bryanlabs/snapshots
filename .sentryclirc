@@ -1,0 +1,7 @@
+[defaults]
+url=https://sentry.io/
+org=bryanlabs
+project=snapshots
+
+[auth]
+# Auth token is set via SENTRY_AUTH_TOKEN environment variable

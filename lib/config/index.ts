@@ -13,7 +13,7 @@ export const config = {
   },
   auth: {
     cookieName: 'snapshot-session',
-    password: process.env.SESSION_PASSWORD || 'complex_password_at_least_32_characters_long',
+    password: process.env.SESSION_PASSWORD!,
     cookieOptions: {
       maxAge: 60 * 60 * 24 * 7, // 1 week
       httpOnly: true,

@@ -4,6 +4,10 @@ import "./globals.css";
 import { Header } from "@/components/common/Header";
 import { LayoutProvider } from "@/components/providers/LayoutProvider";
 import { Providers } from "@/components/providers";
+import { WebVitals } from "@/components/monitoring/WebVitals";
+import { RealUserMonitoring } from "@/components/monitoring/RealUserMonitoring";
+import { SentryUserContext } from "@/components/monitoring/SentryUserContext";
+import { MobileMenu } from "@/components/mobile/MobileMenu";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -58,12 +62,21 @@ export const metadata: Metadata = {
     index: true,
     follow: true,
   },
+  icons: {
+    icon: [
+      { url: '/favicon.svg?v=2', type: 'image/svg+xml' },
+      { url: '/favicon.ico?v=2', sizes: 'any' },
+    ],
+    apple: '/favicon.svg?v=2',
+  },
 };
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 5,
+  userScalable: true,
+  viewportFit: "cover", // For iPhone notch
 };
 
 export default function RootLayout({
@@ -91,12 +104,16 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className={`${inter.variable} font-sans antialiased bg-gray-50 dark:bg-gray-900`}>
+      <body className={`${inter.variable} font-sans antialiased`}>
         <Providers>
+          <WebVitals />
+          <RealUserMonitoring />
+          {/* <SentryUserContext /> */}
           <Header />
           <LayoutProvider>
             {children}
           </LayoutProvider>
+          <MobileMenu />
         </Providers>
       </body>
     </html>

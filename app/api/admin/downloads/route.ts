@@ -1,23 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ApiResponse } from '@/lib/types';
 import { getDownloadStats, getRecentDownloads } from '@/lib/download/tracker';
-import { auth } from '@/auth';
+import { withAdminAuth } from '@/lib/auth/admin-middleware';
 
-export async function GET(request: NextRequest) {
+async function handleGetDownloads(request: NextRequest) {
   try {
-    // Check if user is authenticated as premium (admin)
-    const session = await auth();
-    
-    if (!session?.user || session.user.tier !== 'premium') {
-      return NextResponse.json<ApiResponse>(
-        {
-          success: false,
-          error: 'Unauthorized',
-          message: 'Admin access required',
-        },
-        { status: 401 }
-      );
-    }
     
     // Get query parameters
     const { searchParams } = new URL(request.url);
@@ -50,3 +37,5 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+
+export const GET = withAdminAuth(handleGetDownloads);

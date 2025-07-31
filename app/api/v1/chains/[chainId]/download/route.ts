@@ -65,6 +65,7 @@ async function handleDownload(
       trackRequest('POST', '/api/v1/chains/[chainId]/download', 429);
       logRequest({
         ...requestLog,
+        method: request.method,
         userId,
         tier,
         responseStatus: 429,

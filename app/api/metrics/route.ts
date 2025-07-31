@@ -2,11 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { register } from '@/lib/monitoring/metrics';
 import { auth } from '@/auth';
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     // Optional: Add authentication check for metrics endpoint
     // You might want to restrict access to metrics
-    const session = await auth();
+    await auth();
     
     // Uncomment to require authentication for metrics
     // if (!session) {

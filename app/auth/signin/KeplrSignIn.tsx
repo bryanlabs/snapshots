@@ -58,8 +58,8 @@ export function KeplrSignIn() {
 
       const account = accounts[0];
       
-      // Create a message to sign
-      const message = `Sign in to Snapshots\n\nAddress: ${account.address}\nTimestamp: ${new Date().toISOString()}`;
+      // Create a message to sign with timestamp for replay protection
+      const message = `Sign this message to authenticate with Snapshots Service\n\nAddress: ${account.address}\n\nTimestamp: ${new Date().toISOString()}`;
       
       // Sign the message with Keplr
       const signature = await window.keplr.signArbitrary(

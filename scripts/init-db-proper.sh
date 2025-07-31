@@ -1,9 +1,30 @@
 #!/bin/sh
 
-echo "Initializing database with Prisma schema..."
+echo "Starting database initialization check..."
 
-# Remove old database
-rm -f /app/prisma/dev.db
+# Check if database exists and has tables
+if [ -f /app/prisma/dev.db ]; then
+  echo "Database file exists, checking if it's properly initialized..."
+  TABLE_COUNT=$(sqlite3 /app/prisma/dev.db "SELECT COUNT(*) FROM sqlite_master WHERE type='table';" 2>/dev/null || echo "0")
+  
+  if [ "$TABLE_COUNT" -gt "0" ]; then
+    echo "Database already initialized with $TABLE_COUNT tables. Running migrations..."
+    
+    # Skip Prisma migrations in production for now
+    # The standalone build doesn't include all Prisma CLI dependencies
+    echo "Skipping migrations in production (standalone build limitation)"
+    
+    echo "Database ready, starting application..."
+    exec node server.js
+  else
+    echo "Database file exists but is empty, will initialize..."
+  fi
+else
+  echo "No database found, creating new database..."
+fi
+
+# Only reach here if database doesn't exist or is empty
+echo "Initializing new database with schema..."
 
 # Create new database with correct schema
 sqlite3 /app/prisma/dev.db <<'EOF'

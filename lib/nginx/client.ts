@@ -17,7 +17,10 @@ export function generateSecureLink(
   tier: 'free' | 'premium' = 'free',
   expiryHours: number = 12
 ): string {
-  const secret = process.env.SECURE_LINK_SECRET || '';
+  const secret = process.env.SECURE_LINK_SECRET;
+  if (!secret) {
+    throw new Error('SECURE_LINK_SECRET environment variable is required');
+  }
   const expiryTime = Math.floor(Date.now() / 1000) + (expiryHours * 3600);
   
   // Create the hash: MD5(secret + uri + expires + tier)

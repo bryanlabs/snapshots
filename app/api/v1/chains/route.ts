@@ -4,6 +4,7 @@ import { collectResponseTime, trackRequest } from '@/lib/monitoring/metrics';
 import { extractRequestMetadata, logRequest } from '@/lib/middleware/logger';
 import { listChains } from '@/lib/nginx/operations';
 import { config } from '@/lib/config';
+import { cache, cacheKeys } from '@/lib/cache/redis-cache';
 
 
 // Chain metadata mapping - enhance nginx data with names and logos
@@ -61,47 +62,45 @@ export async function GET(request: NextRequest) {
   const requestLog = extractRequestMetadata(request);
   
   try {
-    let chains: Chain[];
-    
-    // Always try to fetch from nginx first
-    try {
-      console.log('Attempting to fetch chains from nginx...');
-      console.log('nginx config:', {
-        endpoint: process.env.NGINX_ENDPOINT,
-        port: process.env.NGINX_PORT,
-      });
-      const chainInfos = await listChains();
-      console.log('Chain infos from nginx:', chainInfos);
-      
-      // Map chain infos to Chain objects with metadata
-      chains = chainInfos.map((chainInfo) => {
-        const metadata = chainMetadata[chainInfo.chainId] || {
-          name: chainInfo.chainId,
-          logoUrl: '/chains/placeholder.svg',
-          accentColor: '#3B82F6', // default blue
-        };
+    // Use cache with stale-while-revalidate pattern
+    const chains = await cache.staleWhileRevalidate<Chain[]>(
+      cacheKeys.chains(),
+      async () => {
+        // Fetch from nginx
+        console.log('Fetching chains from nginx...');
+        const chainInfos = await listChains();
+        console.log('Chain infos from nginx:', chainInfos);
         
-        return {
-          id: chainInfo.chainId,
-          name: metadata.name,
-          network: chainInfo.chainId,
-          logoUrl: metadata.logoUrl,
-          accentColor: metadata.accentColor,
-          // Include basic snapshot info for the chain card
-          snapshotCount: chainInfo.snapshotCount,
-          latestSnapshot: chainInfo.latestSnapshot ? {
-            size: chainInfo.latestSnapshot.size,
-            lastModified: chainInfo.latestSnapshot.lastModified.toISOString(),
-            compressionType: chainInfo.latestSnapshot.compressionType || 'zst',
-          } : undefined,
-        };
-      });
-    } catch (nginxError) {
-      console.error('Error fetching from nginx:', nginxError);
-      console.error('Stack:', nginxError instanceof Error ? nginxError.stack : 'No stack');
-      // Return empty array on error
-      chains = [];
-    }
+        // Map chain infos to Chain objects with metadata
+        return chainInfos.map((chainInfo) => {
+          const metadata = chainMetadata[chainInfo.chainId] || {
+            name: chainInfo.chainId,
+            logoUrl: '/chains/placeholder.svg',
+            accentColor: '#3B82F6', // default blue
+          };
+          
+          return {
+            id: chainInfo.chainId,
+            name: metadata.name,
+            network: chainInfo.chainId,
+            logoUrl: metadata.logoUrl,
+            accentColor: metadata.accentColor,
+            // Include basic snapshot info for the chain card
+            snapshotCount: chainInfo.snapshotCount,
+            latestSnapshot: chainInfo.latestSnapshot ? {
+              size: chainInfo.latestSnapshot.size,
+              lastModified: chainInfo.latestSnapshot.lastModified.toISOString(),
+              compressionType: chainInfo.latestSnapshot.compressionType || 'zst',
+            } : undefined,
+          };
+        });
+      },
+      {
+        ttl: 300, // 5 minutes fresh
+        staleTime: 3600, // 1 hour stale
+        tags: ['chains'],
+      }
+    );
     
     const response = NextResponse.json<ApiResponse<Chain[]>>({
       success: true,

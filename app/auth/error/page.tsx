@@ -1,9 +1,12 @@
-export default function AuthErrorPage({
+export const dynamic = 'force-dynamic';
+
+export default async function AuthErrorPage({
   searchParams,
 }: {
-  searchParams: { error?: string };
+  searchParams: Promise<{ error?: string }>;
 }) {
-  const error = searchParams.error || "Authentication error";
+  const params = await searchParams;
+  const error = params.error || "Authentication error";
 
   const errorMessages: { [key: string]: string } = {
     Configuration: "There was a problem with the authentication configuration.",

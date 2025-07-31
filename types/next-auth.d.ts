@@ -7,6 +7,7 @@ declare module "next-auth" {
       walletAddress?: string;
       tier: string;
       tierId?: string;
+      role?: string;
       creditBalance: number;
       avatarUrl?: string;
       teams: Array<{
@@ -22,5 +23,8 @@ declare module "next-auth" {
     email?: string | null;
     name?: string | null;
     image?: string | null;
+    role: string;
+    tier: string;
+    walletAddress?: string;
   }
 }

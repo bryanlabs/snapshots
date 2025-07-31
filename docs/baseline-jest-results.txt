@@ -1,0 +1,431 @@
+
+> snapshots@0.1.0 test
+> jest __tests__/api/comprehensive-api.test.ts --passWithNoTests
+
+jest-haste-map: Haste module naming collision: snapshots
+  The following files share their name; please adjust your hasteImpl:
+    * <rootDir>/.next/standalone/package.json
+    * <rootDir>/package.json
+
+  console.warn
+    No snapshot filename available, skipping download test
+
+      119 |     test('POST /api/v1/chains/[chainId]/download - Request download URL (anonymous)', async () => {
+      120 |       if (!latestSnapshotFilename) {
+    > 121 |         console.warn('No snapshot filename available, skipping download test');
+          |                 ^
+      122 |         return;
+      123 |       }
+      124 |
+
+      at Object.warn (__tests__/api/comprehensive-api.test.ts:121:17)
+
+  console.warn
+    PREMIUM_PASSWORD not set, skipping legacy auth test
+
+      215 |       // Skip if premium credentials not configured
+      216 |       if (!process.env.PREMIUM_PASSWORD) {
+    > 217 |         console.warn('PREMIUM_PASSWORD not set, skipping legacy auth test');
+          |                 ^
+      218 |         return;
+      219 |       }
+      220 |
+
+      at Object.warn (__tests__/api/comprehensive-api.test.ts:217:17)
+
+  console.warn
+    No JWT token or snapshot filename, skipping premium test
+
+      328 |     test('POST /api/v1/chains/[chainId]/download - Premium tier', async () => {
+      329 |       if (!jwtToken || !latestSnapshotFilename) {
+    > 330 |         console.warn('No JWT token or snapshot filename, skipping premium test');
+          |                 ^
+      331 |         return;
+      332 |       }
+      333 |
+
+      at Object.warn (__tests__/api/comprehensive-api.test.ts:330:17)
+
+  console.warn
+    No JWT token, skipping auth test
+
+      346 |     test('GET /api/v1/auth/me - Get user info', async () => {
+      347 |       if (!jwtToken) {
+    > 348 |         console.warn('No JWT token, skipping auth test');
+          |                 ^
+      349 |         return;
+      350 |       }
+      351 |
+
+      at Object.warn (__tests__/api/comprehensive-api.test.ts:348:17)
+
+FAIL __tests__/api/comprehensive-api.test.ts
+  Snapshots Service API - Comprehensive Tests
+    Public API (v1)
+      ✕ GET /api/v1/chains - List all chains (2 ms)
+      ✕ GET /api/v1/chains/[chainId] - Get specific chain
+      ✕ GET /api/v1/chains/[chainId]/info - Get chain info
+      ✕ GET /api/v1/chains/[chainId]/snapshots - List snapshots (1 ms)
+      ✕ GET /api/v1/chains/[chainId]/snapshots?type=pruned - Filter snapshots
+      ✕ GET /api/v1/chains/[chainId]/snapshots/latest - Get latest snapshot
+      ✓ POST /api/v1/chains/[chainId]/download - Request download URL (anonymous) (8 ms)
+      ✕ GET /api/v1/downloads/status - Check download status
+    System Endpoints
+      ✕ GET /api/health - Health check
+      ✕ GET /api/bandwidth/status - Bandwidth status
+      ✕ GET /api/metrics - Prometheus metrics
+    Authentication Endpoints
+      ✕ GET /api/auth/providers - List providers
+      ✕ GET /api/auth/csrf - Get CSRF token
+      ✕ GET /api/auth/session - Get session (unauthenticated)
+      ✓ POST /api/v1/auth/login - Legacy login (if configured) (1 ms)
+    Protected Endpoints
+      ✕ GET /api/account/avatar - Should fail without auth
+      ✕ POST /api/account/link-email - Should fail without auth
+      ✕ GET /api/admin/stats - Should fail without admin
+    Error Handling
+      ✕ GET /api/v1/chains/invalid-chain - Should return 404
+      ✕ POST /api/v1/chains/[chainId]/download - Invalid filename
+      ✕ GET /api/v1/chains/[chainId]/snapshots - Invalid query params
+      ✕ POST with invalid JSON - Should handle gracefully
+    Response Format Validation
+      ✕ All success responses follow standard format
+    Premium Features (if JWT available)
+      ✓ POST /api/v1/chains/[chainId]/download - Premium tier
+      ✓ GET /api/v1/auth/me - Get user info
+    Performance Tests
+      ✕ API response times should be under 200ms (1 ms)
+
+  ● Snapshots Service API - Comprehensive Tests › Public API (v1) › GET /api/v1/chains - List all chains
+
+    TypeError: Cannot read properties of undefined (reading 'json')
+
+      27 |   });
+      28 |
+    > 29 |   const data = await response.json();
+         |                               ^
+      30 |   return { status: response.status, data };
+      31 | }
+      32 |
+
+      at json (__tests__/api/comprehensive-api.test.ts:29:31)
+      at Object.<anonymous> (__tests__/api/comprehensive-api.test.ts:40:32)
+
+  ● Snapshots Service API - Comprehensive Tests › Public API (v1) › GET /api/v1/chains/[chainId] - Get specific chain
+
+    TypeError: Cannot read properties of undefined (reading 'json')
+
+      27 |   });
+      28 |
+    > 29 |   const data = await response.json();
+         |                               ^
+      30 |   return { status: response.status, data };
+      31 | }
+      32 |
+
+      at json (__tests__/api/comprehensive-api.test.ts:29:31)
+      at Object.<anonymous> (__tests__/api/comprehensive-api.test.ts:56:32)
+
+  ● Snapshots Service API - Comprehensive Tests › Public API (v1) › GET /api/v1/chains/[chainId]/info - Get chain info
+
+    TypeError: Cannot read properties of undefined (reading 'json')
+
+      27 |   });
+      28 |
+    > 29 |   const data = await response.json();
+         |                               ^
+      30 |   return { status: response.status, data };
+      31 | }
+      32 |
+
+      at json (__tests__/api/comprehensive-api.test.ts:29:31)
+      at Object.<anonymous> (__tests__/api/comprehensive-api.test.ts:66:32)
+
+  ● Snapshots Service API - Comprehensive Tests › Public API (v1) › GET /api/v1/chains/[chainId]/snapshots - List snapshots
+
+    TypeError: Cannot read properties of undefined (reading 'json')
+
+      27 |   });
+      28 |
+    > 29 |   const data = await response.json();
+         |                               ^
+      30 |   return { status: response.status, data };
+      31 | }
+      32 |
+
+      at json (__tests__/api/comprehensive-api.test.ts:29:31)
+      at Object.<anonymous> (__tests__/api/comprehensive-api.test.ts:76:32)
+
+  ● Snapshots Service API - Comprehensive Tests › Public API (v1) › GET /api/v1/chains/[chainId]/snapshots?type=pruned - Filter snapshots
+
+    TypeError: Cannot read properties of undefined (reading 'json')
+
+      27 |   });
+      28 |
+    > 29 |   const data = await response.json();
+         |                               ^
+      30 |   return { status: response.status, data };
+      31 | }
+      32 |
+
+      at json (__tests__/api/comprehensive-api.test.ts:29:31)
+      at Object.<anonymous> (__tests__/api/comprehensive-api.test.ts:97:32)
+
+  ● Snapshots Service API - Comprehensive Tests › Public API (v1) › GET /api/v1/chains/[chainId]/snapshots/latest - Get latest snapshot
+
+    TypeError: Cannot read properties of undefined (reading 'json')
+
+      27 |   });
+      28 |
+    > 29 |   const data = await response.json();
+         |                               ^
+      30 |   return { status: response.status, data };
+      31 | }
+      32 |
+
+      at json (__tests__/api/comprehensive-api.test.ts:29:31)
+      at Object.<anonymous> (__tests__/api/comprehensive-api.test.ts:110:32)
+
+  ● Snapshots Service API - Comprehensive Tests › Public API (v1) › GET /api/v1/downloads/status - Check download status
+
+    TypeError: Cannot read properties of undefined (reading 'json')
+
+      27 |   });
+      28 |
+    > 29 |   const data = await response.json();
+         |                               ^
+      30 |   return { status: response.status, data };
+      31 | }
+      32 |
+
+      at json (__tests__/api/comprehensive-api.test.ts:29:31)
+      at Object.<anonymous> (__tests__/api/comprehensive-api.test.ts:145:32)
+
+  ● Snapshots Service API - Comprehensive Tests › System Endpoints › GET /api/health - Health check
+
+    TypeError: Cannot read properties of undefined (reading 'json')
+
+      27 |   });
+      28 |
+    > 29 |   const data = await response.json();
+         |                               ^
+      30 |   return { status: response.status, data };
+      31 | }
+      32 |
+
+      at json (__tests__/api/comprehensive-api.test.ts:29:31)
+      at Object.<anonymous> (__tests__/api/comprehensive-api.test.ts:158:32)
+
+  ● Snapshots Service API - Comprehensive Tests › System Endpoints › GET /api/bandwidth/status - Bandwidth status
+
+    TypeError: Cannot read properties of undefined (reading 'json')
+
+      27 |   });
+      28 |
+    > 29 |   const data = await response.json();
+         |                               ^
+      30 |   return { status: response.status, data };
+      31 | }
+      32 |
+
+      at json (__tests__/api/comprehensive-api.test.ts:29:31)
+      at Object.<anonymous> (__tests__/api/comprehensive-api.test.ts:168:32)
+
+  ● Snapshots Service API - Comprehensive Tests › System Endpoints › GET /api/metrics - Prometheus metrics
+
+    TypeError: Cannot read properties of undefined (reading 'text')
+
+      177 |     test('GET /api/metrics - Prometheus metrics', async () => {
+      178 |       const response = await fetch(`${BASE_URL}/api/metrics`);
+    > 179 |       const text = await response.text();
+          |                                   ^
+      180 |       
+      181 |       expect(response.status).toBe(200);
+      182 |       expect(text).toContain('# HELP');
+
+      at Object.text (__tests__/api/comprehensive-api.test.ts:179:35)
+
+  ● Snapshots Service API - Comprehensive Tests › Authentication Endpoints › GET /api/auth/providers - List providers
+
+    TypeError: Cannot read properties of undefined (reading 'json')
+
+      27 |   });
+      28 |
+    > 29 |   const data = await response.json();
+         |                               ^
+      30 |   return { status: response.status, data };
+      31 | }
+      32 |
+
+      at json (__tests__/api/comprehensive-api.test.ts:29:31)
+      at Object.<anonymous> (__tests__/api/comprehensive-api.test.ts:190:32)
+
+  ● Snapshots Service API - Comprehensive Tests › Authentication Endpoints › GET /api/auth/csrf - Get CSRF token
+
+    TypeError: Cannot read properties of undefined (reading 'json')
+
+      27 |   });
+      28 |
+    > 29 |   const data = await response.json();
+         |                               ^
+      30 |   return { status: response.status, data };
+      31 | }
+      32 |
+
+      at json (__tests__/api/comprehensive-api.test.ts:29:31)
+      at Object.<anonymous> (__tests__/api/comprehensive-api.test.ts:198:32)
+
+  ● Snapshots Service API - Comprehensive Tests › Authentication Endpoints › GET /api/auth/session - Get session (unauthenticated)
+
+    TypeError: Cannot read properties of undefined (reading 'json')
+
+      27 |   });
+      28 |
+    > 29 |   const data = await response.json();
+         |                               ^
+      30 |   return { status: response.status, data };
+      31 | }
+      32 |
+
+      at json (__tests__/api/comprehensive-api.test.ts:29:31)
+      at Object.<anonymous> (__tests__/api/comprehensive-api.test.ts:207:32)
+
+  ● Snapshots Service API - Comprehensive Tests › Protected Endpoints › GET /api/account/avatar - Should fail without auth
+
+    TypeError: Cannot read properties of undefined (reading 'json')
+
+      27 |   });
+      28 |
+    > 29 |   const data = await response.json();
+         |                               ^
+      30 |   return { status: response.status, data };
+      31 | }
+      32 |
+
+      at json (__tests__/api/comprehensive-api.test.ts:29:31)
+      at Object.<anonymous> (__tests__/api/comprehensive-api.test.ts:242:26)
+
+  ● Snapshots Service API - Comprehensive Tests › Protected Endpoints › POST /api/account/link-email - Should fail without auth
+
+    TypeError: Cannot read properties of undefined (reading 'json')
+
+      27 |   });
+      28 |
+    > 29 |   const data = await response.json();
+         |                               ^
+      30 |   return { status: response.status, data };
+      31 | }
+      32 |
+
+      at json (__tests__/api/comprehensive-api.test.ts:29:31)
+      at Object.<anonymous> (__tests__/api/comprehensive-api.test.ts:248:26)
+
+  ● Snapshots Service API - Comprehensive Tests › Protected Endpoints › GET /api/admin/stats - Should fail without admin
+
+    TypeError: Cannot read properties of undefined (reading 'json')
+
+      27 |   });
+      28 |
+    > 29 |   const data = await response.json();
+         |                               ^
+      30 |   return { status: response.status, data };
+      31 | }
+      32 |
+
+      at json (__tests__/api/comprehensive-api.test.ts:29:31)
+      at Object.<anonymous> (__tests__/api/comprehensive-api.test.ts:260:26)
+
+  ● Snapshots Service API - Comprehensive Tests › Error Handling › GET /api/v1/chains/invalid-chain - Should return 404
+
+    TypeError: Cannot read properties of undefined (reading 'json')
+
+      27 |   });
+      28 |
+    > 29 |   const data = await response.json();
+         |                               ^
+      30 |   return { status: response.status, data };
+      31 | }
+      32 |
+
+      at json (__tests__/api/comprehensive-api.test.ts:29:31)
+      at Object.<anonymous> (__tests__/api/comprehensive-api.test.ts:268:32)
+
+  ● Snapshots Service API - Comprehensive Tests › Error Handling › POST /api/v1/chains/[chainId]/download - Invalid filename
+
+    TypeError: Cannot read properties of undefined (reading 'json')
+
+      27 |   });
+      28 |
+    > 29 |   const data = await response.json();
+         |                               ^
+      30 |   return { status: response.status, data };
+      31 | }
+      32 |
+
+      at json (__tests__/api/comprehensive-api.test.ts:29:31)
+      at Object.<anonymous> (__tests__/api/comprehensive-api.test.ts:276:32)
+
+  ● Snapshots Service API - Comprehensive Tests › Error Handling › GET /api/v1/chains/[chainId]/snapshots - Invalid query params
+
+    TypeError: Cannot read properties of undefined (reading 'json')
+
+      27 |   });
+      28 |
+    > 29 |   const data = await response.json();
+         |                               ^
+      30 |   return { status: response.status, data };
+      31 | }
+      32 |
+
+      at json (__tests__/api/comprehensive-api.test.ts:29:31)
+      at Object.<anonymous> (__tests__/api/comprehensive-api.test.ts:286:32)
+
+  ● Snapshots Service API - Comprehensive Tests › Error Handling › POST with invalid JSON - Should handle gracefully
+
+    TypeError: Cannot read properties of undefined (reading 'status')
+
+      297 |       });
+      298 |       
+    > 299 |       expect(response.status).toBe(400);
+          |                       ^
+      300 |     });
+      301 |   });
+      302 |
+
+      at Object.status (__tests__/api/comprehensive-api.test.ts:299:23)
+
+  ● Snapshots Service API - Comprehensive Tests › Response Format Validation › All success responses follow standard format
+
+    TypeError: Cannot read properties of undefined (reading 'json')
+
+      27 |   });
+      28 |
+    > 29 |   const data = await response.json();
+         |                               ^
+      30 |   return { status: response.status, data };
+      31 | }
+      32 |
+
+      at json (__tests__/api/comprehensive-api.test.ts:29:31)
+      at Object.<anonymous> (__tests__/api/comprehensive-api.test.ts:313:26)
+
+  ● Snapshots Service API - Comprehensive Tests › Performance Tests › API response times should be under 200ms
+
+    TypeError: Cannot read properties of undefined (reading 'json')
+
+      27 |   });
+      28 |
+    > 29 |   const data = await response.json();
+         |                               ^
+      30 |   return { status: response.status, data };
+      31 | }
+      32 |
+
+      at json (__tests__/api/comprehensive-api.test.ts:29:31)
+      at Object.<anonymous> (__tests__/api/comprehensive-api.test.ts:372:9)
+
+Test Suites: 1 failed, 1 total
+Tests:       22 failed, 4 passed, 26 total
+Snapshots:   0 total
+Time:        0.392 s
+Ran all test suites matching /__tests__\/api\/comprehensive-api.test.ts/i.

@@ -44,7 +44,7 @@ export function ChainCard({ chain }: ChainCardProps) {
   return (
     <Link href={`/chains/${chain.id}`}>
       <motion.div 
-        className="relative bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-lg shadow-lg hover:shadow-2xl transition-all duration-300 p-4 cursor-pointer border border-gray-200/50 dark:border-gray-700/50 overflow-hidden group"
+        className="relative bg-card backdrop-blur-sm rounded-lg shadow-lg hover:shadow-2xl transition-all duration-300 p-4 cursor-pointer border border-border overflow-hidden group"
         style={{
           '--chain-accent': accentColor,
           boxShadow: `0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06), 0 0 0 1px ${accentColor}10`,
@@ -78,7 +78,7 @@ export function ChainCard({ chain }: ChainCardProps) {
           position="top"
           className="w-full"
         >
-          <div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-200 dark:bg-gray-700">
+          <div className="absolute bottom-0 left-0 right-0 h-1 bg-muted">
           <motion.div
             className="h-full rounded-r-full"
             style={{ 
@@ -113,10 +113,10 @@ export function ChainCard({ chain }: ChainCardProps) {
               </Tooltip>
             )}
             <div>
-              <h3 className="text-base font-semibold text-gray-900 dark:text-white">
+              <h3 className="text-base font-semibold text-card-foreground">
                 {chain.name}
               </h3>
-              <p className="text-xs text-gray-500 dark:text-gray-400">
+              <p className="text-xs text-muted-foreground">
                 {chain.network}
               </p>
             </div>
@@ -129,13 +129,13 @@ export function ChainCard({ chain }: ChainCardProps) {
         {chain.latestSnapshot ? (
           <div className="space-y-2 mb-3">
             <div className="flex items-center justify-between text-sm">
-              <span className="text-gray-500 dark:text-gray-300">Last updated</span>
-              <span className="text-gray-900 dark:text-white font-medium">
+              <span className="text-muted-foreground">Last updated</span>
+              <span className="text-card-foreground font-medium">
                 {formatTimeAgo(chain.latestSnapshot.lastModified)}
               </span>
             </div>
             <div className="flex items-center justify-between text-sm">
-              <span className="text-gray-500 dark:text-gray-300">Next snapshot in</span>
+              <span className="text-muted-foreground">Next snapshot in</span>
               <Tooltip 
                 content={`Next update: ${formatExactDateTime(calculateNextUpdateTime(chain.latestSnapshot.lastModified))}`}
                 position="top"
@@ -145,7 +145,7 @@ export function ChainCard({ chain }: ChainCardProps) {
             </div>
           </div>
         ) : (
-          <div className="text-sm text-gray-500 dark:text-gray-300 mb-3">
+          <div className="text-sm text-muted-foreground mb-3">
             No snapshots available
           </div>
         )}
@@ -158,7 +158,7 @@ export function ChainCard({ chain }: ChainCardProps) {
             >
               <button
                 onClick={handleSnapshotCountClick}
-                className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 rounded px-1 -mx-1"
+                className="text-muted-foreground hover:text-foreground transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background rounded px-1 -mx-1"
                 aria-label={`View ${snapshotCount} snapshots for ${chain.name}`}
               >
                 {snapshotCount} snapshot{snapshotCount !== 1 ? 's' : ''}
@@ -167,7 +167,7 @@ export function ChainCard({ chain }: ChainCardProps) {
           </div>
           <div className="flex items-center gap-2">
             <svg
-              className="w-5 h-5 text-gray-400"
+              className="w-5 h-5 text-muted-foreground"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"

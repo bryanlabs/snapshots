@@ -12,6 +12,11 @@ export default function PremiumPage() {
   const premiumFeatures = [
     'Unlimited downloads',
     '250 Mbps download speed (5x faster)',
+    'Custom snapshots from any block height',
+    'Request snapshots with custom pruning',
+    'Schedule recurring snapshots',
+    'Private snapshot storage',
+    'Priority processing queue',
     'Premium support',
     'API access for automation',
     'Dashboard tracking download history',
@@ -173,8 +178,54 @@ export default function PremiumPage() {
           </div>
         </div>
 
+        {/* Custom Snapshots Feature Section */}
+        <div className="max-w-4xl mx-auto mt-16 mb-16">
+          <div className="bg-gradient-to-br from-purple-900/20 to-blue-900/20 backdrop-blur-xl rounded-2xl p-8 border border-purple-800">
+            <h3 className="text-2xl font-bold text-white mb-4">
+              🚀 Custom Snapshot Requests
+            </h3>
+            <p className="text-gray-300 mb-6">
+              Premium members can request snapshots from any block height with custom configurations:
+            </p>
+            <div className="grid md:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <div className="flex items-start gap-3">
+                  <CheckIcon className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <span className="text-gray-300 font-semibold">Any Block Height</span>
+                    <p className="text-gray-400 text-sm mt-1">Get snapshots from specific heights for debugging or rollbacks</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <CheckIcon className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <span className="text-gray-300 font-semibold">Custom Pruning</span>
+                    <p className="text-gray-400 text-sm mt-1">Choose between none, default, everything, or custom pruning</p>
+                  </div>
+                </div>
+              </div>
+              <div className="space-y-4">
+                <div className="flex items-start gap-3">
+                  <CheckIcon className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <span className="text-gray-300 font-semibold">Scheduled Snapshots</span>
+                    <p className="text-gray-400 text-sm mt-1">Set up recurring snapshots with cron expressions</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <CheckIcon className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <span className="text-gray-300 font-semibold">Priority Queue</span>
+                    <p className="text-gray-400 text-sm mt-1">Skip ahead of all free tier requests</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* FAQ Section */}
-        <div className="max-w-4xl mx-auto mt-16">
+        <div className="max-w-4xl mx-auto">
           <h2 className="text-3xl font-bold text-white mb-8 text-center">
             Frequently Asked Questions
           </h2>

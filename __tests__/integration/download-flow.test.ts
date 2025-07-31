@@ -3,14 +3,16 @@ import { GET as getChainsGET } from '@/app/api/v1/chains/route';
 import { GET as getChainGET } from '@/app/api/v1/chains/[chainId]/route';
 import { GET as getSnapshotsGET } from '@/app/api/v1/chains/[chainId]/snapshots/route';
 import { POST as downloadPOST } from '@/app/api/v1/chains/[chainId]/download/route';
-import * as minioClient from '@/lib/minio/client';
+import * as nginxOperations from '@/lib/nginx/operations';
 import * as bandwidthManager from '@/lib/bandwidth/manager';
-import { getIronSession } from 'iron-session';
+import * as downloadTracker from '@/lib/download/tracker';
+import { auth } from '@/auth';
 
 // Mock dependencies
-jest.mock('@/lib/minio/client');
+jest.mock('@/lib/nginx/operations');
 jest.mock('@/lib/bandwidth/manager');
-jest.mock('iron-session');
+jest.mock('@/lib/download/tracker');
+jest.mock('@/auth');
 jest.mock('next/headers', () => ({
   cookies: jest.fn().mockResolvedValue({
     get: jest.fn(),
@@ -20,28 +22,101 @@ jest.mock('next/headers', () => ({
 }));
 
 describe('Download Flow Integration', () => {
-  let mockGetPresignedUrl: jest.Mock;
+  let mockGenerateDownloadUrl: jest.Mock;
+  let mockListChains: jest.Mock;
+  let mockListSnapshots: jest.Mock;
   let mockBandwidthManager: any;
-  let mockGetIronSession: jest.Mock;
+  let mockAuth: jest.Mock;
+  let mockCheckDownloadAllowed: jest.Mock;
+  let mockIncrementDailyDownload: jest.Mock;
+  let mockLogDownload: jest.Mock;
 
   beforeEach(() => {
     jest.clearAllMocks();
     
-    // Setup mocks
-    mockGetPresignedUrl = jest.fn().mockResolvedValue('https://minio.example.com/download-url');
-    mockBandwidthManager = {
-      hasExceededLimit: jest.fn().mockReturnValue(false),
-      startConnection: jest.fn(),
-      getUserBandwidth: jest.fn().mockReturnValue(1024 * 1024), // 1 MB used
-    };
-    mockGetIronSession = jest.fn().mockResolvedValue({
-      username: 'testuser',
-      tier: 'free',
+    // Setup nginx mocks
+    mockListChains = jest.fn().mockResolvedValue([
+      {
+        chainId: 'cosmos-hub',
+        snapshotCount: 2,
+        latestSnapshot: {
+          filename: 'cosmos-hub-20250130.tar.lz4',
+          size: 1000000000,
+          lastModified: new Date('2025-01-30'),
+        },
+        totalSize: 2000000000,
+      },
+      {
+        chainId: 'osmosis',
+        snapshotCount: 1,
+        latestSnapshot: {
+          filename: 'osmosis-20250130.tar.lz4',
+          size: 500000000,
+          lastModified: new Date('2025-01-30'),
+        },
+        totalSize: 500000000,
+      },
+    ]);
+
+    mockListSnapshots = jest.fn().mockResolvedValue([
+      {
+        filename: 'cosmos-hub-20250130.tar.lz4',
+        size: 1000000000,
+        lastModified: new Date('2025-01-30'),
+        height: 20250130,
+        compressionType: 'lz4',
+      },
+      {
+        filename: 'cosmos-hub-20250129.tar.zst',
+        size: 900000000,
+        lastModified: new Date('2025-01-29'),
+        height: 20250129,
+        compressionType: 'zst',
+      },
+    ]);
+
+    mockGenerateDownloadUrl = jest.fn().mockResolvedValue({
+      url: 'https://snapshots.bryanlabs.net/snapshots/cosmos-hub/cosmos-hub-20250130.tar.lz4?md5=abc123&expires=1234567890&tier=free',
+      expires: '2025-01-30T12:00:00Z',
+      size: 1000000000,
     });
 
-    (minioClient.getPresignedUrl as jest.Mock) = mockGetPresignedUrl;
+    mockBandwidthManager = {
+      canAllocate: jest.fn().mockReturnValue({ canAllocate: true, queuePosition: 0 }),
+      allocate: jest.fn().mockReturnValue({ allocated: 50 }),
+      getStats: jest.fn().mockReturnValue({
+        totalBandwidth: 1000,
+        allocatedBandwidth: 500,
+        queueLength: 0,
+      }),
+    };
+
+    mockAuth = jest.fn().mockResolvedValue({
+      user: {
+        id: 'user123',
+        email: 'test@example.com',
+        tier: 'free',
+      },
+    });
+
+    mockCheckDownloadAllowed = jest.fn().mockResolvedValue({
+      allowed: true,
+      remaining: 4,
+      limit: 5,
+    });
+
+    mockIncrementDailyDownload = jest.fn().mockResolvedValue(true);
+    mockLogDownload = jest.fn().mockResolvedValue(true);
+
+    // Assign mocks
+    (nginxOperations.listChains as jest.Mock) = mockListChains;
+    (nginxOperations.listSnapshots as jest.Mock) = mockListSnapshots;
+    (nginxOperations.generateDownloadUrl as jest.Mock) = mockGenerateDownloadUrl;
     (bandwidthManager.bandwidthManager as any) = mockBandwidthManager;
-    (getIronSession as jest.Mock) = mockGetIronSession;
+    (auth as jest.Mock) = mockAuth;
+    (downloadTracker.checkDownloadAllowed as jest.Mock) = mockCheckDownloadAllowed;
+    (downloadTracker.incrementDailyDownload as jest.Mock) = mockIncrementDailyDownload;
+    (downloadTracker.logDownload as jest.Mock) = mockLogDownload;
   });
 
   describe('Complete download flow', () => {
@@ -77,20 +152,19 @@ describe('Download Flow Integration', () => {
       expect(snapshotsResponse.status).toBe(200);
       expect(snapshotsData.success).toBe(true);
       expect(Array.isArray(snapshotsData.data)).toBe(true);
-      
-      // Skip if no snapshots available
-      if (snapshotsData.data.length === 0) {
-        return;
-      }
+      expect(snapshotsData.data.length).toBeGreaterThan(0);
       
       const firstSnapshot = snapshotsData.data[0];
       
       // Step 4: Request download URL
       const downloadRequest = new NextRequest(`http://localhost:3000/api/v1/chains/${firstChain.id}/download`, {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-forwarded-for': '192.168.1.1',
+        },
         body: JSON.stringify({
-          snapshotId: firstSnapshot.id,
-          email: 'user@example.com',
+          snapshotId: firstSnapshot.filename,
         }),
       });
       const downloadParams = Promise.resolve({ chainId: firstChain.id });
@@ -99,19 +173,20 @@ describe('Download Flow Integration', () => {
       
       expect(downloadResponse.status).toBe(200);
       expect(downloadData.success).toBe(true);
-      expect(downloadData.data.downloadUrl).toBe('https://minio.example.com/download-url');
+      expect(downloadData.data.url).toContain('https://snapshots.bryanlabs.net');
+      expect(downloadData.data.url).toContain('tier=free');
+      expect(downloadData.data.expires).toBeDefined();
+      expect(downloadData.data.size).toBe(firstSnapshot.size);
       
-      // Verify bandwidth tracking was initiated
-      expect(mockBandwidthManager.startConnection).toHaveBeenCalledWith(
-        expect.stringContaining('testuser'),
-        'testuser',
-        'free'
-      );
+      // Verify download tracking was initiated
+      expect(mockCheckDownloadAllowed).toHaveBeenCalled();
+      expect(mockIncrementDailyDownload).toHaveBeenCalled();
+      expect(mockLogDownload).toHaveBeenCalled();
     });
 
     it('should handle anonymous user download flow', async () => {
       // Set up anonymous session
-      mockGetIronSession.mockResolvedValue(null);
+      mockAuth.mockResolvedValue(null);
       
       // Get chain and snapshot info
       const chainId = 'cosmos-hub';
@@ -125,8 +200,12 @@ describe('Download Flow Integration', () => {
       // Request download as anonymous user
       const downloadRequest = new NextRequest(`http://localhost:3000/api/v1/chains/${chainId}/download`, {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-forwarded-for': '192.168.1.1',
+        },
         body: JSON.stringify({
-          snapshotId: snapshot.id,
+          snapshotId: snapshot.filename,
         }),
       });
       const downloadParams = Promise.resolve({ chainId });
@@ -135,24 +214,32 @@ describe('Download Flow Integration', () => {
       
       expect(downloadResponse.status).toBe(200);
       expect(downloadData.success).toBe(true);
+      expect(downloadData.data.tier).toBe('free');
       
-      // Verify anonymous user handling
-      expect(mockBandwidthManager.hasExceededLimit).toHaveBeenCalledWith('anonymous', 'free');
-      expect(mockBandwidthManager.startConnection).toHaveBeenCalledWith(
-        expect.stringContaining('anonymous'),
-        'anonymous',
-        'free'
+      // Verify anonymous user handling with IP-based tracking
+      expect(mockCheckDownloadAllowed).toHaveBeenCalledWith(
+        '192.168.1.1',
+        'free',
+        expect.any(Number)
       );
     });
 
-    it('should enforce bandwidth limits', async () => {
-      // Set user as exceeding bandwidth limit
-      mockBandwidthManager.hasExceededLimit.mockReturnValue(true);
+    it('should enforce daily download limits', async () => {
+      // Set user as exceeding download limit
+      mockCheckDownloadAllowed.mockResolvedValue({
+        allowed: false,
+        remaining: 0,
+        limit: 5,
+      });
       
       const downloadRequest = new NextRequest('http://localhost:3000/api/v1/chains/cosmos-hub/download', {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-forwarded-for': '192.168.1.1',
+        },
         body: JSON.stringify({
-          snapshotId: 'snapshot-123',
+          snapshotId: 'cosmos-hub-20250130.tar.lz4',
         }),
       });
       const downloadParams = Promise.resolve({ chainId: 'cosmos-hub' });
@@ -161,22 +248,28 @@ describe('Download Flow Integration', () => {
       
       expect(downloadResponse.status).toBe(429);
       expect(downloadData.success).toBe(false);
-      expect(downloadData.error).toBe('Bandwidth limit exceeded');
-      expect(mockBandwidthManager.startConnection).not.toHaveBeenCalled();
+      expect(downloadData.error).toContain('Daily download limit exceeded');
+      expect(mockIncrementDailyDownload).not.toHaveBeenCalled();
     });
 
     it('should handle premium user with higher limits', async () => {
       // Set up premium user session
-      mockGetIronSession.mockResolvedValue({
-        username: 'premiumuser',
-        tier: 'premium',
+      mockAuth.mockResolvedValue({
+        user: {
+          id: 'premium123',
+          email: 'premium@example.com',
+          tier: 'premium',
+        },
       });
       
       const downloadRequest = new NextRequest('http://localhost:3000/api/v1/chains/cosmos-hub/download', {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-forwarded-for': '192.168.1.1',
+        },
         body: JSON.stringify({
-          snapshotId: 'snapshot-123',
-          email: 'premium@example.com',
+          snapshotId: 'cosmos-hub-20250130.tar.lz4',
         }),
       });
       const downloadParams = Promise.resolve({ chainId: 'cosmos-hub' });
@@ -185,19 +278,23 @@ describe('Download Flow Integration', () => {
       
       expect(downloadResponse.status).toBe(200);
       expect(downloadData.success).toBe(true);
+      expect(downloadData.data.tier).toBe('premium');
       
       // Verify premium tier handling
-      expect(mockBandwidthManager.hasExceededLimit).toHaveBeenCalledWith('premiumuser', 'premium');
-      expect(mockBandwidthManager.startConnection).toHaveBeenCalledWith(
-        expect.stringContaining('premiumuser'),
-        'premiumuser',
-        'premium'
+      expect(mockGenerateDownloadUrl).toHaveBeenCalledWith(
+        'cosmos-hub',
+        'cosmos-hub-20250130.tar.lz4',
+        'premium',
+        expect.any(String)
       );
+      expect(downloadData.data.url).toContain('tier=premium');
     });
   });
 
   describe('Error handling in download flow', () => {
     it('should handle invalid chain ID', async () => {
+      mockListChains.mockResolvedValue([]);
+      
       const chainRequest = new NextRequest('http://localhost:3000/api/v1/chains/invalid-chain');
       const chainParams = Promise.resolve({ chainId: 'invalid-chain' });
       const chainResponse = await getChainGET(chainRequest, { params: chainParams });
@@ -211,6 +308,7 @@ describe('Download Flow Integration', () => {
     it('should handle invalid snapshot ID', async () => {
       const downloadRequest = new NextRequest('http://localhost:3000/api/v1/chains/cosmos-hub/download', {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           snapshotId: '', // Invalid: empty snapshot ID
         }),
@@ -221,16 +319,20 @@ describe('Download Flow Integration', () => {
       
       expect(downloadResponse.status).toBe(400);
       expect(downloadData.success).toBe(false);
-      expect(downloadData.error).toBe('Invalid request');
+      expect(downloadData.error).toContain('Invalid request');
     });
 
-    it('should handle MinIO service errors', async () => {
-      mockGetPresignedUrl.mockRejectedValue(new Error('MinIO service unavailable'));
+    it('should handle nginx service errors', async () => {
+      mockGenerateDownloadUrl.mockRejectedValue(new Error('nginx service unavailable'));
       
       const downloadRequest = new NextRequest('http://localhost:3000/api/v1/chains/cosmos-hub/download', {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-forwarded-for': '192.168.1.1',
+        },
         body: JSON.stringify({
-          snapshotId: 'snapshot-123',
+          snapshotId: 'cosmos-hub-20250130.tar.lz4',
         }),
       });
       const downloadParams = Promise.resolve({ chainId: 'cosmos-hub' });
@@ -240,7 +342,33 @@ describe('Download Flow Integration', () => {
       expect(downloadResponse.status).toBe(500);
       expect(downloadData.success).toBe(false);
       expect(downloadData.error).toBe('Failed to generate download URL');
-      expect(downloadData.message).toBe('MinIO service unavailable');
+      expect(downloadData.message).toBe('nginx service unavailable');
+    });
+
+    it('should handle bandwidth allocation failure', async () => {
+      mockBandwidthManager.canAllocate.mockReturnValue({
+        canAllocate: false,
+        queuePosition: 5,
+      });
+
+      const downloadRequest = new NextRequest('http://localhost:3000/api/v1/chains/cosmos-hub/download', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-forwarded-for': '192.168.1.1',
+        },
+        body: JSON.stringify({
+          snapshotId: 'cosmos-hub-20250130.tar.lz4',
+        }),
+      });
+      const downloadParams = Promise.resolve({ chainId: 'cosmos-hub' });
+      const downloadResponse = await downloadPOST(downloadRequest, { params: downloadParams });
+      const downloadData = await downloadResponse.json();
+      
+      expect(downloadResponse.status).toBe(503);
+      expect(downloadData.success).toBe(false);
+      expect(downloadData.error).toContain('bandwidth capacity');
+      expect(downloadData.message).toContain('Queue position: 5');
     });
   });
 
@@ -253,8 +381,12 @@ describe('Download Flow Integration', () => {
       for (let i = 0; i < 3; i++) {
         const downloadRequest = new NextRequest(`http://localhost:3000/api/v1/chains/${chainId}/download`, {
           method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-forwarded-for': '192.168.1.1',
+          },
           body: JSON.stringify({
-            snapshotId: `snapshot-${i}`,
+            snapshotId: `cosmos-hub-2025013${i}.tar.lz4`,
           }),
         });
         const downloadParams = Promise.resolve({ chainId });
@@ -268,39 +400,105 @@ describe('Download Flow Integration', () => {
       expect(responses.every(r => r.status === 200)).toBe(true);
       expect(data.every(d => d.success)).toBe(true);
       
-      // Verify all connections were tracked
-      expect(mockBandwidthManager.startConnection).toHaveBeenCalledTimes(3);
+      // Verify all downloads were tracked
+      expect(mockIncrementDailyDownload).toHaveBeenCalledTimes(3);
+      expect(mockLogDownload).toHaveBeenCalledTimes(3);
     });
 
     it('should track bandwidth across multiple downloads', async () => {
-      // Simulate bandwidth usage increasing with each download
-      let totalBandwidth = 0;
-      mockBandwidthManager.getUserBandwidth.mockImplementation(() => {
-        totalBandwidth += 1024 * 1024 * 100; // 100 MB per download
-        return totalBandwidth;
-      });
-      
       const chainId = 'cosmos-hub';
       
       // First download
       const download1Request = new NextRequest(`http://localhost:3000/api/v1/chains/${chainId}/download`, {
         method: 'POST',
-        body: JSON.stringify({ snapshotId: 'snapshot-1' }),
+        headers: {
+          'Content-Type': 'application/json',
+          'x-forwarded-for': '192.168.1.1',
+        },
+        body: JSON.stringify({ snapshotId: 'cosmos-hub-20250130.tar.lz4' }),
       });
       const download1Params = Promise.resolve({ chainId });
       await downloadPOST(download1Request, { params: download1Params });
       
-      // Second download
+      // Second download - should still be allowed
       const download2Request = new NextRequest(`http://localhost:3000/api/v1/chains/${chainId}/download`, {
         method: 'POST',
-        body: JSON.stringify({ snapshotId: 'snapshot-2' }),
+        headers: {
+          'Content-Type': 'application/json',
+          'x-forwarded-for': '192.168.1.1',
+        },
+        body: JSON.stringify({ snapshotId: 'cosmos-hub-20250129.tar.zst' }),
       });
       const download2Params = Promise.resolve({ chainId });
-      await downloadPOST(download2Request, { params: download2Params });
+      const response2 = await downloadPOST(download2Request, { params: download2Params });
+      const data2 = await response2.json();
+      
+      expect(response2.status).toBe(200);
+      expect(data2.success).toBe(true);
       
       // Verify bandwidth tracking
-      expect(mockBandwidthManager.getUserBandwidth).toHaveBeenCalled();
-      expect(mockBandwidthManager.startConnection).toHaveBeenCalledTimes(2);
+      expect(mockBandwidthManager.canAllocate).toHaveBeenCalledTimes(2);
+      expect(mockBandwidthManager.allocate).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  describe('Nginx integration specifics', () => {
+    it('should generate secure download URLs with proper parameters', async () => {
+      const downloadRequest = new NextRequest('http://localhost:3000/api/v1/chains/cosmos-hub/download', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-forwarded-for': '192.168.1.1',
+        },
+        body: JSON.stringify({
+          snapshotId: 'cosmos-hub-20250130.tar.lz4',
+        }),
+      });
+      const downloadParams = Promise.resolve({ chainId: 'cosmos-hub' });
+      const downloadResponse = await downloadPOST(downloadRequest, { params: downloadParams });
+      const downloadData = await downloadResponse.json();
+      
+      expect(downloadData.data.url).toMatch(/md5=[a-zA-Z0-9_-]+/);
+      expect(downloadData.data.url).toMatch(/expires=\d+/);
+      expect(downloadData.data.url).toMatch(/tier=(free|premium)/);
+    });
+
+    it('should handle different compression types', async () => {
+      // Test lz4 compression
+      const lz4Request = new NextRequest('http://localhost:3000/api/v1/chains/cosmos-hub/download', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-forwarded-for': '192.168.1.1',
+        },
+        body: JSON.stringify({
+          snapshotId: 'cosmos-hub-20250130.tar.lz4',
+        }),
+      });
+      const lz4Params = Promise.resolve({ chainId: 'cosmos-hub' });
+      const lz4Response = await downloadPOST(lz4Request, { params: lz4Params });
+      const lz4Data = await lz4Response.json();
+      
+      expect(lz4Response.status).toBe(200);
+      expect(lz4Data.data.url).toContain('.tar.lz4');
+      
+      // Test zst compression
+      const zstRequest = new NextRequest('http://localhost:3000/api/v1/chains/cosmos-hub/download', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-forwarded-for': '192.168.1.1',
+        },
+        body: JSON.stringify({
+          snapshotId: 'cosmos-hub-20250129.tar.zst',
+        }),
+      });
+      const zstParams = Promise.resolve({ chainId: 'cosmos-hub' });
+      const zstResponse = await downloadPOST(zstRequest, { params: zstParams });
+      const zstData = await zstResponse.json();
+      
+      expect(zstResponse.status).toBe(200);
+      expect(zstData.data.url).toContain('.tar.zst');
     });
   });
 });

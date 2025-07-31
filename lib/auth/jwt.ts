@@ -2,7 +2,11 @@ import { NextRequest } from 'next/server';
 import { User } from '../types';
 import * as jose from 'jose';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+const JWT_SECRET = process.env.JWT_SECRET;
+
+if (!JWT_SECRET) {
+  throw new Error('JWT_SECRET environment variable is required');
+}
 const JWT_ISSUER = 'bryanlabs-snapshots';
 const JWT_AUDIENCE = 'bryanlabs-api';
 

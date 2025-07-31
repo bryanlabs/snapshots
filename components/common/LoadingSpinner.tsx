@@ -6,7 +6,7 @@ export function LoadingSpinner({ size = 'md' }: { size?: 'sm' | 'md' | 'lg' }) {
   };
 
   return (
-    <div className="flex items-center justify-center">
+    <div className="flex items-center justify-center" data-testid="loading-spinner">
       <div className={`${sizeClasses[size]} animate-spin`}>
         <svg
           className="w-full h-full"

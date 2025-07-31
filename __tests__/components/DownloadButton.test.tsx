@@ -1,11 +1,54 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { DownloadButton } from '@/components/snapshots/DownloadButton';
-import { useAuth } from '@/components/providers/AuthProvider';
+import { useAuth } from '@/hooks/useAuth';
 import { Snapshot } from '@/lib/types';
 
 // Mock dependencies
-jest.mock('@/components/providers/AuthProvider');
+jest.mock('@/hooks/useAuth');
+jest.mock('next/image', () => ({
+  __esModule: true,
+  default: (props: any) => <img {...props} />,
+}));
+
+// Mock framer-motion
+jest.mock('framer-motion', () => ({
+  motion: {
+    button: ({ children, onClick, disabled, className, whileHover, whileTap, ...props }: any) => (
+      <button onClick={onClick} disabled={disabled} className={className} {...props}>
+        {children}
+      </button>
+    ),
+    div: ({ children, className, onClick, ...props }: any) => (
+      <div className={className} onClick={onClick} {...props}>
+        {children}
+      </div>
+    ),
+    svg: ({ children, className, ...props }: any) => (
+      <svg className={className} {...props}>
+        {children}
+      </svg>
+    ),
+  },
+  AnimatePresence: ({ children }: any) => children,
+}));
+
+// Mock LoadingSpinner component
+jest.mock('@/components/common/LoadingSpinner', () => ({
+  LoadingSpinner: ({ size }: { size: string }) => <div data-testid="loading-spinner">Loading...</div>,
+}));
+
+// Mock DownloadModal component
+jest.mock('@/components/common/DownloadModal', () => ({
+  DownloadModal: ({ isOpen, onClose, onConfirm, isLoading }: any) => (
+    isOpen ? (
+      <div data-testid="download-modal">
+        <button onClick={onConfirm}>Confirm Download</button>
+        <button onClick={onClose}>Close</button>
+      </div>
+    ) : null
+  ),
+}));
 
 // Mock fetch
 global.fetch = jest.fn();
@@ -49,17 +92,12 @@ describe('DownloadButton', () => {
       }),
     });
     
-    // Mock createElement and appendChild
-    const mockLink = {
-      href: '',
-      download: '',
-      click: jest.fn(),
-      remove: jest.fn(),
-    };
-    
-    jest.spyOn(document, 'createElement').mockReturnValue(mockLink as any);
-    jest.spyOn(document.body, 'appendChild').mockImplementation();
-    jest.spyOn(document.body, 'removeChild').mockImplementation();
+    // Mock clipboard API
+    Object.assign(navigator, {
+      clipboard: {
+        writeText: jest.fn().mockResolvedValue(undefined),
+      },
+    });
   });
 
   afterEach(() => {
@@ -80,6 +118,7 @@ describe('DownloadButton', () => {
   });
 
   it('should handle download click', async () => {
+    // Default user without tier shows modal first
     render(
       <DownloadButton 
         snapshot={mockSnapshot} 
@@ -89,6 +128,15 @@ describe('DownloadButton', () => {
     
     const button = screen.getByRole('button', { name: /download/i });
     fireEvent.click(button);
+    
+    // Should show modal for users without tier
+    await waitFor(() => {
+      expect(screen.getByTestId('download-modal')).toBeInTheDocument();
+    });
+    
+    // Click confirm in modal
+    const confirmButton = screen.getByText('Confirm Download');
+    fireEvent.click(confirmButton);
     
     await waitFor(() => {
       expect(mockFetch).toHaveBeenCalledWith(
@@ -105,7 +153,11 @@ describe('DownloadButton', () => {
     });
   });
 
-  it('should show loading state during download', async () => {
+  it('should show download modal for non-premium users', async () => {
+    mockUseAuth.mockReturnValue({
+      user: { email: 'user@example.com', tier: 'free' },
+    });
+    
     render(
       <DownloadButton 
         snapshot={mockSnapshot} 
@@ -117,20 +169,14 @@ describe('DownloadButton', () => {
     fireEvent.click(button);
     
     await waitFor(() => {
-      expect(screen.getByText('Downloading...')).toBeInTheDocument();
-      expect(button).toBeDisabled();
+      expect(screen.getByTestId('download-modal')).toBeInTheDocument();
     });
   });
 
-  it('should create and click download link', async () => {
-    const mockLink = {
-      href: '',
-      download: '',
-      click: jest.fn(),
-    };
-    
-    const createElementSpy = jest.spyOn(document, 'createElement')
-      .mockReturnValue(mockLink as any);
+  it('should handle immediate download for premium users', async () => {
+    mockUseAuth.mockReturnValue({
+      user: { email: 'premium@example.com', tier: 'premium' },
+    });
     
     render(
       <DownloadButton 
@@ -142,15 +188,25 @@ describe('DownloadButton', () => {
     const button = screen.getByRole('button', { name: /download/i });
     fireEvent.click(button);
     
+    // Premium users should not see the modal
+    expect(screen.queryByTestId('download-modal')).not.toBeInTheDocument();
+    
+    // Should call the download API directly
     await waitFor(() => {
-      expect(createElementSpy).toHaveBeenCalledWith('a');
-      expect(mockLink.href).toBe('https://example.com/download/test-file');
-      expect(mockLink.download).toBe('cosmoshub-4-19234567.tar.lz4');
-      expect(mockLink.click).toHaveBeenCalled();
+      expect(mockFetch).toHaveBeenCalledWith(
+        '/api/v1/chains/cosmos-hub/download',
+        expect.objectContaining({
+          method: 'POST',
+        })
+      );
     });
   });
 
-  it('should show progress bar during download', async () => {
+  it('should confirm download through modal for free users', async () => {
+    mockUseAuth.mockReturnValue({
+      user: { email: 'user@example.com', tier: 'free' },
+    });
+    
     render(
       <DownloadButton 
         snapshot={mockSnapshot} 
@@ -158,12 +214,25 @@ describe('DownloadButton', () => {
       />
     );
     
+    // Click download button
     const button = screen.getByRole('button', { name: /download/i });
     fireEvent.click(button);
     
+    // Modal should appear
     await waitFor(() => {
-      const progressBar = screen.getByRole('progressbar', { hidden: true });
-      expect(progressBar).toBeInTheDocument();
+      expect(screen.getByTestId('download-modal')).toBeInTheDocument();
+    });
+    
+    // Click confirm in modal
+    const confirmButton = screen.getByText('Confirm Download');
+    fireEvent.click(confirmButton);
+    
+    // Should call download API
+    await waitFor(() => {
+      expect(mockFetch).toHaveBeenCalledWith(
+        '/api/v1/chains/cosmos-hub/download',
+        expect.any(Object)
+      );
     });
   });
 
@@ -181,6 +250,15 @@ describe('DownloadButton', () => {
     
     const button = screen.getByRole('button', { name: /download/i });
     fireEvent.click(button);
+    
+    // Should show modal for users without auth
+    await waitFor(() => {
+      expect(screen.getByTestId('download-modal')).toBeInTheDocument();
+    });
+    
+    // Click confirm in modal
+    const confirmButton = screen.getByText('Confirm Download');
+    fireEvent.click(confirmButton);
     
     await waitFor(() => {
       expect(mockFetch).toHaveBeenCalledWith(
@@ -213,13 +291,18 @@ describe('DownloadButton', () => {
     const button = screen.getByRole('button', { name: /download/i });
     fireEvent.click(button);
     
+    // Confirm in modal first
+    await waitFor(() => {
+      const confirmButton = screen.getByText('Confirm Download');
+      fireEvent.click(confirmButton);
+    });
+    
     await waitFor(() => {
       expect(consoleError).toHaveBeenCalledWith(
         'Download failed:',
         expect.any(Error)
       );
       expect(button).not.toBeDisabled();
-      expect(screen.queryByText('Downloading...')).not.toBeInTheDocument();
     });
     
     consoleError.mockRestore();
@@ -240,6 +323,12 @@ describe('DownloadButton', () => {
     const button = screen.getByRole('button', { name: /download/i });
     fireEvent.click(button);
     
+    // Confirm in modal first
+    await waitFor(() => {
+      const confirmButton = screen.getByText('Confirm Download');
+      fireEvent.click(confirmButton);
+    });
+    
     await waitFor(() => {
       expect(consoleError).toHaveBeenCalledWith(
         'Download failed:',
@@ -251,8 +340,10 @@ describe('DownloadButton', () => {
     consoleError.mockRestore();
   });
 
-  it('should reset state after download completes', async () => {
-    jest.useFakeTimers();
+  it('should show download URL modal after successful API call', async () => {
+    mockUseAuth.mockReturnValue({
+      user: { email: 'user@example.com', tier: 'free' },
+    });
     
     render(
       <DownloadButton 
@@ -261,21 +352,20 @@ describe('DownloadButton', () => {
       />
     );
     
+    // Click download button
     const button = screen.getByRole('button', { name: /download/i });
     fireEvent.click(button);
     
+    // Confirm in modal
     await waitFor(() => {
-      expect(screen.getByText('Downloading...')).toBeInTheDocument();
+      const confirmButton = screen.getByText('Confirm Download');
+      fireEvent.click(confirmButton);
     });
     
-    // Fast-forward through the simulated download
-    jest.advanceTimersByTime(10000);
-    
+    // Wait for API call and URL modal
     await waitFor(() => {
-      expect(screen.queryByText('Downloading...')).not.toBeInTheDocument();
-      expect(button).not.toBeDisabled();
+      expect(screen.getByText('Download Ready')).toBeInTheDocument();
+      expect(screen.getByText('Copy URL')).toBeInTheDocument();
     });
-    
-    jest.useRealTimers();
   });
 });

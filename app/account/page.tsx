@@ -1,8 +1,10 @@
 "use client";
 
+export const dynamic = 'force-dynamic';
+
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useState, useRef, ChangeEvent, useEffect } from "react";
+import { useState, useRef, ChangeEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -24,22 +26,7 @@ export default function AccountPage() {
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Check session validity on mount
-  useEffect(() => {
-    if (status === "authenticated" && session?.user?.id) {
-      fetch("/api/auth/sync-session")
-        .then(res => res.json())
-        .then(data => {
-          if (data.requiresReauth) {
-            showToast("Session expired. Please sign in again.", "error");
-            signOut({ callbackUrl: "/auth/signin" });
-          }
-        })
-        .catch(err => {
-          console.error("Failed to sync session:", err);
-        });
-    }
-  }, [status, session?.user?.id, showToast]);
+  // Remove the problematic sync-session check - auth is handled by layout
 
   // Redirect if not authenticated
   if (status === "unauthenticated") {

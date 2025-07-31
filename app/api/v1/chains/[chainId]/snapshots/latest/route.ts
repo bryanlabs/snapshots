@@ -4,7 +4,7 @@ import { getLatestSnapshot, generateDownloadUrl } from '@/lib/nginx/operations';
 import { config } from '@/lib/config';
 import { collectResponseTime, trackRequest } from '@/lib/monitoring/metrics';
 import { extractRequestMetadata, logRequest } from '@/lib/middleware/logger';
-import { getUserFromJWT } from '@/lib/auth/jwt';
+import { auth } from '@/auth';
 
 interface LatestSnapshotResponse {
   chain_id: string;
@@ -29,15 +29,9 @@ export async function GET(
     const { chainId } = await params;
     
     // Determine tier based on authentication
-    let tier: 'free' | 'premium' = 'free';
-    let userId = 'anonymous';
-    
-    // Check for JWT Bearer token
-    const jwtUser = await getUserFromJWT(request);
-    if (jwtUser) {
-      tier = jwtUser.tier || 'premium';
-      userId = jwtUser.id;
-    }
+    const session = await auth();
+    const tier = session?.user?.tier || 'free';
+    const userId = session?.user?.id || 'anonymous';
     
     // Fetch latest snapshot from nginx
     console.log(`Fetching latest snapshot for chain: ${chainId}`);

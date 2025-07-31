@@ -73,6 +73,7 @@ model User {
   // User properties
   displayName       String?   @map("display_name")
   avatarUrl         String?   @map("avatar_url")
+  role              String    @default("user") // "user" or "admin"
   
   // Individual tier (can be overridden by team membership)
   personalTierId    String?   @map("personal_tier_id")
