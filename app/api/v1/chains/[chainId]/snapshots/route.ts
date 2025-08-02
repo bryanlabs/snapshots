@@ -3,6 +3,8 @@ import { ApiResponse, Snapshot } from '@/lib/types';
 import { listSnapshots } from '@/lib/nginx/operations';
 import { config } from '@/lib/config';
 import { cache, cacheKeys } from '@/lib/cache/redis-cache';
+import { getUserSession, getGuestUserTier } from '@/lib/auth/user-session';
+import { canAccessSnapshot } from '@/lib/utils/tier';
 
 export async function GET(
   request: NextRequest,
@@ -11,8 +13,12 @@ export async function GET(
   try {
     const { chainId } = await params;
     
+    // Get user session and tier
+    const userSession = await getUserSession();
+    const userTier = userSession.user?.tier || getGuestUserTier();
+    
     // Use cache for snapshots with shorter TTL
-    const snapshots = await cache.getOrSet<Snapshot[]>(
+    const allSnapshots = await cache.getOrSet<Snapshot[]>(
       cacheKeys.chainSnapshots(chainId),
       async () => {
         // Fetch real snapshots from nginx
@@ -47,9 +53,21 @@ export async function GET(
       }
     );
     
+    // Filter snapshots based on user tier access
+    const accessibleSnapshots = allSnapshots.filter(snapshot => 
+      canAccessSnapshot(snapshot, userTier)
+    );
+    
+    // Add access metadata to snapshots for UI
+    const snapshotsWithAccessInfo = allSnapshots.map(snapshot => ({
+      ...snapshot,
+      isAccessible: canAccessSnapshot(snapshot, userTier),
+      userTier: userTier,
+    }));
+    
     return NextResponse.json<ApiResponse<Snapshot[]>>({
       success: true,
-      data: snapshots,
+      data: snapshotsWithAccessInfo,
     });
   } catch (error) {
     return NextResponse.json<ApiResponse>(

@@ -25,6 +25,14 @@ export interface Snapshot {
   updatedAt: Date;
   type: 'pruned' | 'archive' | 'default';
   compressionType: 'lz4' | 'zst' | 'none';
+  // Tier-based access control
+  generationCycle?: 'daily' | 'twice-daily' | 'six-hourly'; // Which schedule created this snapshot
+  hourGenerated?: number; // UTC hour when snapshot was generated (0, 6, 12, 18)
+  minimumTier?: 'free' | 'premium' | 'ultra'; // Minimum tier required to access
+  isRestricted?: boolean; // Whether this snapshot has tier restrictions
+  // Runtime access control (added by API)
+  isAccessible?: boolean; // Whether current user can access this snapshot
+  userTier?: string; // Current user's tier (for UI display)
 }
 
 export interface User {
@@ -32,7 +40,7 @@ export interface User {
   email: string;
   name?: string;
   role: 'admin' | 'user';
-  tier?: 'free' | 'premium' | 'unlimited';
+  tier?: 'free' | 'premium' | 'ultra';
 }
 
 export interface LoginRequest {

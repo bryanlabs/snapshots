@@ -78,13 +78,18 @@ model User {
   // Individual tier (can be overridden by team membership)
   personalTierId    String?   @map("personal_tier_id")
   
-  // Credits system for prepaid billing model
-  creditBalance     Int       @default(0) @map("credit_balance") // in cents
+  // Subscription management for tier-based system
+  subscriptionStatus  String    @default("free") @map("subscription_status") // free, active, cancelled, expired, pending
+  subscriptionExpiresAt DateTime? @map("subscription_expires_at")
   
   // Audit fields for compliance and debugging
   createdAt         DateTime  @default(now()) @map("created_at")
   updatedAt         DateTime  @updatedAt @map("updated_at")
   lastLoginAt       DateTime? @map("last_login_at")
+  
+  // Telegram community access
+  telegramUsername  String?   @map("telegram_username")
+  telegramUserId    String?   @unique @map("telegram_user_id")
   
   // Relations
   personalTier      Tier?     @relation(fields: [personalTierId], references: [id])
@@ -96,6 +101,8 @@ model User {
   creditTransactions CreditTransaction[]
   usageRecords      UsageRecord[]
   snapshotAccess    SnapshotAccess[]
+  apiUsageRecords   ApiUsageRecord[]
+  telegramInvitations TelegramInvitation[]
   
   @@index([email])
   @@index([walletAddress])
@@ -189,10 +196,17 @@ model Tier {
   // When bandwidth is saturated, higher priority tiers get served first
   queuePriority     Int       @default(0) @map("queue_priority")
   
+  // API Rate Limiting - New for tier-based system
+  apiRateLimitHourly Int      @default(50) @map("api_rate_limit_hourly") // requests per hour
+  
   // Feature flags
   canRequestSnapshots Boolean @default(false) @map("can_request_snapshots")
   canAccessApi      Boolean   @default(true) @map("can_access_api")
   canCreateTeams    Boolean   @default(false) @map("can_create_teams")
+  
+  // Telegram community access
+  telegramGroupAccess String?  @map("telegram_group_access") // null, "premium", "ultra"
+  telegramGroupName   String?  @map("telegram_group_name") // Human-readable group name
   
   // Pricing for credit consumption
   downloadPricePerGb Int     @default(0) @map("download_price_per_gb") // in cents
@@ -461,6 +475,36 @@ model CreditTransaction {
   @@map("credit_transactions")
 }
 
+// ========== API RATE LIMITING ==========
+// API usage tracking for hourly rate limits
+model ApiUsageRecord {
+  id                String    @id @default(cuid())
+  
+  // User identification
+  userId            String    @map("user_id")
+  
+  // Time window for rate limiting (hourly buckets)
+  hourBucket        DateTime  @map("hour_bucket") // Rounded to hour (e.g., 2025-08-02 14:00:00)
+  
+  // Usage counts
+  requestCount      Int       @default(0) @map("request_count")
+  
+  // Endpoint tracking for detailed analytics
+  endpoint          String?   // optional: track which endpoints are being hit
+  
+  // Relations
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Timestamps
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+  
+  @@unique([userId, hourBucket, endpoint])
+  @@index([userId, hourBucket])
+  @@index([hourBucket]) // for cleanup of old records
+  @@map("api_usage_records")
+}
+
 // ========== ANALYTICS ==========
 // Separate metrics table for performance
 // "Granular long-term analytics for business intelligence"
@@ -561,4 +605,55 @@ model Session {
   @@index([userId])
   @@index([expires])
   @@map("sessions")
+}
+
+// ========== TELEGRAM COMMUNITY ACCESS ==========
+// Tracks Telegram group invitations and membership status for tier-based access
+model TelegramInvitation {
+  id                String    @id @default(cuid())
+  userId            String    @map("user_id")
+  
+  // Telegram group configuration
+  groupType         String    @map("group_type") // "premium" or "ultra"
+  groupName         String    @map("group_name") // Human-readable name
+  
+  // Invitation tracking
+  status            String    @default("pending") @map("status") // pending, invited, joined, expired, revoked
+  invitationMethod  String    @default("link") @map("invitation_method") // link, username, manual
+  
+  // Invitation details (for audit trail)
+  inviteToken       String?   @unique @map("invite_token") // Secure token for invitation links
+  invitedAt         DateTime? @map("invited_at")
+  joinedAt          DateTime? @map("joined_at")
+  revokedAt         DateTime? @map("revoked_at")
+  expiresAt         DateTime? @map("expires_at")
+  
+  // Telegram-specific data (stored securely)
+  telegramChatId    String?   @map("telegram_chat_id") // Group chat ID
+  inviteLink        String?   @map("invite_link") // Temporary invite link
+  
+  // Admin tracking
+  invitedBy         String?   @map("invited_by") // Admin user ID who processed invitation
+  revokedBy         String?   @map("revoked_by") // Admin user ID who revoked access
+  revokedReason     String?   @map("revoked_reason")
+  
+  // Notification tracking
+  emailSent         Boolean   @default(false) @map("email_sent")
+  emailSentAt       DateTime? @map("email_sent_at")
+  remindersSent     Int       @default(0) @map("reminders_sent")
+  lastReminderAt    DateTime? @map("last_reminder_at")
+  
+  // Audit trail
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+  
+  // Relations
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId, groupType])
+  @@index([status, groupType])
+  @@index([inviteToken])
+  @@index([expiresAt])
+  @@index([createdAt])
+  @@map("telegram_invitations")
 }

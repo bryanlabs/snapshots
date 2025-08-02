@@ -1,5 +1,6 @@
 import { Snapshot } from '@/lib/types';
 import { DownloadButton } from './DownloadButton';
+import { TierAccessBadge, SnapshotFreshnessIndicator } from './TierAccessBadge';
 import { components, getCompressionColor, typography } from '@/lib/design-system';
 import { cn } from '@/lib/utils';
 
@@ -38,10 +39,14 @@ export function SnapshotItem({ snapshot, chainName, chainLogoUrl }: SnapshotCard
   };
 
   return (
-    <div className={cn(components.card.base, 'p-6')}>
+    <div className={cn(
+      components.card.base, 
+      'p-6',
+      !snapshot.isAccessible && 'opacity-75 bg-gray-50 dark:bg-gray-800/50'
+    )}>
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div className="flex-1">
-          <div className="flex items-center gap-3 mb-2">
+          <div className="flex items-center gap-2 mb-2 flex-wrap">
             <h3 className={typography.h5}>
               Block #{snapshot.height.toLocaleString()}
             </h3>
@@ -55,12 +60,31 @@ export function SnapshotItem({ snapshot, chainName, chainLogoUrl }: SnapshotCard
             )}>
               {snapshot.compressionType.toUpperCase()}
             </span>
+            <TierAccessBadge
+              minimumTier={snapshot.minimumTier}
+              userTier={snapshot.userTier}
+              isAccessible={snapshot.isAccessible}
+              generationCycle={snapshot.generationCycle}
+              hourGenerated={snapshot.hourGenerated}
+            />
           </div>
           
           <div className={cn('space-y-1', typography.body.small, typography.muted)}>
             <p>Size: {formatSize(snapshot.size)}</p>
-            <p>Created: {formatDate(snapshot.createdAt)}</p>
+            <div className="flex items-center gap-2">
+              <span>Created: {formatDate(snapshot.createdAt)}</span>
+              <SnapshotFreshnessIndicator
+                hourGenerated={snapshot.hourGenerated}
+                userTier={snapshot.userTier}
+                isAccessible={snapshot.isAccessible}
+              />
+            </div>
             <p className={typography.code}>{snapshot.fileName}</p>
+            {!snapshot.isAccessible && snapshot.minimumTier && (
+              <p className="text-amber-600 dark:text-amber-400 text-xs mt-2">
+                Upgrade to {snapshot.minimumTier} tier for access
+              </p>
+            )}
           </div>
         </div>
 
@@ -69,6 +93,7 @@ export function SnapshotItem({ snapshot, chainName, chainLogoUrl }: SnapshotCard
             snapshot={snapshot}
             chainName={chainName}
             chainLogoUrl={chainLogoUrl}
+            disabled={!snapshot.isAccessible}
           />
         </div>
       </div>

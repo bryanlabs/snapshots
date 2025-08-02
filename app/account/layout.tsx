@@ -94,7 +94,7 @@ export default async function AccountLayout({ children }: AccountLayoutProps) {
                         Get 5x faster downloads, custom snapshots, and more
                       </p>
                       <Link
-                        href="/premium"
+                        href="/pricing"
                         className="inline-flex items-center gap-1 text-xs font-medium text-purple-400 hover:text-purple-300"
                       >
                         <span>Upgrade Now</span>

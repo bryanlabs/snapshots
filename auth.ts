@@ -185,9 +185,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         if (token.id === 'premium-user') {
           session.user.name = 'Ultimate User';
           session.user.email = 'ultimate_user@snapshots.bryanlabs.net';
-          session.user.tier = 'unlimited';
-          session.user.tierId = 'unlimited-tier'; // Add a dummy tier ID
-          session.user.creditBalance = 9999; // Unlimited for ultimate
+          session.user.tier = 'ultra';
+          session.user.tierId = 'ultra-tier'; // Add a dummy tier ID
+          session.user.subscriptionStatus = 'active';
+          session.user.subscriptionExpiresAt = undefined; // Never expires
+          session.user.apiRateLimit = 2000; // Ultra tier limit
           session.user.teams = [];
           session.user.walletAddress = undefined;
           session.user.image = undefined;
@@ -204,18 +206,34 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         });
 
         if (user) {
-          // Use personal tier for now (team support can be added later)
-          const effectiveTier = user.personalTier;
+          // Import subscription utilities
+          const { getEffectiveTier } = await import("@/lib/utils/subscription");
+          const { getApiRateLimit } = await import("@/lib/utils/tier");
+          
+          // Calculate effective tier considering subscription status
+          const effectiveTierName = getEffectiveTier(
+            user.personalTier?.name || 'free',
+            user.subscriptionStatus as any,
+            user.subscriptionExpiresAt
+          );
+          
+          // Get API rate limit for effective tier
+          const apiRateLimit = getApiRateLimit(effectiveTierName);
 
           session.user.name = user.displayName || user.email?.split('@')[0] || undefined;
           session.user.email = user.email || undefined;
           session.user.walletAddress = user.walletAddress || undefined;
           session.user.image = user.avatarUrl || undefined;
           session.user.avatarUrl = user.avatarUrl || undefined;
-          session.user.tier = effectiveTier?.name || "free";
-          session.user.tierId = effectiveTier?.id;
+          session.user.tier = effectiveTierName;
+          session.user.tierId = user.personalTier?.id;
           session.user.role = user.role;
-          session.user.creditBalance = user.creditBalance;
+          
+          // New subscription fields
+          session.user.subscriptionStatus = user.subscriptionStatus;
+          session.user.subscriptionExpiresAt = user.subscriptionExpiresAt;
+          session.user.apiRateLimit = apiRateLimit;
+          
           session.user.teams = []; // Empty for now
         } else {
           // User in session but not in database - this can happen during development

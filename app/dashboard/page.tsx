@@ -544,6 +544,15 @@ export default async function DashboardPage() {
               icon={Clock}
               badge={stats.completed > 0 ? `${stats.completed} downloads` : undefined}
             />
+            {tier?.name === 'free' && (
+              <QuickActionCard
+                title="Upgrade Plan"
+                description="Unlock faster speeds & features"
+                href="/pricing"
+                icon={Star}
+                badge="5x faster"
+              />
+            )}
             {tier?.canCreateTeams && (
               <QuickActionCard
                 title="Manage Teams"
@@ -603,13 +612,16 @@ export default async function DashboardPage() {
             )}
             
             {tier?.name === 'free' && (
-              <div className="pt-3 border-t">
-                <Link href="/billing">
-                  <Button size="sm" className="w-full">
+              <div className="pt-3 border-t space-y-2">
+                <Link href="/pricing">
+                  <Button size="sm" className="w-full bg-purple-600 hover:bg-purple-700">
                     <Star className="h-4 w-4 mr-1" />
-                    Upgrade to Premium
+                    View Pricing Plans
                   </Button>
                 </Link>
+                <p className="text-xs text-center text-muted-foreground">
+                  Upgrade for 5x faster speeds & custom snapshots
+                </p>
               </div>
             )}
           </CardContent>

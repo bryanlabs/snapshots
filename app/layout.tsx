@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/components/common/Header";
+import { Footer } from "@/components/common/Footer";
 import { LayoutProvider } from "@/components/providers/LayoutProvider";
 import { Providers } from "@/components/providers";
 import { WebVitals } from "@/components/monitoring/WebVitals";
@@ -69,6 +70,12 @@ export const metadata: Metadata = {
     ],
     apple: '/favicon.svg?v=2',
   },
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'BryanLabs Snapshots',
+  },
 };
 
 export const viewport: Viewport = {
@@ -119,6 +126,7 @@ export default function RootLayout({
           <LayoutProvider>
             {children}
           </LayoutProvider>
+          <Footer />
           <MobileMenu />
         </Providers>
       </body>

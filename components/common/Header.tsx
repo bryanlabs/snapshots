@@ -58,6 +58,12 @@ export function Header() {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-6">
+            <Link
+              href="/pricing"
+              className="text-foreground hover:text-primary transition-colors font-medium"
+            >
+              Pricing
+            </Link>
             <ThemeToggle />
             {session ? (
               <UserDropdown user={session.user} />
@@ -90,6 +96,13 @@ export function Header() {
         {isMenuOpen && (
           <div className="md:hidden py-4 border-t border-border">
             <nav className="flex flex-col space-y-4">
+              <Link
+                href="/pricing"
+                className="text-foreground hover:text-primary transition-colors font-medium"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Pricing
+              </Link>
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">Theme</span>
                 <ThemeToggle />

@@ -8,7 +8,15 @@ declare module "next-auth" {
       tier: string;
       tierId?: string;
       role?: string;
-      creditBalance: number;
+      
+      // New subscription management fields
+      subscriptionStatus: string;
+      subscriptionExpiresAt?: Date;
+      
+      // API rate limiting info
+      apiRateLimit?: number;
+      apiUsageThisHour?: number;
+      
       avatarUrl?: string;
       teams: Array<{
         id: string;
@@ -26,5 +34,9 @@ declare module "next-auth" {
     role: string;
     tier: string;
     walletAddress?: string;
+    
+    // Subscription fields
+    subscriptionStatus?: string;
+    subscriptionExpiresAt?: Date;
   }
 }

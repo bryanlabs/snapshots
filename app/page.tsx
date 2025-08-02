@@ -19,11 +19,14 @@ export default async function Home() {
               Blockchain Snapshots
             </h1>
             
-            <p className="text-xl md:text-2xl text-gray-200 mb-8">
+            <p className="text-xl md:text-2xl text-gray-200 mb-6">
               Fast, reliable blockchain snapshots for Cosmos ecosystem chains
             </p>
+            <p className="text-lg text-gray-300 mb-8">
+              From 50 Mbps free tier to 500 Mbps ultra-fast enterprise • Custom snapshots • Priority support
+            </p>
             
-            <div className="flex flex-wrap justify-center items-center gap-4 text-gray-300">
+            <div className="flex flex-wrap justify-center items-center gap-4 text-gray-300 mb-8">
               <span className="flex items-center gap-2">
                 <svg className="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
@@ -47,6 +50,29 @@ export default async function Home() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                 </svg>
               </Link>
+            </div>
+            
+            {/* CTA Buttons */}
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+              <Link
+                href="/pricing"
+                className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-3 rounded-lg font-semibold text-lg transition-all duration-300 hover:scale-105 hover:shadow-lg"
+              >
+                View Pricing Plans
+              </Link>
+              {!user && (
+                <Link
+                  href="/auth/signin"
+                  className="bg-transparent border-2 border-white text-white hover:bg-white hover:text-purple-600 px-8 py-3 rounded-lg font-semibold text-lg transition-all duration-300"
+                >
+                  Get Started Free
+                </Link>
+              )}
+              {user?.tier === 'free' && (
+                <span className="text-sm text-gray-300">
+                  Start with 50 Mbps • Upgrade for 5x faster speeds
+                </span>
+              )}
             </div>
           </div>
         </div>

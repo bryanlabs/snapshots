@@ -12,6 +12,7 @@ interface DownloadButtonProps {
   snapshot: Snapshot;
   chainName: string;
   chainLogoUrl?: string;
+  disabled?: boolean;
 }
 
 function formatFileSize(bytes: number): string {
@@ -24,7 +25,7 @@ function formatFileSize(bytes: number): string {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
 }
 
-export function DownloadButton({ snapshot, chainName, chainLogoUrl }: DownloadButtonProps) {
+export function DownloadButton({ snapshot, chainName, chainLogoUrl, disabled = false }: DownloadButtonProps) {
   const { user } = useAuth();
   const [isDownloading, setIsDownloading] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -35,8 +36,10 @@ export function DownloadButton({ snapshot, chainName, chainLogoUrl }: DownloadBu
   const [showCopySuccess, setShowCopySuccess] = useState(false);
 
   const handleDownloadClick = () => {
-    // Premium and unlimited users get instant download, others see modal
-    if (user?.tier === 'premium' || user?.tier === 'unlimited') {
+    if (disabled) return;
+    
+    // Premium and ultra users get instant download, others see modal
+    if (user?.tier === 'premium' || user?.tier === 'ultra') {
       handleDownload();
     } else {
       setShowModal(true);
@@ -94,10 +97,16 @@ export function DownloadButton({ snapshot, chainName, chainLogoUrl }: DownloadBu
       <div className="flex flex-col items-end gap-2">
         <motion.button
           onClick={handleDownloadClick}
-          disabled={isDownloading}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-lg transition-colors disabled:cursor-not-allowed"
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
+          disabled={isDownloading || disabled}
+          className={`
+            flex items-center gap-2 px-4 py-2 rounded-lg transition-colors disabled:cursor-not-allowed
+            ${disabled 
+              ? 'bg-gray-400 dark:bg-gray-600 text-gray-200 dark:text-gray-400' 
+              : 'bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white'
+            }
+          `}
+          whileHover={disabled ? {} : { scale: 1.02 }}
+          whileTap={disabled ? {} : { scale: 0.98 }}
         >
         {isDownloading ? (
           <>
@@ -111,12 +120,16 @@ export function DownloadButton({ snapshot, chainName, chainLogoUrl }: DownloadBu
               fill="none" 
               stroke="currentColor" 
               viewBox="0 0 24 24"
-              animate={{ y: [0, 2, 0] }}
+              animate={disabled ? {} : { y: [0, 2, 0] }}
               transition={{ duration: 2, repeat: Infinity }}
             >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
+              {disabled ? (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 1.732a2 2 0 0 1-1.732-1v-10c0-.866.5-1.667 1.732-2L12 3.732a2 2 0 0 1 3.464 0L21.732 6.5c1.232.566 1.732 1.5 1.732 2.5v9a2 2 0 0 1-1.732 2L12 20.268a2 2 0 0 1-3.464 0L2.268 17.5A2 2 0 0 1 .536 15.5V6.5C.536 5.5 1.036 4.566 2.268 4L8.536.732A2 2 0 0 1 12 .732z" />
+              ) : (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
+              )}
             </motion.svg>
-            <span>Download</span>
+            <span>{disabled ? 'Restricted' : 'Download'}</span>
           </>
         )}
       </motion.button>

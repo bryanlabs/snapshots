@@ -18,10 +18,6 @@ const nextConfig: NextConfig = {
   },
   
   // Disable static generation for pages with dynamic features
-  experimental: {
-    optimizePackageImports: ["framer-motion", "@heroicons/react"],
-    instrumentationHook: true,
-  },
 
   // Image optimization
   images: {
@@ -35,6 +31,17 @@ const nextConfig: NextConfig = {
   // Performance optimizations
   experimental: {
     optimizePackageImports: ["framer-motion", "@heroicons/react"],
+    instrumentationHook: true,
+  },
+  
+  // Turbopack configuration
+  turbopack: {
+    rules: {
+      "*.svg": {
+        loaders: ["@svgr/webpack"],
+        as: "*.js",
+      },
+    },
   },
 
   // Compression
@@ -135,6 +142,39 @@ const nextConfig: NextConfig = {
           {
             key: "Content-Type",
             value: "application/json; charset=utf-8",
+          },
+        ],
+      },
+      // Static assets caching
+      {
+        source: "/manifest.json",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=86400, stale-while-revalidate=3600", // 1 day with 1 hour stale
+          },
+        ],
+      },
+      {
+        source: "/_next/static/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=31536000, immutable", // 1 year for static assets
+          },
+        ],
+      },
+      // Pricing page specific optimizations
+      {
+        source: "/pricing",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=3600, stale-while-revalidate=300", // 1 hour cache with 5 min stale
+          },
+          {
+            key: "Link",
+            value: "</pricing>; rel=preload; as=document",
           },
         ],
       },

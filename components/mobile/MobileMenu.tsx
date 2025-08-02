@@ -11,6 +11,7 @@ import {
   UserIcon,
   ArrowDownTrayIcon,
   CreditCardIcon,
+  CurrencyDollarIcon,
 } from '@heroicons/react/24/outline';
 
 export function MobileMenu() {
@@ -49,15 +50,14 @@ export function MobileMenu() {
       label: 'Chains',
     },
     {
+      href: '/pricing',
+      icon: CurrencyDollarIcon,
+      label: 'Pricing',
+    },
+    {
       href: '/my-downloads',
       icon: ArrowDownTrayIcon,
       label: 'Downloads',
-      requiresAuth: true,
-    },
-    {
-      href: '/billing',
-      icon: CreditCardIcon,
-      label: 'Billing',
       requiresAuth: true,
     },
     {
@@ -78,7 +78,7 @@ export function MobileMenu() {
         !isVisible && 'translate-y-full'
       )}
     >
-      <div className="grid grid-cols-5 h-16">
+      <div className="grid h-16" style={{ gridTemplateColumns: `repeat(${visibleItems.length}, minmax(0, 1fr))` }}>
         {visibleItems.map((item) => {
           const Icon = item.icon;
           const isActive = pathname === item.href;

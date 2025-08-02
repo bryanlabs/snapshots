@@ -1,0 +1,66 @@
+{
+  "name": "Blockchain Snapshots - BryanLabs",
+  "short_name": "BryanLabs Snapshots",
+  "description": "Fast, reliable blockchain snapshots for Cosmos ecosystem chains with mobile-first design for SREs on the go",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "theme_color": "#1e293b",
+  "background_color": "#0f172a",
+  "categories": ["productivity", "developer", "utilities"],
+  "scope": "/",
+  "lang": "en",
+  "dir": "ltr",
+  "icons": [
+    {
+      "src": "/favicon-16x16.png",
+      "sizes": "16x16",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon-32x32.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Pricing",
+      "short_name": "Pricing",
+      "description": "View pricing tiers and upgrade options",
+      "url": "/pricing",
+      "icons": [{ "src": "/favicon.svg", "sizes": "96x96" }]
+    },
+    {
+      "name": "Chains",
+      "short_name": "Chains",
+      "description": "Browse available blockchain snapshots",
+      "url": "/chains",
+      "icons": [{ "src": "/favicon.svg", "sizes": "96x96" }]
+    },
+    {
+      "name": "Dashboard",
+      "short_name": "Dashboard",
+      "description": "View your account and downloads",
+      "url": "/dashboard",
+      "icons": [{ "src": "/favicon.svg", "sizes": "96x96" }]
+    }
+  ],
+  "edge_side_panel": {
+    "preferred_width": 400
+  },
+  "launch_handler": {
+    "client_mode": "navigate-existing"
+  }
+}

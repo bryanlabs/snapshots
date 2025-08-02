@@ -244,7 +244,7 @@ export default async function ChainDetailPage({
             {(session?.user?.tier === 'premium' || session?.user?.tier === 'unlimited') ? (
               <CustomSnapshotModal chainId={chainId} chainName={chain.name} />
             ) : session?.user && (
-              <Link href="/premium?feature=custom-snapshots">
+              <Link href="/pricing#premium">
                 <Button 
                   variant="outline" 
                   className="bg-gray-800/50 border-gray-700 hover:bg-gray-700/50 text-gray-300 hover:text-white transition-colors"
@@ -279,7 +279,7 @@ export default async function ChainDetailPage({
                   <p className="text-xs text-gray-400 mb-3">
                     Premium users can request custom snapshots from any block height with priority processing.
                   </p>
-                  <Link href="/premium?feature=custom-snapshots" className="inline-flex items-center gap-1 text-xs font-medium text-purple-400 hover:text-purple-300">
+                  <Link href="/pricing#premium" className="inline-flex items-center gap-1 text-xs font-medium text-purple-400 hover:text-purple-300">
                     Learn more about premium features →
                   </Link>
                 </div>
