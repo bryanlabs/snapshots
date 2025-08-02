@@ -1,5 +1,6 @@
 import { ChainListServer } from '@/components/chains/ChainListServer';
 import Image from 'next/image';
+import Link from 'next/link';
 import { Suspense } from 'react';
 import { UpgradePrompt } from '@/components/common/UpgradePrompt';
 import { auth } from '@/auth';
@@ -34,15 +35,18 @@ export default async function Home() {
                 <svg className="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                 </svg>
-                Latest zstd compression
+                Custom snapshots
               </span>
               <span className="hidden sm:inline text-gray-400">•</span>
-              <span className="flex items-center gap-2">
+              <Link href="/network" className="flex items-center gap-2 hover:text-white transition-colors">
                 <svg className="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                 </svg>
                 Powered by DACS-IX
-              </span>
+                <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                </svg>
+              </Link>
             </div>
           </div>
         </div>

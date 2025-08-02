@@ -263,19 +263,16 @@ export function ChainListRealtime({ initialChains, pollInterval = 60000 }: Chain
             </select>
           </div>
 
-          {/* Refresh Indicator */}
-          <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-            <button
-              onClick={() => refetch()}
-              disabled={isRefetching}
-              className="p-1 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
-              title="Refresh chains"
-            >
-              <RefreshCw className={`w-4 h-4 ${isRefetching ? 'animate-spin' : ''}`} />
-            </button>
-            {isRefetching && <span>Updating...</span>}
-            <span className="text-xs hidden sm:inline">Auto-refresh every 60s</span>
-          </div>
+          {/* Manual Refresh Button */}
+          <button
+            onClick={() => refetch()}
+            disabled={isRefetching}
+            className="flex items-center gap-1 px-2 py-1 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
+            title="Manually refresh chains (R)"
+          >
+            <RefreshCw className={`w-4 h-4 ${isRefetching ? 'animate-spin' : ''}`} />
+            {isRefetching && <span className="hidden sm:inline">Updating...</span>}
+          </button>
         </div>
 
         {/* Active Filters */}
@@ -286,9 +283,16 @@ export function ChainListRealtime({ initialChains, pollInterval = 60000 }: Chain
 
       {/* Results count and keyboard hints */}
       <div className="mb-4 text-sm text-gray-600 dark:text-gray-400 flex items-center justify-between">
-        <span>
-          Showing {filteredAndSortedChains.length} of {chains.length} chains
-        </span>
+        <div className="flex items-center gap-3">
+          <span>
+            Showing {filteredAndSortedChains.length} of {chains.length} chains
+          </span>
+          <div className="flex items-center gap-1 text-xs opacity-75">
+            <div className={`w-1.5 h-1.5 rounded-full ${isRefetching ? 'bg-blue-500 animate-pulse' : 'bg-green-500'}`} />
+            <span className="hidden lg:inline">Auto-updates every 60s</span>
+            <span className="lg:hidden">Auto-sync</span>
+          </div>
+        </div>
         <div className="hidden sm:flex items-center gap-3 text-xs">
           <span className="flex items-center gap-1">
             <kbd className="px-1 py-0.5 bg-gray-100 dark:bg-gray-700 rounded border border-gray-300 dark:border-gray-600">/</kbd>

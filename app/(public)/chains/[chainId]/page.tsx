@@ -3,6 +3,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { SnapshotListRealtime } from '@/components/snapshots/SnapshotListRealtime';
 import { DownloadLatestButton } from '@/components/chains/DownloadLatestButton';
+import { BackButton } from '@/components/common/BackButton';
 import type { Metadata } from 'next';
 import { Chain, Snapshot } from '@/lib/types';
 import { auth } from '@/auth';
@@ -142,6 +143,13 @@ export default async function ChainDetailPage({
 
   return (
     <div className="min-h-screen">
+      {/* Back Button */}
+      <div className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
+        <div className="container mx-auto px-4 py-4">
+          <BackButton />
+        </div>
+      </div>
+
       {/* Breadcrumb */}
       <div className="bg-gray-100 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
         <div className="container mx-auto px-4 py-4">

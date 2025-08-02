@@ -218,8 +218,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           session.user.creditBalance = user.creditBalance;
           session.user.teams = []; // Empty for now
         } else {
-          // User in session but not in database - this shouldn't happen but handle gracefully
-          console.error(`Session user ${token.id} not found in database`);
+          // User in session but not in database - this can happen during development
+          const isDevelopment = process.env.NODE_ENV === 'development';
+          if (isDevelopment) {
+            console.warn(`[Dev] Session user ${token.id} not found in database - clearing session`);
+          } else {
+            console.error(`Session user ${token.id} not found in database`);
+          }
           // Return null to invalidate the session
           return null as any;
         }

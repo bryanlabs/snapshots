@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { auth } from '@/auth';
-import HomePage from '../page';
+import HomePage from '../../app/page';
 
 // Mock auth
 jest.mock('@/auth', () => ({
@@ -148,8 +148,12 @@ describe('HomePage', () => {
       render(await HomePage());
 
       expect(screen.getByText('Updated 4x daily')).toBeInTheDocument();
-      expect(screen.getByText('Latest zstd compression')).toBeInTheDocument();
-      expect(screen.getByText('Powered by DACS-IX')).toBeInTheDocument();
+      expect(screen.getByText('Custom snapshots')).toBeInTheDocument();
+      
+      // Check that DACS-IX is now a clickable link
+      const dacsLink = screen.getByText('Powered by DACS-IX');
+      expect(dacsLink).toBeInTheDocument();
+      expect(dacsLink.closest('a')).toHaveAttribute('href', '/network');
     });
   });
 
@@ -201,7 +205,8 @@ describe('HomePage', () => {
 
       // This test ensures the page renders without throwing
       // Metadata is handled at the layout level
-      expect(() => render(await HomePage())).not.toThrow();
+      const page = await HomePage();
+      expect(() => render(page)).not.toThrow();
     });
   });
 });

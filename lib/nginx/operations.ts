@@ -1,4 +1,5 @@
 import { generateSecureLink, listObjects, objectExists } from './client';
+import { getNginxClient } from '../nginx-dev';
 
 export interface Snapshot {
   filename: string;
@@ -19,6 +20,39 @@ export interface ChainInfo {
  * List all available chains
  */
 export async function listChains(): Promise<ChainInfo[]> {
+  const isDevelopment = process.env.NODE_ENV === 'development';
+  
+  if (isDevelopment) {
+    console.log('Fetching chains from nginx...');
+    // Use development nginx client with fallback
+    try {
+      const nginxClient = getNginxClient();
+      const objects = await nginxClient.listObjects('/snapshots/');
+      const chains: ChainInfo[] = [];
+      
+      for (const obj of objects) {
+        if (obj.type === 'directory') {
+          const chainId = obj.name.replace(/\/$/, '');
+          const snapshots = await listSnapshots(chainId);
+          
+          chains.push({
+            chainId,
+            snapshotCount: snapshots.length,
+            latestSnapshot: snapshots[0], // Already sorted by height desc
+            totalSize: snapshots.reduce((sum, s) => sum + s.size, 0)
+          });
+        }
+      }
+      
+      console.log(`Chain infos from nginx: ${JSON.stringify(chains.map(c => ({ chainId: c.chainId, count: c.snapshotCount })))}`);
+      return chains;
+    } catch (error) {
+      console.error('Error fetching chains from nginx client:', error);
+      return [];
+    }
+  }
+  
+  // Production code (original implementation)
   const objects = await listObjects('');
   const chains: ChainInfo[] = [];
   
@@ -43,7 +77,21 @@ export async function listChains(): Promise<ChainInfo[]> {
  * List snapshots for a specific chain
  */
 export async function listSnapshots(chainId: string): Promise<Snapshot[]> {
-  const objects = await listObjects(chainId);
+  const isDevelopment = process.env.NODE_ENV === 'development';
+  let objects;
+  
+  if (isDevelopment) {
+    try {
+      const nginxClient = getNginxClient();
+      objects = await nginxClient.listObjects(`/snapshots/${chainId}/`);
+    } catch (error) {
+      console.error(`Error listing snapshots for ${chainId}:`, error);
+      return [];
+    }
+  } else {
+    objects = await listObjects(chainId);
+  }
+  
   const snapshots: Snapshot[] = [];
   
   for (const obj of objects) {

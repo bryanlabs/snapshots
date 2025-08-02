@@ -126,29 +126,43 @@ export function ChainCard({ chain }: ChainCardProps) {
           </div>
         </div>
 
-        {chain.latestSnapshot ? (
-          <div className="space-y-2 mb-3">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Last updated</span>
-              <span className="text-card-foreground font-medium">
-                {formatTimeAgo(chain.latestSnapshot.lastModified)}
-              </span>
-            </div>
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Next snapshot in</span>
-              <Tooltip 
-                content={`Next update: ${formatExactDateTime(calculateNextUpdateTime(chain.latestSnapshot.lastModified))}`}
-                position="top"
-              >
-                <CountdownTimer lastUpdated={chain.latestSnapshot.lastModified} />
-              </Tooltip>
-            </div>
-          </div>
-        ) : (
-          <div className="text-sm text-muted-foreground mb-3">
-            No snapshots available
-          </div>
-        )}
+        {/* Standardized two-row structure for consistent card height */}
+        <div className="space-y-2 mb-3 min-h-[44px]">
+          {chain.latestSnapshot ? (
+            <>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">Last updated</span>
+                <span className="text-card-foreground font-medium">
+                  {formatTimeAgo(chain.latestSnapshot.lastModified)}
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">Next snapshot in</span>
+                <Tooltip 
+                  content={`Next update: ${formatExactDateTime(calculateNextUpdateTime(chain.latestSnapshot.lastModified))}`}
+                  position="top"
+                >
+                  <CountdownTimer lastUpdated={chain.latestSnapshot.lastModified} />
+                </Tooltip>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">Status</span>
+                <span className="text-card-foreground font-medium">
+                  No snapshots available
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">Action</span>
+                <span className="text-card-foreground font-medium">
+                  Check back later
+                </span>
+              </div>
+            </>
+          )}
+        </div>
 
         <div className="flex items-center justify-between text-sm">
           <div className="flex items-center space-x-4">

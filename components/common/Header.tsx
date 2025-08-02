@@ -41,7 +41,7 @@ export function Header() {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link href="/" className="flex items-center space-x-3">
+          <Link href="/" className="flex items-center space-x-3 sm:space-x-4">
             <Image
               src="/bryanlabs-logo-transparent.png"
               alt="BryanLabs Logo"

@@ -85,7 +85,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="scroll-smooth">
+    <html lang="en" className="scroll-smooth dark">
       <head>
         <script
           dangerouslySetInnerHTML={{
@@ -96,8 +96,14 @@ export default function RootLayout({
                 const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
                 const theme = savedTheme || systemTheme;
                 
+                // Remove existing theme classes first
+                document.documentElement.classList.remove('light', 'dark');
+                
+                // Add appropriate theme class
                 if (theme === 'dark') {
                   document.documentElement.classList.add('dark');
+                } else {
+                  document.documentElement.classList.add('light');
                 }
               })();
             `,
