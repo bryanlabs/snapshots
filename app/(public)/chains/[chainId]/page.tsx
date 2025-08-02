@@ -233,7 +233,7 @@ export default async function ChainDetailPage({
                 accentColor={chainMetadata[chain.id]?.accentColor}
               />
             )}
-            {session?.user?.tier === 'premium' ? (
+            {(session?.user?.tier === 'premium' || session?.user?.tier === 'unlimited') ? (
               <CustomSnapshotModal chainId={chainId} chainName={chain.name} />
             ) : session?.user && (
               <Link href="/premium?feature=custom-snapshots">

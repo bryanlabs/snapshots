@@ -53,7 +53,7 @@ export async function rateLimitMiddleware(
   try {
     // Get user session to determine tier
     const session = await auth();
-    const isPremium = session?.user?.tier === 'premium';
+    const isPremium = session?.user?.tier === 'premium' || session?.user?.tier === 'unlimited';
     
     // Get client identifier (user ID if logged in, otherwise IP)
     const clientId = session?.user?.id || 

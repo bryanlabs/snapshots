@@ -37,7 +37,7 @@ export interface DownloadRecord {
   chainId: string;
   userId: string;
   ip: string;
-  tier: 'free' | 'premium';
+  tier: 'free' | 'premium' | 'unlimited';
   timestamp: Date;
 }
 
@@ -139,14 +139,14 @@ export async function getDownloadStats() {
  */
 export async function checkDownloadAllowed(
   ip: string,
-  tier: 'free' | 'premium',
+  tier: 'free' | 'premium' | 'unlimited',
   limit: number = 5
 ): Promise<{ allowed: boolean; remaining: number; resetTime: Date }> {
   console.log(`[Redis] Checking download allowed for IP: ${ip}, tier: ${tier}, limit: ${limit}`);
   
-  // Premium users have unlimited downloads
-  if (tier === 'premium') {
-    console.log(`[Redis] Premium user - unlimited downloads allowed`);
+  // Premium and unlimited users have unlimited downloads
+  if (tier === 'premium' || tier === 'unlimited') {
+    console.log(`[Redis] ${tier} user - unlimited downloads allowed`);
     return {
       allowed: true,
       remaining: -1, // Unlimited

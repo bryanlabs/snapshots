@@ -42,7 +42,7 @@ async function handleDownload(
     
     // Check download limits
     const DAILY_LIMIT = parseInt(process.env.DAILY_DOWNLOAD_LIMIT || '5');
-    const downloadCheck = await checkDownloadAllowed(clientIp, tier as 'free' | 'premium', DAILY_LIMIT);
+    const downloadCheck = await checkDownloadAllowed(clientIp, tier as 'free' | 'premium' | 'unlimited', DAILY_LIMIT);
     
     if (!downloadCheck.allowed) {
       const response = NextResponse.json<ApiResponse>(
@@ -121,7 +121,7 @@ async function handleDownload(
     const downloadUrl = await generateDownloadUrl(
       chainId,
       snapshot.fileName,
-      tier as 'free' | 'premium',
+      tier as 'free' | 'premium' | 'unlimited',
       userId
     );
     
@@ -138,7 +138,7 @@ async function handleDownload(
       chainId,
       userId,
       ip: clientIp,
-      tier: tier as 'free' | 'premium',
+      tier: tier as 'free' | 'premium' | 'unlimited',
       timestamp: new Date(),
     });
     

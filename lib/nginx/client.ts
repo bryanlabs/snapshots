@@ -14,7 +14,7 @@ export interface NginxSnapshot {
  */
 export function generateSecureLink(
   path: string,
-  tier: 'free' | 'premium' = 'free',
+  tier: 'free' | 'premium' | 'unlimited' = 'free',
   expiryHours: number = 12
 ): string {
   const secret = process.env.SECURE_LINK_SECRET;

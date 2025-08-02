@@ -289,6 +289,48 @@ describe('Download Flow Integration', () => {
       );
       expect(downloadData.data.url).toContain('tier=premium');
     });
+
+    it('should handle unlimited tier users (ultimate_user)', async () => {
+      // Mock unlimited tier user session
+      mockAuth.mockResolvedValue({
+        user: {
+          id: 'ultimate-user',
+          email: 'ultimate_user@snapshots.bryanlabs.net',
+          tier: 'unlimited',
+        },
+      });
+
+      const downloadRequest = new NextRequest('http://localhost:3000/api/v1/chains/cosmos-hub/download', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-forwarded-for': '192.168.1.100',
+        },
+        body: JSON.stringify({
+          snapshotId: 'cosmos-hub-20250130.tar.lz4',
+        }),
+      });
+
+      mockListObjects.mockResolvedValue([mockSnapshot]);
+      mockGenerateDownloadUrl.mockResolvedValue('https://snapshots.bryanlabs.net/snapshots/cosmos-hub/cosmos-hub-20250130.tar.lz4?md5=xyz&expires=1234567890&tier=unlimited');
+      
+      const params = Promise.resolve({ chainId: 'cosmos-hub' });
+      const response = await downloadPOST(downloadRequest, { params });
+      const downloadData = await response.json();
+      
+      expect(response.status).toBe(200);
+      expect(downloadData.success).toBe(true);
+      expect(downloadData.data.tier).toBe('unlimited');
+      
+      // Verify unlimited tier handling
+      expect(mockGenerateDownloadUrl).toHaveBeenCalledWith(
+        'cosmos-hub',
+        'cosmos-hub-20250130.tar.lz4',
+        'unlimited',
+        expect.any(String)
+      );
+      expect(downloadData.data.url).toContain('tier=unlimited');
+    });
   });
 
   describe('Error handling in download flow', () => {
@@ -460,7 +502,7 @@ describe('Download Flow Integration', () => {
       
       expect(downloadData.data.url).toMatch(/md5=[a-zA-Z0-9_-]+/);
       expect(downloadData.data.url).toMatch(/expires=\d+/);
-      expect(downloadData.data.url).toMatch(/tier=(free|premium)/);
+      expect(downloadData.data.url).toMatch(/tier=(free|premium|unlimited)/);
     });
 
     it('should handle different compression types', async () => {

@@ -13,7 +13,7 @@ const JWT_AUDIENCE = 'bryanlabs-api';
 interface JWTPayload {
   sub: string; // user id
   email: string;
-  tier: 'free' | 'premium';
+  tier: 'free' | 'premium' | 'unlimited';
   role: 'admin' | 'user';
   iat?: number;
   exp?: number;

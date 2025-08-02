@@ -13,7 +13,7 @@ interface LatestSnapshotResponse {
   compression: 'lz4' | 'zst' | 'none';
   url: string;
   expires_at: string;
-  tier: 'free' | 'premium';
+  tier: 'free' | 'premium' | 'unlimited';
   checksum?: string;
 }
 
@@ -63,7 +63,7 @@ export async function GET(
     
     // Generate secure link URL
     // Use different expiry times based on tier
-    const expiryHours = tier === 'premium' ? 24 : 1; // 24 hours for premium, 1 hour for free
+    const expiryHours = (tier === 'premium' || tier === 'unlimited') ? 24 : 1; // 24 hours for premium/unlimited, 1 hour for free
     const expiresAt = new Date(Date.now() + expiryHours * 3600 * 1000);
     
     const downloadUrl = await generateDownloadUrl(

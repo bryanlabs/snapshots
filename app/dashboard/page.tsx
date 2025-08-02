@@ -122,9 +122,11 @@ export default async function DashboardPage() {
       where: { id: session.user.id },
       select: { creditBalance: true },
     }),
-    prisma.tier.findUnique({
-      where: { id: session.user.tierId || undefined },
-    }),
+    session.user.tierId 
+      ? prisma.tier.findUnique({
+          where: { id: session.user.tierId },
+        })
+      : null,
   ]);
 
   const stats = {

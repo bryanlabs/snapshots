@@ -23,10 +23,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Only premium users can request custom snapshots
-    if (session.user.tier !== 'premium') {
+    // Only premium and unlimited users can request custom snapshots
+    if (session.user.tier !== 'premium' && session.user.tier !== 'unlimited') {
       return NextResponse.json(
-        { error: "Custom snapshots are only available for premium users" },
+        { error: "Custom snapshots are only available for premium and unlimited users" },
         { status: 403 }
       );
     }

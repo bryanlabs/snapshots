@@ -62,6 +62,11 @@ export const colors = {
       text: 'text-purple-800 dark:text-purple-200',
       border: 'border-purple-300 dark:border-purple-700',
     },
+    unlimited: {
+      bg: 'bg-amber-100 dark:bg-amber-900/30',
+      text: 'text-amber-800 dark:text-amber-200',
+      border: 'border-amber-300 dark:border-amber-700',
+    },
   },
 
   // Compression type colors
@@ -111,5 +116,7 @@ export function getCompressionColor(type: string) {
 
 // Helper function to get tier color
 export function getTierColor(tier: string) {
-  return tier === 'premium' ? colors.tier.premium : colors.tier.free;
+  if (tier === 'premium') return colors.tier.premium;
+  if (tier === 'unlimited') return colors.tier.unlimited;
+  return colors.tier.free;
 }

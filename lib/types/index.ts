@@ -32,7 +32,7 @@ export interface User {
   email: string;
   name?: string;
   role: 'admin' | 'user';
-  tier?: 'free' | 'premium';
+  tier?: 'free' | 'premium' | 'unlimited';
 }
 
 export interface LoginRequest {

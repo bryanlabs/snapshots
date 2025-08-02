@@ -35,8 +35,8 @@ export function DownloadButton({ snapshot, chainName, chainLogoUrl }: DownloadBu
   const [showCopySuccess, setShowCopySuccess] = useState(false);
 
   const handleDownloadClick = () => {
-    // Premium users get instant download, others see modal
-    if (user?.tier === 'premium') {
+    // Premium and unlimited users get instant download, others see modal
+    if (user?.tier === 'premium' || user?.tier === 'unlimited') {
       handleDownload();
     } else {
       setShowModal(true);

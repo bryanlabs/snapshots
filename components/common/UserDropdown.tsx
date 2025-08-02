@@ -69,9 +69,11 @@ export function UserDropdown({ user }: UserDropdownProps) {
                   <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium mt-1 ${
                     user.tier === 'premium' 
                       ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300'
+                      : user.tier === 'unlimited'
+                      ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300'
                       : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
                   }`}>
-                    {user.tier === 'premium' ? 'Premium' : 'Free'} Tier
+                    {user.tier === 'premium' ? 'Premium' : user.tier === 'unlimited' ? 'Ultimate' : 'Free'} Tier
                   </span>
                 )}
               </div>

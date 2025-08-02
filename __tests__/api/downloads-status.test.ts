@@ -90,6 +90,33 @@ describe('/api/v1/downloads/status', () => {
       expect(mockCheckDownloadAllowed).toHaveBeenCalledWith('unknown', 'premium', 5);
     });
 
+    it('should return unlimited limit for unlimited users', async () => {
+      mockAuth.mockResolvedValue({
+        user: {
+          id: 'unlimited123',
+          email: 'ultimate_user@example.com',
+          tier: 'unlimited',
+        },
+      });
+      
+      const resetTime = new Date(Date.now() + 86400000);
+      mockCheckDownloadAllowed.mockResolvedValue({
+        allowed: true,
+        remaining: -1,
+        resetTime,
+      });
+
+      const request = new NextRequest('http://localhost:3000/api/v1/downloads/status');
+
+      const response = await GET(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(data.data.limit).toBe(-1); // -1 indicates unlimited for unlimited tier
+      expect(data.data.tier).toBe('unlimited');
+      expect(mockCheckDownloadAllowed).toHaveBeenCalledWith('unknown', 'unlimited', 5);
+    });
+
     it('should handle anonymous users', async () => {
       mockAuth.mockResolvedValue(null);
       

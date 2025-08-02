@@ -123,14 +123,14 @@ export async function getLatestSnapshot(chainId: string): Promise<Snapshot | nul
 export async function generateDownloadUrl(
   chainId: string,
   filename: string,
-  tier: 'free' | 'premium' = 'free',
+  tier: 'free' | 'premium' | 'unlimited' = 'free',
   userId?: string
 ): Promise<string> {
   // Path should be relative to /snapshots
   const path = `/${chainId}/${filename}`;
   
-  // Use 24 hours for premium, 12 hours for free
-  const expiryHours = tier === 'premium' ? 24 : 12;
+  // Use 24 hours for premium/unlimited, 12 hours for free
+  const expiryHours = (tier === 'premium' || tier === 'unlimited') ? 24 : 12;
   
   return generateSecureLink(path, tier, expiryHours);
 }

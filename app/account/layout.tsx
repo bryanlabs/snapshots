@@ -32,25 +32,25 @@ export default async function AccountLayout({ children }: AccountLayoutProps) {
       name: 'Team',
       href: '/account/team',
       icon: UsersIcon,
-      available: session.user.tier === 'premium',
+      available: session.user.tier === 'premium' || session.user.tier === 'unlimited',
     },
     {
       name: 'Analytics',
       href: '/account/analytics',
       icon: ChartBarIcon,
-      available: session.user.tier === 'premium',
+      available: session.user.tier === 'premium' || session.user.tier === 'unlimited',
     },
     {
       name: 'API Keys',
       href: '/account/api-keys',
       icon: KeyIcon,
-      available: session.user.tier === 'premium',
+      available: session.user.tier === 'premium' || session.user.tier === 'unlimited',
     },
     {
       name: 'Credits',
       href: '/account/credits',
       icon: CreditCardIcon,
-      available: session.user.tier === 'premium',
+      available: session.user.tier === 'premium' || session.user.tier === 'unlimited',
     },
   ];
 

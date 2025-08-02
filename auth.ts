@@ -183,11 +183,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         
         // Handle premium user specially
         if (token.id === 'premium-user') {
-          session.user.name = 'Premium User';
-          session.user.email = 'premium_user@snapshots.bryanlabs.net';
-          session.user.tier = 'premium';
-          session.user.tierId = 'premium-tier'; // Add a dummy tier ID
-          session.user.creditBalance = 9999; // Unlimited for premium
+          session.user.name = 'Ultimate User';
+          session.user.email = 'ultimate_user@snapshots.bryanlabs.net';
+          session.user.tier = 'unlimited';
+          session.user.tierId = 'unlimited-tier'; // Add a dummy tier ID
+          session.user.creditBalance = 9999; // Unlimited for ultimate
           session.user.teams = [];
           session.user.walletAddress = undefined;
           session.user.image = undefined;

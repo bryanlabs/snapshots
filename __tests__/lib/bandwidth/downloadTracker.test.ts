@@ -102,7 +102,7 @@ describe('downloadTracker', () => {
     });
 
     it('should handle different tier types', () => {
-      const tiers = ['free', 'premium'] as const;
+      const tiers = ['free', 'premium', 'unlimited'] as const;
 
       tiers.forEach(tier => {
         const mockConnection = {

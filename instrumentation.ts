@@ -8,7 +8,8 @@ export async function register() {
       validateRequiredEnvVars();
     } catch (error) {
       console.error('❌ Environment validation failed:', error);
-      process.exit(1);
+      // Don't use process.exit in Edge Runtime - just log the error
+      // The app will still start but may have issues with missing env vars
     }
   }
 }

@@ -32,8 +32,8 @@ export function SnapshotListClient({ chainId, chainName, chainLogoUrl, initialSn
       
       setSelectedSnapshot(latestSnapshot);
       
-      // Premium users get instant download without modal
-      if (user?.tier === 'premium') {
+      // Premium and unlimited users get instant download without modal
+      if (user?.tier === 'premium' || user?.tier === 'unlimited') {
         // Directly trigger download
         handleInstantDownload(latestSnapshot);
       } else {

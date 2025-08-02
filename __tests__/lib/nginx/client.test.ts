@@ -228,6 +228,24 @@ describe('Nginx Client', () => {
       expect(params.get('tier')).toBe('premium');
       expect(params.get('expires')).toBe('1706707200'); // 24 hours later
     });
+
+    it('should generate secure link for unlimited tier', () => {
+      // Mock Date.now to return a fixed timestamp
+      const mockTimestamp = 1706620800000; // 2025-01-30 12:00:00 UTC
+      jest.spyOn(Date, 'now').mockReturnValue(mockTimestamp);
+      
+      const url = nginxClient.generateSecureLink(
+        '/cosmos-hub/snapshot.tar.zst',
+        'unlimited',
+        24
+      );
+      
+      const urlObj = new URL(url);
+      const params = urlObj.searchParams;
+      
+      expect(params.get('tier')).toBe('unlimited');
+      expect(params.get('expires')).toBe('1706707200'); // 24 hours later
+    });
     
     it('should generate correct MD5 hash', () => {
       // Mock the secure link secret

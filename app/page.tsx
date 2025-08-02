@@ -61,8 +61,8 @@ export default async function Home() {
             </p>
           </div>
 
-          {/* Upgrade prompt for non-premium users */}
-          {user?.tier !== 'premium' && (
+          {/* Upgrade prompt for free tier users only */}
+          {user?.tier === 'free' && (
             <div className="mb-8">
               <UpgradePrompt />
             </div>

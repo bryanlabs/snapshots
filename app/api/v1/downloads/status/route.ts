@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
     
     // Check download status
     const DAILY_LIMIT = parseInt(process.env.DAILY_DOWNLOAD_LIMIT || '5');
-    const status = await checkDownloadAllowed(clientIp, tier as 'free' | 'premium', DAILY_LIMIT);
+    const status = await checkDownloadAllowed(clientIp, tier as 'free' | 'premium' | 'unlimited', DAILY_LIMIT);
     
     return NextResponse.json<ApiResponse<{
       allowed: boolean;
@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
       data: {
         allowed: status.allowed,
         remaining: status.remaining,
-        limit: tier === 'premium' ? -1 : DAILY_LIMIT,
+        limit: (tier === 'premium' || tier === 'unlimited') ? -1 : DAILY_LIMIT,
         resetTime: status.resetTime.toISOString(),
         tier,
       },
