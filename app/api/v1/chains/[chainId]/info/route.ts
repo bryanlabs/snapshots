@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ApiResponse } from '@/lib/types';
 import { listSnapshots } from '@/lib/nginx/operations';
+import { 
+  isValidSnapshotFile, 
+  extractHeightFromFilename,
+  getEstimatedCompressionRatio,
+  getCompressionType 
+} from '@/lib/config/supported-formats';
 import { collectResponseTime, trackRequest } from '@/lib/monitoring/metrics';
 import { extractRequestMetadata, logRequest } from '@/lib/middleware/logger';
 
@@ -33,7 +39,7 @@ export async function GET(
     
     // Filter only actual snapshot files
     const validSnapshots = nginxSnapshots.filter(s => 
-      s.filename.endsWith('.tar.zst') || s.filename.endsWith('.tar.lz4')
+      isValidSnapshotFile(s.filename)
     );
     
     if (validSnapshots.length === 0) {
@@ -62,8 +68,7 @@ export async function GET(
     
     // Get latest snapshot info
     const latestSnapshot = validSnapshots[0];
-    const heightMatch = latestSnapshot.filename.match(/(\d+)\.tar\.(zst|lz4)$/);
-    const height = heightMatch ? parseInt(heightMatch[1]) : 0;
+    const height = extractHeightFromFilename(latestSnapshot.filename) || 0;
     
     // Calculate age in hours
     const ageMs = Date.now() - latestSnapshot.lastModified.getTime();
@@ -73,15 +78,9 @@ export async function GET(
     const totalSize = validSnapshots.reduce((sum, snapshot) => sum + snapshot.size, 0);
     const averageSize = Math.round(totalSize / validSnapshots.length);
     
-    // Estimate compression ratio
-    // Typical blockchain data compresses to about 30-40% of original size
-    // We'll use the file extension to provide a more accurate estimate
-    let compressionRatio = 0.35; // Default 35%
-    if (latestSnapshot.filename.endsWith('.zst')) {
-      compressionRatio = 0.30; // Zstandard typically achieves better compression
-    } else if (latestSnapshot.filename.endsWith('.lz4')) {
-      compressionRatio = 0.40; // LZ4 prioritizes speed over compression ratio
-    }
+    // Estimate compression ratio based on file extension
+    const compressionType = getCompressionType(latestSnapshot.filename);
+    const compressionRatio = getEstimatedCompressionRatio(compressionType);
     
     const metadata: ChainMetadata = {
       chain_id: chainId,

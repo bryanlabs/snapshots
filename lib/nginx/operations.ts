@@ -1,5 +1,10 @@
 import { generateSecureLink, listObjects, objectExists } from './client';
 import { getNginxClient } from '../nginx-dev';
+import { 
+  isValidSnapshotFile, 
+  getCompressionType, 
+  extractHeightFromFilename 
+} from '../config/supported-formats';
 
 export interface Snapshot {
   filename: string;
@@ -96,7 +101,7 @@ export async function listSnapshots(chainId: string): Promise<Snapshot[]> {
   
   for (const obj of objects) {
     // Skip directories and non-snapshot files
-    if (obj.type === 'directory' || (!obj.name.endsWith('.tar.zst') && !obj.name.endsWith('.tar.lz4'))) {
+    if (obj.type === 'directory' || !isValidSnapshotFile(obj.name)) {
       continue;
     }
     
@@ -107,7 +112,7 @@ export async function listSnapshots(chainId: string): Promise<Snapshot[]> {
     
     // Parse snapshot info from filename
     // Format: chainId-YYYYMMDD-HHMMSS.tar.zst or chainId-height.tar.zst
-    const compressionType = obj.name.endsWith('.tar.lz4') ? 'lz4' : 'zst';
+    const compressionType = getCompressionType(obj.name);
     const snapshot: Snapshot = {
       filename: obj.name,
       size: obj.size,
@@ -116,9 +121,9 @@ export async function listSnapshots(chainId: string): Promise<Snapshot[]> {
     };
     
     // Try to extract height from filename
-    const heightMatch = obj.name.match(/(\d+)\.tar\.(zst|lz4)$/);
-    if (heightMatch) {
-      snapshot.height = parseInt(heightMatch[1], 10);
+    const height = extractHeightFromFilename(obj.name);
+    if (height) {
+      snapshot.height = height;
     }
     
     snapshots.push(snapshot);

@@ -5,56 +5,7 @@ import { extractRequestMetadata, logRequest } from '@/lib/middleware/logger';
 import { listChains } from '@/lib/nginx/operations';
 import { config } from '@/lib/config';
 import { cache, cacheKeys } from '@/lib/cache/redis-cache';
-
-
-// Chain metadata mapping - enhance nginx data with names and logos
-const chainMetadata: Record<string, { name: string; logoUrl: string; accentColor: string }> = {
-  'noble-1': {
-    name: 'Noble',
-    logoUrl: '/chains/noble.png',
-    accentColor: '#FFB800', // gold
-  },
-  'cosmoshub-4': {
-    name: 'Cosmos Hub',
-    logoUrl: '/chains/cosmos.png',
-    accentColor: '#5E72E4', // indigo
-  },
-  'osmosis-1': {
-    name: 'Osmosis',
-    logoUrl: '/chains/osmosis.png',
-    accentColor: '#9945FF', // purple
-  },
-  'juno-1': {
-    name: 'Juno',
-    logoUrl: '/chains/juno.png',
-    accentColor: '#3B82F6', // blue (default)
-  },
-  'kaiyo-1': {
-    name: 'Kujira',
-    logoUrl: '/chains/kujira.png',
-    accentColor: '#DC3545', // red
-  },
-  'columbus-5': {
-    name: 'Terra Classic',
-    logoUrl: '/chains/terra.png',
-    accentColor: '#FF6B6B', // orange
-  },
-  'phoenix-1': {
-    name: 'Terra',
-    logoUrl: '/chains/terra2.png',
-    accentColor: '#FF6B6B', // orange
-  },
-  'thorchain-1': {
-    name: 'THORChain',
-    logoUrl: '/chains/thorchain.png',
-    accentColor: '#00D4AA', // teal
-  },
-  'agoric-3': {
-    name: 'Agoric',
-    logoUrl: '/chains/agoric.png',
-    accentColor: '#DB2777', // pink
-  },
-};
+import { getChainConfig } from '@/lib/config/chains';
 
 export async function GET(request: NextRequest) {
   const endTimer = collectResponseTime('GET', '/api/v1/chains');
@@ -71,20 +22,16 @@ export async function GET(request: NextRequest) {
         const chainInfos = await listChains();
         console.log('Chain infos from nginx:', chainInfos);
         
-        // Map chain infos to Chain objects with metadata
+        // Map chain infos to Chain objects with metadata from centralized config
         return chainInfos.map((chainInfo) => {
-          const metadata = chainMetadata[chainInfo.chainId] || {
-            name: chainInfo.chainId,
-            logoUrl: '/chains/placeholder.svg',
-            accentColor: '#3B82F6', // default blue
-          };
+          const config = getChainConfig(chainInfo.chainId);
           
           return {
             id: chainInfo.chainId,
-            name: metadata.name,
+            name: config.name,
             network: chainInfo.chainId,
-            logoUrl: metadata.logoUrl,
-            accentColor: metadata.accentColor,
+            logoUrl: config.logoUrl,
+            accentColor: config.accentColor,
             // Include basic snapshot info for the chain card
             snapshotCount: chainInfo.snapshotCount,
             latestSnapshot: chainInfo.latestSnapshot ? {

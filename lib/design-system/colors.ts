@@ -83,6 +83,38 @@ export const colors = {
       bg: 'bg-green-100 dark:bg-green-900',
       text: 'text-green-800 dark:text-green-200',
     },
+    none: {
+      bg: 'bg-gray-100 dark:bg-gray-900',
+      text: 'text-gray-800 dark:text-gray-200',
+    },
+    bz2: {
+      bg: 'bg-orange-100 dark:bg-orange-900',
+      text: 'text-orange-800 dark:text-orange-200',
+    },
+    xz: {
+      bg: 'bg-indigo-100 dark:bg-indigo-900',
+      text: 'text-indigo-800 dark:text-indigo-200',
+    },
+    default: {
+      bg: 'bg-gray-100 dark:bg-gray-900',
+      text: 'text-gray-800 dark:text-gray-200',
+    },
+  },
+
+  // Archive format colors
+  archive: {
+    tar: {
+      bg: 'bg-emerald-100 dark:bg-emerald-900',
+      text: 'text-emerald-800 dark:text-emerald-200',
+    },
+    zip: {
+      bg: 'bg-sky-100 dark:bg-sky-900',
+      text: 'text-sky-800 dark:text-sky-200',
+    },
+    '7z': {
+      bg: 'bg-violet-100 dark:bg-violet-900',
+      text: 'text-violet-800 dark:text-violet-200',
+    },
     default: {
       bg: 'bg-gray-100 dark:bg-gray-900',
       text: 'text-gray-800 dark:text-gray-200',
@@ -109,8 +141,31 @@ export function getCompressionColor(type: string) {
     case 'gz':
     case 'gzip':
       return colors.compression.gzip;
+    case 'none':
+      return colors.compression.none;
+    case 'bz2':
+    case 'bzip2':
+      return colors.compression.bz2;
+    case 'xz':
+      return colors.compression.xz;
     default:
       return colors.compression.default;
+  }
+}
+
+// Helper function to get archive format color
+export function getArchiveColor(format: string | null) {
+  if (!format) return colors.archive.default;
+  
+  switch (format) {
+    case 'tar':
+      return colors.archive.tar;
+    case 'zip':
+      return colors.archive.zip;
+    case '7z':
+      return colors.archive['7z'];
+    default:
+      return colors.archive.default;
   }
 }
 

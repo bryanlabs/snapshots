@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ApiResponse, Snapshot } from '@/lib/types';
 import { listSnapshots } from '@/lib/nginx/operations';
+import { extractHeightFromFilename } from '@/lib/config/supported-formats';
 import { config } from '@/lib/config';
 import { cache, cacheKeys } from '@/lib/cache/redis-cache';
 import { getUserSession, getGuestUserTier } from '@/lib/auth/user-session';
@@ -30,8 +31,7 @@ export async function GET(
         return nginxSnapshots
           .map((s, index) => {
             // Extract height from filename (e.g., noble-1-0.tar.zst -> 0)
-            const heightMatch = s.filename.match(/(\d+)\.tar\.(zst|lz4)$/);
-            const height = heightMatch ? parseInt(heightMatch[1]) : s.height || 0;
+            const height = extractHeightFromFilename(s.filename) || s.height || 0;
             
             return {
               id: `${chainId}-snapshot-${index}`,

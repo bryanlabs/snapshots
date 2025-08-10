@@ -21,6 +21,10 @@ export default async function AccountLayout({ children }: AccountLayoutProps) {
     redirect('/auth/signin');
   }
 
+  // Use centralized tier access validation - supports all premium tiers
+  const { getServerTierCapabilities } = require("@/lib/utils/tier");
+  const capabilities = getServerTierCapabilities(session.user.tier);
+
   const navigation = [
     {
       name: 'Account',
@@ -32,25 +36,25 @@ export default async function AccountLayout({ children }: AccountLayoutProps) {
       name: 'Team',
       href: '/account/team',
       icon: UsersIcon,
-      available: session.user.tier === 'premium' || session.user.tier === 'unlimited',
+      available: capabilities.canAccessPremiumFeatures,
     },
     {
       name: 'Analytics',
       href: '/account/analytics',
       icon: ChartBarIcon,
-      available: session.user.tier === 'premium' || session.user.tier === 'unlimited',
+      available: capabilities.canAccessPremiumFeatures,
     },
     {
       name: 'API Keys',
       href: '/account/api-keys',
       icon: KeyIcon,
-      available: session.user.tier === 'premium' || session.user.tier === 'unlimited',
+      available: capabilities.canAccessPremiumFeatures,
     },
     {
       name: 'Credits',
       href: '/account/credits',
       icon: CreditCardIcon,
-      available: session.user.tier === 'premium' || session.user.tier === 'unlimited',
+      available: capabilities.canAccessPremiumFeatures,
     },
   ];
 

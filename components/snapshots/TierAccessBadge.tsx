@@ -27,10 +27,10 @@ export function TierAccessBadge({
     return (
       <span className={cn(
         components.badge.base,
-        'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+        'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
         className
       )}>
-        Free Access
+        public
       </span>
     );
   }
@@ -62,10 +62,10 @@ export function TierAccessBadge({
     }
     
     if (minimumTier === 'ultra') {
-      return isAccessible ? 'Ultra Access' : 'Ultra Only';
+      return isAccessible ? 'ultra' : 'ultra only';
     }
     
-    return isAccessible ? 'Premium Access' : 'Premium Only';
+    return isAccessible ? 'premium' : 'premium only';
   };
 
   return (

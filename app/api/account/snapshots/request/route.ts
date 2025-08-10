@@ -23,11 +23,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Only premium and unlimited users can request custom snapshots
-    if (session.user.tier !== 'premium' && session.user.tier !== 'unlimited') {
+    // Use centralized tier access validation - supports ultra, premium, unlimited, enterprise
+    const { validateSessionTierAccess, createTierAccessError } = await import("@/lib/utils/tier");
+    
+    if (!validateSessionTierAccess(session, 'canRequestCustomSnapshots')) {
+      const tierError = createTierAccessError(session.user.tier, 'custom snapshots');
       return NextResponse.json(
-        { error: "Custom snapshots are only available for premium and unlimited users" },
-        { status: 403 }
+        { error: tierError.error, code: tierError.code },
+        { status: tierError.status }
       );
     }
 

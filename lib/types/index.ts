@@ -10,7 +10,7 @@ export interface Chain {
   latestSnapshot?: {
     size: number;
     lastModified: Date;
-    compressionType: 'lz4' | 'zst' | 'none';
+    compressionType: 'lz4' | 'zst' | 'gz' | 'bz2' | 'xz' | 'none';
   };
 }
 

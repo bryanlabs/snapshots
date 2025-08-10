@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ApiResponse } from '@/lib/types';
 import { getLatestSnapshot, generateDownloadUrl } from '@/lib/nginx/operations';
+import { extractHeightFromFilename } from '@/lib/config/supported-formats';
 import { config } from '@/lib/config';
 import { collectResponseTime, trackRequest } from '@/lib/monitoring/metrics';
 import { extractRequestMetadata, logRequest } from '@/lib/middleware/logger';
@@ -76,11 +77,7 @@ export async function GET(
     console.log(`Generated secure link for ${chainId}/${latestSnapshot.filename}, tier: ${tier}, expires: ${expiresAt.toISOString()}`);
     
     // Extract height from snapshot if not already set
-    let height = latestSnapshot.height || 0;
-    if (!height) {
-      const heightMatch = latestSnapshot.filename.match(/(\d+)\.tar\.(zst|lz4)$/);
-      height = heightMatch ? parseInt(heightMatch[1]) : 0;
-    }
+    const height = latestSnapshot.height || extractHeightFromFilename(latestSnapshot.filename) || 0;
     
     // Prepare response
     const responseData: LatestSnapshotResponse = {

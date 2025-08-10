@@ -1,8 +1,9 @@
 import { Snapshot } from '@/lib/types';
 import { DownloadButton } from './DownloadButton';
 import { TierAccessBadge, SnapshotFreshnessIndicator } from './TierAccessBadge';
-import { components, getCompressionColor, typography } from '@/lib/design-system';
+import { components, getCompressionColor, getArchiveColor, typography } from '@/lib/design-system';
 import { cn } from '@/lib/utils';
+import { getArchiveFormat } from '@/lib/config/supported-formats';
 
 interface SnapshotCardProps {
   snapshot: Snapshot;
@@ -47,19 +48,13 @@ export function SnapshotItem({ snapshot, chainName, chainLogoUrl }: SnapshotCard
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-2 flex-wrap">
-            <h3 className={typography.h5}>
-              Block #{snapshot.height.toLocaleString()}
-            </h3>
-            <span className={cn(components.badge.base, getTypeColor(snapshot.type))}>
-              {snapshot.type}
-            </span>
-            <span className={cn(
-              components.badge.base,
-              getCompressionColor(snapshot.compressionType).bg,
-              getCompressionColor(snapshot.compressionType).text
-            )}>
-              {snapshot.compressionType.toUpperCase()}
-            </span>
+            {/* Show type badge only if it's archive (not pruned) */}
+            {snapshot.type === 'archive' && (
+              <span className={cn(components.badge.base, getTypeColor(snapshot.type))}>
+                {snapshot.type}
+              </span>
+            )}
+            {/* Order: Tier, Archive Format, Compression Format */}
             <TierAccessBadge
               minimumTier={snapshot.minimumTier}
               userTier={snapshot.userTier}
@@ -67,6 +62,32 @@ export function SnapshotItem({ snapshot, chainName, chainLogoUrl }: SnapshotCard
               generationCycle={snapshot.generationCycle}
               hourGenerated={snapshot.hourGenerated}
             />
+            {(() => {
+              const archiveFormat = getArchiveFormat(snapshot.fileName);
+              return (
+                <>
+                  {archiveFormat && (
+                    <span className={cn(
+                      components.badge.base,
+                      getArchiveColor(archiveFormat).bg,
+                      getArchiveColor(archiveFormat).text
+                    )}>
+                      {archiveFormat.toLowerCase()}
+                    </span>
+                  )}
+                  {/* Only show compression if it's not 'none' */}
+                  {snapshot.compressionType && snapshot.compressionType !== 'none' && (
+                    <span className={cn(
+                      components.badge.base,
+                      getCompressionColor(snapshot.compressionType).bg,
+                      getCompressionColor(snapshot.compressionType).text
+                    )}>
+                      {snapshot.compressionType.toLowerCase()}
+                    </span>
+                  )}
+                </>
+              );
+            })()}
           </div>
           
           <div className={cn('space-y-1', typography.body.small, typography.muted)}>
