@@ -171,7 +171,14 @@ export function getArchiveColor(format: string | null) {
 
 // Helper function to get tier color
 export function getTierColor(tier: string) {
-  if (tier === 'premium') return colors.tier.premium;
-  if (tier === 'unlimited') return colors.tier.unlimited;
+  const normalizedTier = tier?.toLowerCase().trim();
+  
+  // Handle all ultra tier variations
+  if (normalizedTier === 'ultra' || normalizedTier === 'unlimited' || normalizedTier === 'ultimate' || normalizedTier === 'enterprise') {
+    return colors.tier.unlimited; // Use the unlimited color for all ultra variations
+  }
+  
+  if (normalizedTier === 'premium') return colors.tier.premium;
+  
   return colors.tier.free;
 }

@@ -7,6 +7,7 @@ import { Snapshot } from '@/lib/types';
 import { useAuth } from '@/hooks/useAuth';
 import { LoadingSpinner } from '../common/LoadingSpinner';
 import { DownloadModal } from '../common/DownloadModal';
+import { isPremiumTier } from '@/lib/utils/tier';
 
 interface DownloadButtonProps {
   snapshot: Snapshot;
@@ -38,8 +39,8 @@ export function DownloadButton({ snapshot, chainName, chainLogoUrl, disabled = f
   const handleDownloadClick = () => {
     if (disabled) return;
     
-    // Premium and ultra users get instant download, others see modal
-    if (user?.tier === 'premium' || user?.tier === 'ultra') {
+    // Premium tier users (premium, ultra, unlimited, etc.) get instant download, others see modal
+    if (isPremiumTier(user?.tier)) {
       handleDownload();
     } else {
       setShowModal(true);

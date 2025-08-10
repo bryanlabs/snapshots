@@ -45,7 +45,12 @@ export async function GET(
               compressionType: s.compressionType || 'zst' as const,
             };
           })
-          .sort((a, b) => b.height - a.height); // Sort by height descending
+          .sort((a, b) => {
+            // Sort by createdAt (newest first)
+            const dateA = new Date(a.createdAt).getTime();
+            const dateB = new Date(b.createdAt).getTime();
+            return dateB - dateA;
+          });
       },
       {
         ttl: 60, // 1 minute cache for snapshot lists
