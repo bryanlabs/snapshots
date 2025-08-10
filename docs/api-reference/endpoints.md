@@ -49,8 +49,8 @@ GET /api/health
     "timestamp": "2024-01-15T10:00:00Z",
     "services": {
       "database": true,
-      "minio": true,
-      "cache": true
+      "nginx": true,
+      "redis": true
     },
     "version": "1.0.0"
   }
@@ -233,6 +233,7 @@ GET /api/v1/chains/cosmos-hub/snapshots
       "fileName": "cosmoshub-4-19234567.tar.lz4",
       "type": "pruned",
       "compressionType": "lz4",
+      "compressionOptions": ["zst", "lz4"],
       "compressionRatio": 0.65,
       "sha256": "d2d2a8c2e45f1d9c3a4e5b6f7e8d9e0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7",
       "createdAt": "2024-01-15T00:00:00Z",
@@ -250,6 +251,7 @@ GET /api/v1/chains/cosmos-hub/snapshots
       "fileName": "latest.tar.lz4",
       "isSymlink": true,
       "linkedTo": "cosmos-snapshot-19234567",
+      "compressionType": "lz4",
       "size": 483183820800,
       "sizeHuman": "450.0 GB",
       "updatedAt": "2024-01-15T00:00:00Z"
@@ -264,9 +266,46 @@ GET /api/v1/chains/cosmos-hub/snapshots
 }
 ```
 
+### GET /v1/chains/[chainId]/snapshots/latest
+
+Get the latest snapshot for a chain with a pre-signed download URL.
+
+#### Request
+```http
+GET /api/v1/chains/cosmos-hub/snapshots/latest
+Authorization: Bearer <token>  // Optional, for premium tier
+```
+
+#### Response
+```json
+{
+  "success": true,
+  "data": {
+    "chain_id": "cosmos-hub",
+    "height": 19234567,
+    "size": 483183820800,
+    "compression": "lz4",
+    "url": "https://snapshots.bryanlabs.net/snapshots/cosmos-hub/cosmoshub-4-19234567.tar.lz4?md5=abc123&expires=1234567890&tier=free",
+    "expires_at": "2024-01-15T11:00:00.000Z",
+    "tier": "free",
+    "checksum": "d2d2a8c2e45f1d9c3a4e5b6f7e8d9e0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7"
+  },
+  "message": "Latest snapshot URL generated successfully"
+}
+```
+
+#### Authentication
+- **No Authorization header**: Free tier (URL expires in 1 hour)
+- **Bearer token**: Premium tier (URL expires in 24 hours)
+
+#### Status Codes
+- `200 OK` - URL generated successfully
+- `404 Not Found` - No snapshots available for chain
+- `500 Internal Server Error` - Failed to generate URL
+
 ### POST /v1/chains/[chainId]/download
 
-Generate a pre-signed download URL for a snapshot.
+Generate a secure download URL for a snapshot file.
 
 #### Request
 ```http
@@ -277,7 +316,7 @@ Cookie: auth-token=... (optional for premium)
 
 ```json
 {
-  "snapshotId": "cosmos-snapshot-latest",
+  "fileName": "cosmoshub-4-19234567.tar.lz4",
   "email": "user@example.com"  // Optional, for tracking
 }
 ```
@@ -287,7 +326,7 @@ Cookie: auth-token=... (optional for premium)
 {
   "success": true,
   "data": {
-    "downloadUrl": "https://minio.bryanlabs.net/snapshots/cosmoshub-4-19234567.tar.lz4?X-Amz-Algorithm=AWS4-HMAC-SHA256&...",
+    "downloadUrl": "https://snapshots.bryanlabs.net/snapshots/cosmos-hub/cosmoshub-4-19234567.tar.lz4?md5=abc123&expires=1234567890&tier=premium",
     "expiresIn": 300,
     "expiresAt": "2024-01-15T10:05:00Z",
     "tier": "premium",

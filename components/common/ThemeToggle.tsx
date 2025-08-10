@@ -8,20 +8,22 @@ export function ThemeToggle() {
 
   useEffect(() => {
     setMounted(true);
-    // Check localStorage and system preference
-    const savedTheme = localStorage.getItem('theme');
-    const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-    const initialTheme = (savedTheme as 'light' | 'dark') || systemTheme;
-    
-    setTheme(initialTheme);
-    document.documentElement.classList.toggle('dark', initialTheme === 'dark');
+    // Check current theme from DOM
+    const currentTheme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+    setTheme(currentTheme);
   }, []);
 
   const toggleTheme = () => {
     const newTheme = theme === 'light' ? 'dark' : 'light';
     setTheme(newTheme);
     localStorage.setItem('theme', newTheme);
-    document.documentElement.classList.toggle('dark', newTheme === 'dark');
+    
+    // Update the DOM
+    if (newTheme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
   };
 
   // Avoid hydration mismatch

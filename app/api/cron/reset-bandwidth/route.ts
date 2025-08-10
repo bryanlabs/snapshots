@@ -14,7 +14,7 @@ import { headers } from 'next/headers';
  *   }]
  * }
  */
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     // Verify the request is from Vercel Cron
     const authHeader = (await headers()).get('authorization');

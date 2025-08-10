@@ -1,37 +1,19 @@
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+import NextAuth from "next-auth";
+import { authConfig } from "./auth.config";
 
-// Define protected routes
-const protectedRoutes = [
-  '/api/v1/admin',
-  '/admin',
-];
+export default NextAuth(authConfig).auth;
 
-// Define auth routes
-const authRoutes = [
-  '/api/v1/auth/login',
-  '/api/v1/auth/logout',
-  '/api/v1/auth/me',
-];
-
-export function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
-  
-  // Allow all requests for now
-  // TODO: Implement actual authentication check when needed
-  
-  return NextResponse.next();
-}
-
+// Configure which routes require authentication
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public folder
-     */
-    '/((?!_next/static|_next/image|favicon.ico|.*\\..*|public).*)',
+    // Protect API routes that require authentication
+    "/api/v1/snapshots/download/:path*",
+    "/api/v1/teams/:path*",
+    "/api/v1/credits/:path*",
+    "/api/v1/requests/:path*",
+    // Protect UI routes
+    "/dashboard/:path*",
+    "/teams/:path*",
+    "/settings/:path*",
   ],
 };

@@ -22,17 +22,8 @@ export default function NotFound() {
             We currently support snapshots for these popular Cosmos ecosystem
             chains:
           </p>
-          <div className="grid grid-cols-2 gap-2 text-sm">
-            <div className="text-left text-muted-foreground">
-              • Juno
-              <br />• Stargaze
-            </div>
-            <div className="text-left text-muted-foreground">
-              • Persistence
-              <br />
-              • Secret Network
-              <br />• Injective
-            </div>
+          <div className="text-sm text-muted-foreground">
+            • Noble
           </div>
         </div>
 

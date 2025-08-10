@@ -22,9 +22,10 @@ export function ChainList() {
     if (!chains) return [];
     
     return chains.filter(chain => {
-      const matchesSearch = searchTerm === '' || 
-        chain.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        chain.id.toLowerCase().includes(searchTerm.toLowerCase());
+      const trimmedSearch = searchTerm.trim();
+      const matchesSearch = trimmedSearch === '' || 
+        chain.name.toLowerCase().includes(trimmedSearch.toLowerCase()) ||
+        chain.id.toLowerCase().includes(trimmedSearch.toLowerCase());
       
       const matchesNetwork = selectedNetwork === 'all' || chain.network === selectedNetwork;
       

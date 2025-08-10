@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server';
 import { ApiResponse, User } from '@/lib/types';
-import { getUser } from '@/lib/auth/session';
+import { getUserSession } from '@/lib/auth/user-session';
 
 export async function GET() {
   try {
-    const user = await getUser();
+    const userSession = await getUserSession();
     
-    if (!user) {
+    if (!userSession.isAuthenticated || !userSession.user) {
       return NextResponse.json<ApiResponse>(
         {
           success: false,
@@ -19,7 +19,7 @@ export async function GET() {
     
     return NextResponse.json<ApiResponse<User>>({
       success: true,
-      data: user,
+      data: userSession.user,
     });
   } catch (error) {
     return NextResponse.json<ApiResponse>(

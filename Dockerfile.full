@@ -1,0 +1,74 @@
+# Build stage
+FROM node:20-alpine AS builder
+
+# Add dependencies for native modules
+RUN apk add --no-cache libc6-compat python3 make g++
+
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install ALL dependencies (including dev dependencies)
+RUN npm ci --legacy-peer-deps
+
+# Copy source code
+COPY . .
+
+# Generate Prisma client
+RUN npx prisma generate
+
+# Build the application
+ENV NEXT_TELEMETRY_DISABLED=1
+RUN npm run build
+
+# Production stage
+FROM node:20-alpine AS runner
+
+LABEL org.opencontainers.image.source=https://github.com/bryanlabs/snapshots
+
+WORKDIR /app
+
+# Add non-root user
+RUN addgroup -g 1001 -S nodejs
+RUN adduser -S nextjs -u 1001
+
+# Copy everything from builder
+COPY --from=builder --chown=nextjs:nodejs /app/package*.json ./
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules ./node_modules
+COPY --from=builder --chown=nextjs:nodejs /app/.next ./.next
+COPY --from=builder --chown=nextjs:nodejs /app/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
+COPY --from=builder --chown=nextjs:nodejs /app/next.config.ts ./
+COPY --from=builder --chown=nextjs:nodejs /app/auth.ts ./
+COPY --from=builder --chown=nextjs:nodejs /app/auth.config.ts ./
+COPY --from=builder --chown=nextjs:nodejs /app/middleware.ts ./
+
+# Create startup script before switching user
+RUN echo '#!/bin/sh\n\
+if [ ! -f /app/prisma/.initialized ]; then\n\
+  echo "Initializing database..."\n\
+  npx prisma db push --skip-generate\n\
+  npx prisma db seed\n\
+  touch /app/prisma/.initialized\n\
+fi\n\
+echo "Starting Next.js..."\n\
+npm start' > /app/start.sh && chmod +x /app/start.sh && chown nextjs:nodejs /app/start.sh
+
+USER nextjs
+
+# Expose port
+EXPOSE 3000
+
+# Environment variables
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV HOSTNAME="0.0.0.0"
+ENV PORT=3000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD node -e "require('http').get('http://localhost:3000/api/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1); })"
+
+# Start the application
+CMD ["sh", "/app/start.sh"]

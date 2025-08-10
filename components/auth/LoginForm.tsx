@@ -8,7 +8,7 @@ import { LoadingSpinner } from '../common/LoadingSpinner';
 export function LoginForm() {
   const router = useRouter();
   const { login, error } = useAuth();
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -16,7 +16,7 @@ export function LoginForm() {
     e.preventDefault();
     setIsLoading(true);
 
-    const success = await login({ email, password });
+    const success = await login({ email: username, password });
 
     if (success) {
       router.push('/');
@@ -34,19 +34,19 @@ export function LoginForm() {
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label 
-              htmlFor="email" 
+              htmlFor="username" 
               className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
             >
-              Email Address
+              Username
             </label>
             <input
-              id="email"
-              type="email"
+              id="username"
+              type="text"
               required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-              placeholder="you@example.com"
+              placeholder="premium_user"
             />
           </div>
 

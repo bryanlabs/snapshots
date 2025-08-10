@@ -1,0 +1,135 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: snapshots
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: snapshots
+  template:
+    metadata:
+      labels:
+        app: snapshots
+    spec:
+      containers:
+      - name: app
+        image: ghcr.io/bryanlabs/snapshots:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 3000
+        env:
+        - name: NODE_ENV
+          value: "production"
+        - name: HOSTNAME
+          value: "0.0.0.0"
+        - name: PORT
+          value: "3000"
+        - name: DATABASE_URL
+          value: "file:/app/prisma/dev.db"
+        - name: NEXTAUTH_URL
+          value: "https://snapshots.bryanlabs.net"
+        - name: NEXTAUTH_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: snapshots-secrets
+              key: nextauth-secret
+        - name: SNAPSHOT_SERVER_URL
+          value: "http://nginx-service.fullnodes.svc.cluster.local:32708"
+        - name: REDIS_URL
+          value: "redis://redis-service.fullnodes.svc.cluster.local:6379"
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: snapshots-secrets
+              key: jwt-secret
+        resources:
+          requests:
+            cpu: 200m
+            memory: 512Mi
+          limits:
+            cpu: 1000m
+            memory: 1Gi
+        volumeMounts:
+        - name: db-storage
+          mountPath: /app/prisma
+        - name: avatars-storage
+          mountPath: /app/public/avatars
+        lifecycle:
+          postStart:
+            exec:
+              command: ["/bin/sh", "-c", "cd /app && ./scripts/init-db-proper.sh"]
+      volumes:
+      - name: db-storage
+        persistentVolumeClaim:
+          claimName: snapshots-db-pvc
+      - name: avatars-storage
+        persistentVolumeClaim:
+          claimName: snapshots-avatars-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: snapshots
+  namespace: default
+spec:
+  selector:
+    app: snapshots
+  ports:
+  - port: 80
+    targetPort: 3000
+    protocol: TCP
+  type: ClusterIP
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: snapshots-db-pvc
+  namespace: default
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: topolvm-ssd-xfs
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: snapshots-avatars-pvc
+  namespace: default
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+  storageClassName: topolvm-ssd-xfs
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: snapshots
+  namespace: default
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - snapshots.bryanlabs.net
+    secretName: snapshots-tls
+  rules:
+  - host: snapshots.bryanlabs.net
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: snapshots
+            port:
+              number: 80

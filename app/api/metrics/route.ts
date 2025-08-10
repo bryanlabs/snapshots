@@ -1,19 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { register } from '@/lib/monitoring/metrics';
-import { getIronSession } from 'iron-session';
-import { User } from '@/types/user';
-import { sessionOptions } from '@/lib/session';
-import { cookies } from 'next/headers';
+import { auth } from '@/auth';
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     // Optional: Add authentication check for metrics endpoint
     // You might want to restrict access to metrics
-    const cookieStore = await cookies();
-    const session = await getIronSession<User>(cookieStore, sessionOptions);
+    await auth();
     
     // Uncomment to require authentication for metrics
-    // if (!session?.isLoggedIn) {
+    // if (!session) {
     //   return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     // }
     

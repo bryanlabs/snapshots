@@ -12,9 +12,12 @@ class BandwidthManager {
   private userBandwidthUsage: Map<string, number> = new Map();
   
   // Bandwidth limits in bytes per second (shared among all users of the same tier)
+  // Note: We advertise in Mbps but store in bytes/second for calculations
+  // 50 Mbps = 50/8 MB/s = 6.25 MB/s = 6.25 * 1024 * 1024 bytes/second
+  // 250 Mbps = 250/8 MB/s = 31.25 MB/s = 31.25 * 1024 * 1024 bytes/second
   private readonly BANDWIDTH_LIMITS = {
-    free: 50 * 1024 * 1024, // 50 MB/s for free tier (shared)
-    premium: 250 * 1024 * 1024, // 250 MB/s for premium tier (shared)
+    free: (parseInt(process.env.BANDWIDTH_FREE_TOTAL || '6.25')) * 1024 * 1024, // 50 Mbps = 6.25 MB/s for free tier (shared)
+    premium: (parseInt(process.env.BANDWIDTH_PREMIUM_TOTAL || '31.25')) * 1024 * 1024, // 250 Mbps = 31.25 MB/s for premium tier (shared)
   };
   
   // Monthly bandwidth limits in bytes

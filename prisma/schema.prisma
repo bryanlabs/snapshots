@@ -1,0 +1,659 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ==============================================================================
+// SNAPSHOTS DATABASE SCHEMA - DESIGN DECISIONS & FUTURE ROADMAP
+// ==============================================================================
+//
+// This schema was designed based on the following requirements and future plans:
+//
+// 1. DOWNLOAD HISTORY & ANALYTICS
+//    Q: Track detailed history or just real-time queue management?
+//    A: "Granular long-term analytics for business intelligence"
+//    → We store all downloads permanently with detailed metrics for BI reporting
+//
+// 2. MULTI-TIER SYSTEM
+//    Q: Just free/premium or more complex tiers?
+//    A: "Configurable properties, rework the web app to work this way too"
+//    → Flexible tier system with customizable bandwidth, limits, and features
+//    → Tiers can be created/modified without code changes
+//
+// 3. TEAM ACCOUNTS
+//    Q: Individual accounts only or team support?
+//    A: "Team accounts too" with role-based permissions and sub-limits
+//    → Teams can have admins who invite/revoke members
+//    → Team leads can see all team downloads, members see only their own
+//    → Members can have individual limits within team quotas
+//
+// 4. CUSTOM SNAPSHOTS
+//    Q: What about on-demand snapshot requests?
+//    A: "Yes to all" - custom configurations, scheduling, access control
+//    → Users can request snapshots with custom block heights, pruning, compression
+//    → Private snapshots for dedicated customers (e.g., "injective node")
+//    → Scheduled recurring snapshots
+//    → Access control - some snapshots hidden from public
+//
+// 5. GEOGRAPHIC DISTRIBUTION
+//    Q: Multiple regions planned?
+//    A: "Prep the database for this, but not going to do this for a bit"
+//    → Region field on snapshots for future CDN/multi-region support
+//    → Download tracking includes region for analytics
+//
+// BANDWIDTH AS LIMITED RESOURCE
+// The system treats bandwidth as a scarce resource with queue management:
+// - Total bandwidth is fixed (e.g., 1 Gbps)
+// - Users queue when bandwidth is saturated
+// - Premium users get priority in queue
+// - Fair scheduling prevents resource starvation
+//
+// BILLING MODEL
+// - Prepaid credits system
+// - Daily quotas with hard stops
+// - Usage tracking for billing
+// ==============================================================================
+
+// ========== USERS & AUTHENTICATION ==========
+// Core user model supporting both traditional auth and Web3 (Keplr wallet)
+model User {
+  id                String    @id @default(cuid())
+  email             String?   @unique
+  emailVerified     DateTime? @map("email_verified")
+  walletAddress     String?   @unique @map("wallet_address")
+  passwordHash      String?   @map("password_hash")
+  
+  // User properties
+  displayName       String?   @map("display_name")
+  avatarUrl         String?   @map("avatar_url")
+  role              String    @default("user") // "user" or "admin"
+  
+  // Individual tier (can be overridden by team membership)
+  personalTierId    String?   @map("personal_tier_id")
+  
+  // Subscription management for tier-based system
+  subscriptionStatus  String    @default("free") @map("subscription_status") // free, active, cancelled, expired, pending
+  subscriptionExpiresAt DateTime? @map("subscription_expires_at")
+  
+  // Audit fields for compliance and debugging
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+  lastLoginAt       DateTime? @map("last_login_at")
+  
+  // Telegram community access
+  telegramUsername  String?   @map("telegram_username")
+  telegramUserId    String?   @unique @map("telegram_user_id")
+  
+  // Relations
+  personalTier      Tier?     @relation(fields: [personalTierId], references: [id])
+  accounts          Account[]
+  sessions          Session[]
+  teamMemberships   TeamMember[]
+  downloads         Download[]
+  snapshotRequests  SnapshotRequest[]
+  creditTransactions CreditTransaction[]
+  usageRecords      UsageRecord[]
+  snapshotAccess    SnapshotAccess[]
+  apiUsageRecords   ApiUsageRecord[]
+  telegramInvitations TelegramInvitation[]
+  
+  @@index([email])
+  @@index([walletAddress])
+  @@index([personalTierId])
+  @@map("users")
+}
+
+// ========== TEAMS ==========
+// Teams allow multiple users to share a subscription/tier
+// Team admins can manage members and see all activity
+model Team {
+  id                String    @id @default(cuid())
+  name              String
+  slug              String    @unique // URL-friendly name
+  
+  // Team tier and limits
+  tierId            String    @map("tier_id")
+  
+  // Team-wide credits
+  creditBalance     Int       @default(0) @map("credit_balance")
+  
+  // Team quotas (can override tier defaults)
+  // "Each member gets 100GB/day from the team's 1TB pool"
+  dailyDownloadGb   Int?      @map("daily_download_gb") // null = use tier default
+  monthlyDownloadGb Int?      @map("monthly_download_gb")
+  maxConcurrentDownloads Int? @map("max_concurrent_downloads")
+  
+  // Audit
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+  
+  // Relations
+  tier              Tier      @relation(fields: [tierId], references: [id])
+  members           TeamMember[]
+  snapshotAccess    SnapshotAccess[]
+  creditTransactions CreditTransaction[]
+  usageRecords      UsageRecord[]
+  
+  @@index([slug])
+  @@index([tierId])
+  @@map("teams")
+}
+
+model TeamMember {
+  id                String    @id @default(cuid())
+  teamId            String    @map("team_id")
+  userId            String    @map("user_id")
+  
+  // Role-based permissions
+  // - admin: can invite/revoke users, see all downloads, manage billing
+  // - member: can download as team, see own downloads
+  // - viewer: read-only access to team resources
+  role              String    @default("member") // admin, member, viewer
+  
+  // Member-specific limits within team
+  // Allows "each member gets X GB from team pool" scenarios
+  dailyDownloadGb   Int?      @map("daily_download_gb") // null = share team pool
+  
+  // Audit
+  joinedAt          DateTime  @default(now()) @map("joined_at")
+  invitedBy         String?   @map("invited_by")
+  
+  // Relations
+  team              Team      @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([teamId, userId])
+  @@index([userId])
+  @@index([teamId, role])
+  @@map("team_members")
+}
+
+// ========== TIERS ==========
+// Flexible tier system with configurable properties
+// "Configurable properties, rework the web app to work this way too"
+model Tier {
+  id                String    @id @default(cuid())
+  name              String    @unique // internal name: "free", "premium", "enterprise"
+  displayName       String    @map("display_name") // UI display: "Free Tier", "Premium"
+  
+  // Bandwidth limits - the core differentiator
+  bandwidthMbps     Int       @map("bandwidth_mbps") // 50, 250, 500
+  burstBandwidthMbps Int?     @map("burst_bandwidth_mbps") // temporary burst speed
+  
+  // Download limits
+  dailyDownloadGb   Int       @map("daily_download_gb") // 0 = unlimited
+  monthlyDownloadGb Int       @map("monthly_download_gb") // 0 = unlimited
+  maxConcurrentDownloads Int  @map("max_concurrent_downloads")
+  
+  // Queue priority (higher = better position in queue)
+  // When bandwidth is saturated, higher priority tiers get served first
+  queuePriority     Int       @default(0) @map("queue_priority")
+  
+  // API Rate Limiting - New for tier-based system
+  apiRateLimitHourly Int      @default(50) @map("api_rate_limit_hourly") // requests per hour
+  
+  // Feature flags
+  canRequestSnapshots Boolean @default(false) @map("can_request_snapshots")
+  canAccessApi      Boolean   @default(true) @map("can_access_api")
+  canCreateTeams    Boolean   @default(false) @map("can_create_teams")
+  
+  // Telegram community access
+  telegramGroupAccess String?  @map("telegram_group_access") // null, "premium", "ultra"
+  telegramGroupName   String?  @map("telegram_group_name") // Human-readable group name
+  
+  // Pricing for credit consumption
+  downloadPricePerGb Int     @default(0) @map("download_price_per_gb") // in cents
+  snapshotRequestPrice Int   @default(0) @map("snapshot_request_price") // in cents
+  
+  // UI customization
+  badgeColor        String?   @map("badge_color")
+  description       String?
+  features          String?   // JSON array of feature strings
+  
+  // Soft delete for tier management
+  isActive          Boolean   @default(true) @map("is_active")
+  
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+  
+  // Relations
+  users             User[]
+  teams             Team[]
+  
+  @@index([name])
+  @@map("tiers")
+}
+
+// ========== SNAPSHOTS ==========
+// Central snapshot registry - tracks all available snapshots
+model Snapshot {
+  id                String    @id @default(cuid())
+  
+  // Snapshot identification
+  chainId           String    @map("chain_id")
+  fileName          String    @map("file_name")
+  filePath          String    @map("file_path")
+  fileSizeBytes     BigInt    @map("file_size_bytes")
+  
+  // Snapshot properties for custom configurations
+  blockHeight       BigInt    @map("block_height")
+  pruningMode       String    @map("pruning_mode") // none, default, everything, custom
+  compressionType   String    @map("compression_type") // zst, lz4, tar
+  
+  // Access control
+  // "Some snapshots hidden from public" - e.g., dedicated customer snapshots
+  isPublic          Boolean   @default(true) @map("is_public")
+  isActive          Boolean   @default(true) @map("is_active")
+  
+  // Source tracking
+  createdBy         String?   @map("created_by") // user_id or 'system'
+  requestId         String?   @map("request_id") // links to SnapshotRequest
+  
+  // Regional availability for future CDN support
+  // "Prep the database for this, but not going to do this for a bit"
+  regions           String    @default("us-east") // comma-separated
+  
+  // Timestamps
+  snapshotTakenAt   DateTime  @map("snapshot_taken_at")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  expiresAt         DateTime? @map("expires_at") // for auto-cleanup
+  
+  // Relations
+  accessPolicies    SnapshotAccess[]
+  downloads         Download[]
+  
+  @@unique([chainId, fileName])
+  @@index([chainId, isPublic, isActive])
+  @@index([blockHeight])
+  @@index([createdAt])
+  @@map("snapshots")
+}
+
+// Access control for private snapshots
+// "Access granted at user level, team level, or both"
+// "Time-limited access (expires in 30 days)"
+model SnapshotAccess {
+  id                String    @id @default(cuid())
+  snapshotId        String    @map("snapshot_id")
+  
+  // Access can be granted to user OR team
+  userId            String?   @map("user_id")
+  teamId            String?   @map("team_id")
+  
+  // Access control
+  expiresAt         DateTime? @map("expires_at")
+  maxDownloads      Int?      @map("max_downloads") // null = unlimited
+  downloadsUsed     Int       @default(0) @map("downloads_used")
+  
+  // Audit
+  grantedAt         DateTime  @default(now()) @map("granted_at")
+  grantedBy         String    @map("granted_by")
+  reason            String?   // why access was granted
+  
+  // Relations
+  snapshot          Snapshot  @relation(fields: [snapshotId], references: [id], onDelete: Cascade)
+  user              User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  team              Team?     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  
+  @@index([snapshotId, userId])
+  @@index([snapshotId, teamId])
+  @@index([expiresAt])
+  @@map("snapshot_access")
+}
+
+// ========== SNAPSHOT REQUESTS ==========
+// On-demand snapshot generation with custom parameters
+// "Block height, pruning settings, compression types"
+// "Scheduled recurring snapshot requests"
+model SnapshotRequest {
+  id                String    @id @default(cuid())
+  userId            String    @map("user_id")
+  
+  // Request details - what kind of snapshot user wants
+  chainId           String    @map("chain_id")
+  blockHeight       BigInt    @map("block_height")
+  pruningMode       String    @map("pruning_mode")
+  compressionType   String    @map("compression_type")
+  
+  // Scheduling - supports recurring snapshots
+  // "Snapshot every Sunday at block X"
+  scheduleType      String    @default("once") // once, daily, weekly, monthly
+  scheduleCron      String?   @map("schedule_cron")
+  nextRunAt         DateTime? @map("next_run_at")
+  lastRunAt         DateTime? @map("last_run_at")
+  
+  // Status tracking with priority queue
+  status            String    @default("pending") // pending, processing, completed, failed
+  priority          Int       @default(0) // higher = more priority
+  errorMessage      String?   @map("error_message")
+  
+  // Result tracking
+  resultSnapshotId  String?   @map("result_snapshot_id")
+  
+  // Billing
+  creditsCost       Int       @default(0) @map("credits_cost")
+  
+  // Retention policy support
+  // "Auto-delete after X days"
+  retentionDays     Int       @default(30) @map("retention_days")
+  
+  // Audit
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+  completedAt       DateTime? @map("completed_at")
+  
+  // Relations
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId, status])
+  @@index([status, priority, createdAt])
+  @@index([nextRunAt])
+  @@map("snapshot_requests")
+}
+
+// ========== DOWNLOADS ==========
+// Core download tracking - treats bandwidth as limited resource
+// "If 10 premium users were all on at once each trying to get 250MBs 
+//  only 3 could go through at a time, the rest would be queued"
+model Download {
+  id                String    @id @default(cuid())
+  userId            String    @map("user_id")
+  teamId            String?   @map("team_id") // if downloaded as team member
+  snapshotId        String    @map("snapshot_id")
+  
+  // Download details
+  fileSizeBytes     BigInt    @map("file_size_bytes")
+  bytesTransferred  BigInt    @default(0) @map("bytes_transferred")
+  
+  // Status tracking for queue management
+  status            String    @default("pending") // pending, queued, active, completed, failed, cancelled
+  queuePosition     Int?      @map("queue_position")
+  downloadToken     String?   @unique @map("download_token")
+  
+  // Performance tracking
+  allocatedBandwidthMbps Int? @map("allocated_bandwidth_mbps")
+  actualBandwidthMbps Float? @map("actual_bandwidth_mbps")
+  
+  // Billing
+  creditsCost       Int       @default(0) @map("credits_cost")
+  
+  // Client info for analytics
+  ipAddress         String?   @map("ip_address")
+  userAgent         String?   @map("user_agent")
+  region            String?   @map("region") // for future CDN analytics
+  
+  // Timestamps
+  createdAt         DateTime  @default(now()) @map("created_at")
+  queuedAt          DateTime? @map("queued_at")
+  startedAt         DateTime? @map("started_at")
+  completedAt       DateTime? @map("completed_at")
+  
+  // Relations
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  snapshot          Snapshot  @relation(fields: [snapshotId], references: [id])
+  
+  @@index([userId, status])
+  @@index([teamId, status])
+  @@index([status, queuePosition])
+  @@index([downloadToken])
+  @@index([completedAt]) // for analytics queries
+  @@map("downloads")
+}
+
+// ========== USAGE & BILLING ==========
+// Aggregated usage records for billing and analytics
+// "Track usage for billing purposes (GB downloaded, compute time)"
+// "Daily quotas with hard stops"
+model UsageRecord {
+  id                String    @id @default(cuid())
+  
+  // Owner (user or team)
+  userId            String?   @map("user_id")
+  teamId            String?   @map("team_id")
+  
+  // Usage details
+  recordType        String    @map("record_type") // download, snapshot_request, storage
+  recordDate        DateTime  @map("record_date")
+  
+  // Metrics
+  downloadGb        Float     @default(0) @map("download_gb")
+  snapshotRequests  Int       @default(0) @map("snapshot_requests")
+  storageGbHours    Float     @default(0) @map("storage_gb_hours") // for custom snapshots
+  
+  // Billing
+  creditsCost       Int       @default(0) @map("credits_cost")
+  
+  createdAt         DateTime  @default(now()) @map("created_at")
+  
+  // Relations
+  user              User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  team              Team?     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, recordType, recordDate])
+  @@unique([teamId, recordType, recordDate])
+  @@index([recordDate])
+  @@map("usage_records")
+}
+
+// Prepaid credits system
+// "Prepaid credits" for billing model
+model CreditTransaction {
+  id                String    @id @default(cuid())
+  
+  // Owner
+  userId            String?   @map("user_id")
+  teamId            String?   @map("team_id")
+  
+  // Transaction details
+  amount            Int       // positive = credit, negative = debit
+  balance           Int       // balance after transaction
+  description       String
+  
+  // Reference for what consumed credits
+  referenceType     String?   @map("reference_type") // download, snapshot_request, purchase
+  referenceId       String?   @map("reference_id")
+  
+  // Payment info (for purchases)
+  paymentMethod     String?   @map("payment_method") // stripe, crypto, admin_grant
+  paymentReference  String?   @map("payment_reference")
+  
+  createdAt         DateTime  @default(now()) @map("created_at")
+  
+  // Relations
+  user              User?     @relation(fields: [userId], references: [id])
+  team              Team?     @relation(fields: [teamId], references: [id])
+  
+  @@index([userId, createdAt])
+  @@index([teamId, createdAt])
+  @@map("credit_transactions")
+}
+
+// ========== API RATE LIMITING ==========
+// API usage tracking for hourly rate limits
+model ApiUsageRecord {
+  id                String    @id @default(cuid())
+  
+  // User identification
+  userId            String    @map("user_id")
+  
+  // Time window for rate limiting (hourly buckets)
+  hourBucket        DateTime  @map("hour_bucket") // Rounded to hour (e.g., 2025-08-02 14:00:00)
+  
+  // Usage counts
+  requestCount      Int       @default(0) @map("request_count")
+  
+  // Endpoint tracking for detailed analytics
+  endpoint          String?   // optional: track which endpoints are being hit
+  
+  // Relations
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Timestamps
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+  
+  @@unique([userId, hourBucket, endpoint])
+  @@index([userId, hourBucket])
+  @@index([hourBucket]) // for cleanup of old records
+  @@map("api_usage_records")
+}
+
+// ========== ANALYTICS ==========
+// Separate metrics table for performance
+// "Granular long-term analytics for business intelligence"
+model DownloadMetrics {
+  id                String    @id @default(cuid())
+  
+  // Dimensions
+  date              DateTime
+  hour              Int       // 0-23
+  chainId           String    @map("chain_id")
+  tier              String
+  region            String?   // for future multi-region
+  
+  // Metrics
+  downloadCount     Int       @default(0) @map("download_count")
+  uniqueUsers       Int       @default(0) @map("unique_users")
+  totalBytes        BigInt    @default(0) @map("total_bytes")
+  avgDurationMs     Int       @default(0) @map("avg_duration_ms")
+  failureCount      Int       @default(0) @map("failure_count")
+  queuedCount       Int       @default(0) @map("queued_count")
+  avgQueueTimeMs    Int       @default(0) @map("avg_queue_time_ms")
+  
+  createdAt         DateTime  @default(now()) @map("created_at")
+  
+  @@unique([date, hour, chainId, tier])
+  @@index([date, chainId])
+  @@index([date, tier])
+  @@map("download_metrics")
+}
+
+// ========== SYSTEM ==========
+// Singleton for system-wide configuration and state
+// Tracks global bandwidth usage and queue state
+model SystemConfig {
+  id                String    @id @default("system")
+  
+  // Bandwidth management - the core constraint
+  totalBandwidthMbps Int      @default(1000) @map("total_bandwidth_mbps")
+  reservedBandwidthMbps Int    @default(100) @map("reserved_bandwidth_mbps") // for system use
+  
+  // Current usage (frequently updated - consider caching in Redis)
+  usedBandwidthMbps Int       @default(0) @map("used_bandwidth_mbps")
+  activeDownloads   Int       @default(0) @map("active_downloads")
+  queueLength       Int       @default(0) @map("queue_length")
+  
+  // Feature flags
+  maintenanceMode   Boolean   @default(false) @map("maintenance_mode")
+  queueEnabled      Boolean   @default(true) @map("queue_enabled")
+  signupsEnabled    Boolean   @default(true) @map("signups_enabled")
+  
+  // Default tier for new users
+  defaultTierId     String    @default("free") @map("default_tier_id")
+  
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+  
+  @@map("system_config")
+}
+
+// ========== NEXT-AUTH MODELS ==========
+// Required for NextAuth.js integration
+model Account {
+  id                String  @id @default(cuid())
+  userId            String  @map("user_id")
+  type              String  // oauth, credentials, wallet
+  provider          String  // google, github, keplr, email
+  providerAccountId String  @map("provider_account_id")
+  
+  // OAuth fields
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+  
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique @map("session_token")
+  userId       String   @map("user_id")
+  expires      DateTime
+  
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([expires])
+  @@map("sessions")
+}
+
+// ========== TELEGRAM COMMUNITY ACCESS ==========
+// Tracks Telegram group invitations and membership status for tier-based access
+model TelegramInvitation {
+  id                String    @id @default(cuid())
+  userId            String    @map("user_id")
+  
+  // Telegram group configuration
+  groupType         String    @map("group_type") // "premium" or "ultra"
+  groupName         String    @map("group_name") // Human-readable name
+  
+  // Invitation tracking
+  status            String    @default("pending") @map("status") // pending, invited, joined, expired, revoked
+  invitationMethod  String    @default("link") @map("invitation_method") // link, username, manual
+  
+  // Invitation details (for audit trail)
+  inviteToken       String?   @unique @map("invite_token") // Secure token for invitation links
+  invitedAt         DateTime? @map("invited_at")
+  joinedAt          DateTime? @map("joined_at")
+  revokedAt         DateTime? @map("revoked_at")
+  expiresAt         DateTime? @map("expires_at")
+  
+  // Telegram-specific data (stored securely)
+  telegramChatId    String?   @map("telegram_chat_id") // Group chat ID
+  inviteLink        String?   @map("invite_link") // Temporary invite link
+  
+  // Admin tracking
+  invitedBy         String?   @map("invited_by") // Admin user ID who processed invitation
+  revokedBy         String?   @map("revoked_by") // Admin user ID who revoked access
+  revokedReason     String?   @map("revoked_reason")
+  
+  // Notification tracking
+  emailSent         Boolean   @default(false) @map("email_sent")
+  emailSentAt       DateTime? @map("email_sent_at")
+  remindersSent     Int       @default(0) @map("reminders_sent")
+  lastReminderAt    DateTime? @map("last_reminder_at")
+  
+  // Audit trail
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+  
+  // Relations
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId, groupType])
+  @@index([status, groupType])
+  @@index([inviteToken])
+  @@index([expiresAt])
+  @@index([createdAt])
+  @@map("telegram_invitations")
+}

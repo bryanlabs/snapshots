@@ -1,202 +1,184 @@
-# Monitoring and Metrics Guide
+# Web Vitals and RUM (Real User Monitoring) Implementation
 
-This document describes the monitoring, metrics, and rate limiting functionality implemented for the snapshot service.
+This document describes the performance monitoring implementation for the Snapshots Service.
 
 ## Overview
 
-The monitoring system includes:
-- Prometheus metrics collection
-- Request/response logging
-- Rate limiting
-- Bandwidth tracking and management
-- Structured logging with Winston
+We've implemented comprehensive performance monitoring using:
+1. **Web Vitals**: Core Web Vitals metrics (CLS, INP, LCP, FCP, TTFB)
+2. **Real User Monitoring (RUM)**: Page views, timing, resources, and errors
 
-## Components
+## Web Vitals Implementation
 
-### 1. Prometheus Metrics (`lib/monitoring/metrics.ts`)
+### Core Web Vitals Tracked
 
-Collects the following metrics:
-- **api_requests_total**: Total API requests by method, route, and status code
-- **api_response_time_seconds**: Response time histogram
-- **downloads_initiated_total**: Download counter by tier and snapshot ID
-- **auth_attempts_total**: Authentication attempts by type and success
-- **bandwidth_usage_bytes**: Current bandwidth usage by tier and user
-- **active_connections**: Active download connections by tier
-- **rate_limit_hits_total**: Rate limit hits by endpoint and tier
+1. **CLS (Cumulative Layout Shift)**
+   - Measures visual stability
+   - Good: < 0.1, Poor: > 0.25
 
-Access metrics at: `/api/metrics`
+2. **INP (Interaction to Next Paint)**
+   - Measures responsiveness
+   - Good: < 200ms, Poor: > 500ms
 
-### 2. Rate Limiting (`lib/middleware/rateLimiter.ts`)
+3. **LCP (Largest Contentful Paint)**
+   - Measures loading performance
+   - Good: < 2.5s, Poor: > 4s
 
-Three rate limit tiers:
-- **Download**: 10 requests per minute
-- **Auth**: 5 attempts per 15 minutes
-- **General**: 100 requests per minute (free), 200 for premium
+4. **FCP (First Contentful Paint)**
+   - Time to first content render
+   - Good: < 1.8s, Poor: > 3s
 
-Usage:
-```typescript
-export const POST = withRateLimit(handler, 'download');
+5. **TTFB (Time to First Byte)**
+   - Server response time
+   - Good: < 800ms, Poor: > 1.8s
+
+### Components
+
+- **WebVitals Component**: `components/monitoring/WebVitals.tsx`
+  - Automatically tracks all Core Web Vitals
+  - Sends data to `/api/vitals` endpoint
+  - Uses `navigator.sendBeacon` for reliability
+
+- **API Endpoint**: `app/api/vitals/route.ts`
+  - Collects and stores vitals data
+  - Provides summary statistics
+  - Alerts on poor performance
+
+- **Dashboard**: `app/admin/vitals/page.tsx`
+  - Admin-only dashboard
+  - Real-time performance metrics
+  - Performance score calculation
+
+## Real User Monitoring (RUM)
+
+### Data Collected
+
+1. **Page Views**
+   - URL, referrer, timestamp
+   - Viewport and screen dimensions
+   - User agent
+
+2. **Page Timing**
+   - DNS lookup, connection time
+   - TLS handshake time
+   - TTFB, DOM ready, page load
+   - Resource timing by type
+
+3. **JavaScript Errors**
+   - Error message and stack trace
+   - Source file and line number
+   - Unhandled promise rejections
+
+4. **Resource Performance**
+   - Scripts, stylesheets, images, fonts
+   - API calls timing
+   - Average and max duration per type
+
+### Components
+
+- **RUM Component**: `components/monitoring/RealUserMonitoring.tsx`
+  - Tracks page navigation
+  - Monitors resource loading
+  - Captures errors
+
+- **API Endpoint**: `app/api/rum/route.ts`
+  - Stores RUM events
+  - Provides event summaries
+
+## Usage
+
+### Viewing Web Vitals
+
+1. Navigate to `/admin/vitals` (admin only)
+2. View performance scores by page
+3. Monitor Core Web Vitals trends
+4. Identify performance issues
+
+### Accessing RUM Data
+
+```bash
+# Get all event types
+curl http://localhost:3000/api/rum
+
+# Get specific event type
+curl http://localhost:3000/api/rum?type=pageview&limit=50
+
+# Event types: pageview, timing, resources, error
 ```
 
-### 3. Bandwidth Management (`lib/bandwidth/manager.ts`)
+### Performance Alerts
 
-Tracks and limits bandwidth usage:
-- **Free tier**: 1 MB/s, 5 GB/month
-- **Premium tier**: 10 MB/s, 100 GB/month
+The system automatically logs warnings for:
+- Poor Web Vitals scores
+- Slow page loads (> 5 seconds)
+- JavaScript errors
+- Failed resource loads
 
-Features:
-- Per-user bandwidth tracking
-- Monthly usage limits
-- Active connection management
-- Automatic bandwidth division among connections
+## Integration with External Services
 
-### 4. Request Logging (`lib/middleware/logger.ts`)
+To send data to external monitoring services:
 
-Structured logging with Winston:
-- Request/response details
-- Download events
-- Authentication events
-- Bandwidth usage
-- Rate limit hits
+1. **Google Analytics**:
+   ```javascript
+   // In WebVitals.tsx
+   if (window.gtag) {
+     window.gtag('event', metric.name, {
+       value: metric.value,
+       metric_label: metric.rating,
+     });
+   }
+   ```
 
-## API Endpoints
+2. **Custom Analytics**:
+   - Modify `sendToAnalytics()` in WebVitals.tsx
+   - Update `sendToRUM()` in RealUserMonitoring.tsx
 
-### Metrics Endpoint
-```
-GET /api/metrics
-```
-Returns Prometheus-formatted metrics.
+## Performance Optimization Tips
 
-### Admin Statistics
-```
-GET /api/admin/stats
-```
-Returns JSON-formatted statistics (requires authentication).
+Based on collected metrics:
 
-### Bandwidth Reset (Cron)
-```
-GET /api/cron/reset-bandwidth
-```
-Resets monthly bandwidth usage (called by cron job).
+1. **Improve LCP**:
+   - Optimize largest images
+   - Preload critical resources
+   - Reduce server response time
 
-## Integration Guide
+2. **Reduce CLS**:
+   - Set dimensions for images/videos
+   - Avoid inserting content dynamically
+   - Use CSS transforms for animations
 
-### Adding Monitoring to API Routes
+3. **Optimize INP**:
+   - Minimize JavaScript execution
+   - Use web workers for heavy tasks
+   - Implement request idle callbacks
 
-Use the `withApiMonitoring` wrapper:
+4. **Lower TTFB**:
+   - Optimize server processing
+   - Use CDN for static assets
+   - Implement caching strategies
 
-```typescript
-import { withApiMonitoring } from '@/lib/middleware/apiWrapper';
+## Data Retention
 
-async function handleRequest(request: NextRequest) {
-  // Your handler logic
-}
+Currently, data is stored in-memory for demonstration. For production:
 
-export const GET = withApiMonitoring(handleRequest, '/api/your-route', {
-  rateLimit: 'general',  // optional
-  requireAuth: true      // optional
-});
-```
+1. Replace in-memory storage with database
+2. Implement data retention policies
+3. Set up data aggregation
+4. Configure alerting thresholds
 
-### Manual Integration
+## Testing
 
-For more control, integrate components directly:
+To test monitoring:
 
-```typescript
-import { collectResponseTime, trackRequest } from '@/lib/monitoring/metrics';
-import { logRequest } from '@/lib/middleware/logger';
-import { withRateLimit } from '@/lib/middleware/rateLimiter';
+1. Visit various pages
+2. Perform interactions (clicks, scrolls)
+3. Check `/admin/vitals` for metrics
+4. Verify data in browser console (dev mode)
 
-async function handler(request: NextRequest) {
-  const endTimer = collectResponseTime('GET', '/api/route');
-  
-  try {
-    // Your logic
-    
-    endTimer();
-    trackRequest('GET', '/api/route', 200);
-    return response;
-  } catch (error) {
-    endTimer();
-    trackRequest('GET', '/api/route', 500);
-    throw error;
-  }
-}
+## Future Enhancements
 
-export const GET = withRateLimit(handler, 'general');
-```
-
-## Bandwidth Tracking
-
-For actual file downloads, integrate with your CDN/file server:
-
-```typescript
-import { trackDownloadBandwidth, endDownloadConnection } from '@/lib/bandwidth/downloadTracker';
-
-// When download starts
-bandwidthManager.startConnection(connectionId, userId, tier);
-
-// During download (called periodically)
-trackDownloadBandwidth(connectionId, bytesTransferred);
-
-// When download completes
-endDownloadConnection(connectionId);
-```
-
-## Cron Jobs
-
-### Vercel Cron Configuration
-
-Add to `vercel.json`:
-```json
-{
-  "crons": [{
-    "path": "/api/cron/reset-bandwidth",
-    "schedule": "0 0 1 * *"
-  }]
-}
-```
-
-### Environment Variables
-
-Add to `.env`:
-```
-CRON_SECRET=your-secret-key
-```
-
-## Monitoring Dashboard
-
-### Prometheus/Grafana Setup
-
-1. Configure Prometheus to scrape `/api/metrics`
-2. Import provided Grafana dashboards
-3. Set up alerts based on metrics
-
-### Built-in Admin Stats
-
-Access JSON statistics at `/api/admin/stats` (requires authentication).
-
-## Best Practices
-
-1. **Use the wrapper functions** - They handle all monitoring automatically
-2. **Set appropriate rate limits** - Adjust based on your traffic patterns
-3. **Monitor bandwidth usage** - Set up alerts for users approaching limits
-4. **Review logs regularly** - Look for patterns in errors and rate limit hits
-5. **Scale rate limiters** - Consider Redis for distributed rate limiting in production
-
-## Troubleshooting
-
-### High Rate Limit Hits
-- Review rate limit configuration
-- Check for abusive clients
-- Consider increasing limits for legitimate use cases
-
-### Bandwidth Issues
-- Monitor active connections
-- Check for stuck connections
-- Verify bandwidth calculation accuracy
-
-### Metrics Not Updating
-- Ensure metrics are being collected in all routes
-- Check for errors in metric collection
-- Verify Prometheus scraping configuration
+1. **Session Replay**: Record user sessions
+2. **Heat Maps**: Track user interactions
+3. **Custom Metrics**: Business-specific KPIs
+4. **A/B Testing**: Performance impact analysis
+5. **Synthetic Monitoring**: Automated testing

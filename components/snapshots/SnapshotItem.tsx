@@ -1,12 +1,17 @@
 import { Snapshot } from '@/lib/types';
 import { DownloadButton } from './DownloadButton';
+import { TierAccessBadge, SnapshotFreshnessIndicator } from './TierAccessBadge';
+import { components, getCompressionColor, getArchiveColor, typography } from '@/lib/design-system';
+import { cn } from '@/lib/utils';
+import { getArchiveFormat } from '@/lib/config/supported-formats';
 
 interface SnapshotCardProps {
   snapshot: Snapshot;
   chainName: string;
+  chainLogoUrl?: string;
 }
 
-export function SnapshotItem({ snapshot, chainName }: SnapshotCardProps) {
+export function SnapshotItem({ snapshot, chainName, chainLogoUrl }: SnapshotCardProps) {
   const formatSize = (bytes: number): string => {
     const gb = bytes / (1024 * 1024 * 1024);
     return `${gb.toFixed(2)} GB`;
@@ -26,45 +31,81 @@ export function SnapshotItem({ snapshot, chainName }: SnapshotCardProps) {
   const getTypeColor = (type: string) => {
     switch (type) {
       case 'archive':
-        return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200';
+        return components.badge.variant.secondary;
       case 'pruned':
-        return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
+        return components.badge.variant.primary;
       default:
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
-    }
-  };
-
-  const getCompressionBadge = (compression: string) => {
-    switch (compression) {
-      case 'lz4':
-        return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
-      case 'zst':
-        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
-      default:
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
+        return components.badge.variant.default;
     }
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 p-6">
+    <div className={cn(
+      components.card.base, 
+      'p-6',
+      !snapshot.isAccessible && 'opacity-75 bg-gray-50 dark:bg-gray-800/50'
+    )}>
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div className="flex-1">
-          <div className="flex items-center gap-3 mb-2">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-              Block #{snapshot.height.toLocaleString()}
-            </h3>
-            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getTypeColor(snapshot.type)}`}>
-              {snapshot.type}
-            </span>
-            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getCompressionBadge(snapshot.compressionType)}`}>
-              {snapshot.compressionType.toUpperCase()}
-            </span>
+          <div className="flex items-center gap-2 mb-2 flex-wrap">
+            {/* Show type badge only if it's archive (not pruned) */}
+            {snapshot.type === 'archive' && (
+              <span className={cn(components.badge.base, getTypeColor(snapshot.type))}>
+                {snapshot.type}
+              </span>
+            )}
+            {/* Order: Tier, Archive Format, Compression Format */}
+            <TierAccessBadge
+              minimumTier={snapshot.minimumTier}
+              userTier={snapshot.userTier}
+              isAccessible={snapshot.isAccessible}
+              generationCycle={snapshot.generationCycle}
+              hourGenerated={snapshot.hourGenerated}
+            />
+            {(() => {
+              const archiveFormat = getArchiveFormat(snapshot.fileName);
+              return (
+                <>
+                  {archiveFormat && (
+                    <span className={cn(
+                      components.badge.base,
+                      getArchiveColor(archiveFormat).bg,
+                      getArchiveColor(archiveFormat).text
+                    )}>
+                      {archiveFormat.toLowerCase()}
+                    </span>
+                  )}
+                  {/* Only show compression if it's not 'none' */}
+                  {snapshot.compressionType && snapshot.compressionType !== 'none' && (
+                    <span className={cn(
+                      components.badge.base,
+                      getCompressionColor(snapshot.compressionType).bg,
+                      getCompressionColor(snapshot.compressionType).text
+                    )}>
+                      {snapshot.compressionType.toLowerCase()}
+                    </span>
+                  )}
+                </>
+              );
+            })()}
           </div>
           
-          <div className="space-y-1 text-sm text-gray-600 dark:text-gray-400">
+          <div className={cn('space-y-1', typography.body.small, typography.muted)}>
             <p>Size: {formatSize(snapshot.size)}</p>
-            <p>Created: {formatDate(snapshot.createdAt)}</p>
-            <p className="font-mono text-xs break-all">{snapshot.fileName}</p>
+            <div className="flex items-center gap-2">
+              <span>Created: {formatDate(snapshot.createdAt)}</span>
+              <SnapshotFreshnessIndicator
+                hourGenerated={snapshot.hourGenerated}
+                userTier={snapshot.userTier}
+                isAccessible={snapshot.isAccessible}
+              />
+            </div>
+            <p className={typography.code}>{snapshot.fileName}</p>
+            {!snapshot.isAccessible && snapshot.minimumTier && (
+              <p className="text-amber-600 dark:text-amber-400 text-xs mt-2">
+                Upgrade to {snapshot.minimumTier} tier for access
+              </p>
+            )}
           </div>
         </div>
 
@@ -72,6 +113,8 @@ export function SnapshotItem({ snapshot, chainName }: SnapshotCardProps) {
           <DownloadButton 
             snapshot={snapshot}
             chainName={chainName}
+            chainLogoUrl={chainLogoUrl}
+            disabled={!snapshot.isAccessible}
           />
         </div>
       </div>

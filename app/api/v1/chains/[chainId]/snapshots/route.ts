@@ -1,70 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ApiResponse, Snapshot } from '@/lib/types';
-
-// Mock data - replace with actual database queries
-const mockSnapshots: Record<string, Snapshot[]> = {
-  'cosmos-hub': [
-    {
-      id: 'cosmos-snapshot-1',
-      chainId: 'cosmos-hub',
-      height: 19234567,
-      size: 450 * 1024 * 1024 * 1024, // 450 GB in bytes
-      fileName: 'cosmoshub-4-15234567.tar.lz4',
-      createdAt: new Date('2024-01-15'),
-      updatedAt: new Date('2024-01-15'),
-      type: 'pruned',
-      compressionType: 'lz4',
-    },
-    {
-      id: 'cosmos-snapshot-2',
-      chainId: 'cosmos-hub',
-      height: 19200000,
-      size: 850 * 1024 * 1024 * 1024, // 850 GB in bytes
-      fileName: 'cosmoshub-4-15200000.tar.lz4',
-      createdAt: new Date('2024-01-10'),
-      updatedAt: new Date('2024-01-10'),
-      type: 'archive',
-      compressionType: 'lz4',
-    },
-  ],
-  'osmosis': [
-    {
-      id: 'osmosis-snapshot-1',
-      chainId: 'osmosis',
-      height: 12345678,
-      size: 128849018880, // ~120 GB in bytes
-      fileName: 'osmosis-1-12345678.tar.lz4',
-      createdAt: new Date('2024-01-10'),
-      updatedAt: new Date('2024-01-10'),
-      type: 'pruned',
-      compressionType: 'lz4',
-    },
-    {
-      id: 'osmosis-snapshot-2',
-      chainId: 'osmosis',
-      height: 12300000,
-      size: 127312345600, // ~118 GB in bytes
-      fileName: 'osmosis-1-12300000.tar.lz4',
-      createdAt: new Date('2024-01-09'),
-      updatedAt: new Date('2024-01-09'),
-      type: 'pruned',
-      compressionType: 'lz4',
-    },
-  ],
-  'juno': [
-    {
-      id: 'juno-snapshot-1',
-      chainId: 'juno',
-      height: 12345678,
-      size: 250 * 1024 * 1024 * 1024, // 250 GB in bytes
-      fileName: 'juno-1-9876543.tar.lz4',
-      createdAt: new Date('2024-01-13'),
-      updatedAt: new Date('2024-01-13'),
-      type: 'pruned',
-      compressionType: 'lz4',
-    },
-  ],
-};
+import { listSnapshots } from '@/lib/nginx/operations';
+import { extractHeightFromFilename } from '@/lib/config/supported-formats';
+import { config } from '@/lib/config';
+import { cache, cacheKeys } from '@/lib/cache/redis-cache';
+import { getUserSession, getGuestUserTier } from '@/lib/auth/user-session';
+import { canAccessSnapshot } from '@/lib/utils/tier';
 
 export async function GET(
   request: NextRequest,
@@ -73,17 +14,65 @@ export async function GET(
   try {
     const { chainId } = await params;
     
-    // TODO: Implement actual database query
-    // const snapshots = await db.snapshot.findMany({ 
-    //   where: { chainId },
-    //   orderBy: { height: 'desc' }
-    // });
+    // Get user session and tier
+    const userSession = await getUserSession();
+    const userTier = userSession.user?.tier || getGuestUserTier();
     
-    const snapshots = mockSnapshots[chainId] || [];
+    // Use cache for snapshots with shorter TTL
+    const allSnapshots = await cache.getOrSet<Snapshot[]>(
+      cacheKeys.chainSnapshots(chainId),
+      async () => {
+        // Fetch real snapshots from nginx
+        console.log(`Fetching snapshots for chain: ${chainId}`);
+        const nginxSnapshots = await listSnapshots(chainId);
+        console.log(`Found ${nginxSnapshots.length} snapshots from nginx`);
+        
+        // Transform nginx snapshots to match our Snapshot type
+        return nginxSnapshots
+          .map((s, index) => {
+            // Extract height from filename (e.g., noble-1-0.tar.zst -> 0)
+            const height = extractHeightFromFilename(s.filename) || s.height || 0;
+            
+            return {
+              id: `${chainId}-snapshot-${index}`,
+              chainId: chainId,
+              height: height,
+              size: s.size,
+              fileName: s.filename,
+              createdAt: s.lastModified.toISOString(),
+              updatedAt: s.lastModified.toISOString(),
+              type: 'pruned' as const, // Default to pruned, could be determined from metadata
+              compressionType: s.compressionType || 'zst' as const,
+            };
+          })
+          .sort((a, b) => {
+            // Sort by createdAt (newest first)
+            const dateA = new Date(a.createdAt).getTime();
+            const dateB = new Date(b.createdAt).getTime();
+            return dateB - dateA;
+          });
+      },
+      {
+        ttl: 60, // 1 minute cache for snapshot lists
+        tags: ['snapshots', `chain:${chainId}`],
+      }
+    );
+    
+    // Filter snapshots based on user tier access
+    const accessibleSnapshots = allSnapshots.filter(snapshot => 
+      canAccessSnapshot(snapshot, userTier)
+    );
+    
+    // Add access metadata to snapshots for UI
+    const snapshotsWithAccessInfo = allSnapshots.map(snapshot => ({
+      ...snapshot,
+      isAccessible: canAccessSnapshot(snapshot, userTier),
+      userTier: userTier,
+    }));
     
     return NextResponse.json<ApiResponse<Snapshot[]>>({
       success: true,
-      data: snapshots,
+      data: snapshotsWithAccessInfo,
     });
   } catch (error) {
     return NextResponse.json<ApiResponse>(

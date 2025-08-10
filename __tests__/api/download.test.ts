@@ -1,17 +1,14 @@
 import { NextRequest } from 'next/server';
-import { POST } from '@/app/api/v1/chains/[chainId]/download/route';
-import * as minioClient from '@/lib/minio/client';
-import * as metrics from '@/lib/monitoring/metrics';
-import * as logger from '@/lib/middleware/logger';
-import * as bandwidthManager from '@/lib/bandwidth/manager';
-import { getIronSession } from 'iron-session';
 
-// Mock dependencies
-jest.mock('@/lib/minio/client');
+// Mock dependencies before imports
+jest.mock('@/lib/nginx/operations');
 jest.mock('@/lib/monitoring/metrics');
 jest.mock('@/lib/middleware/logger');
 jest.mock('@/lib/bandwidth/manager');
-jest.mock('iron-session');
+jest.mock('@/lib/download/tracker');
+jest.mock('@/auth', () => ({
+  auth: jest.fn(),
+}));
 jest.mock('next/headers', () => ({
   cookies: jest.fn().mockResolvedValue({
     get: jest.fn(),
@@ -20,8 +17,17 @@ jest.mock('next/headers', () => ({
   }),
 }));
 
+// Import after mocks
+import { POST } from '@/app/api/v1/chains/[chainId]/download/route';
+import * as nginxOperations from '@/lib/nginx/operations';
+import * as metrics from '@/lib/monitoring/metrics';
+import * as logger from '@/lib/middleware/logger';
+import * as bandwidthManager from '@/lib/bandwidth/manager';
+import * as downloadTracker from '@/lib/download/tracker';
+import { auth } from '@/auth';
+
 describe('/api/v1/chains/[chainId]/download', () => {
-  let mockGetPresignedUrl: jest.Mock;
+  let mockGenerateDownloadUrl: jest.Mock;
   let mockCollectResponseTime: jest.Mock;
   let mockTrackRequest: jest.Mock;
   let mockTrackDownload: jest.Mock;
@@ -29,13 +35,16 @@ describe('/api/v1/chains/[chainId]/download', () => {
   let mockLogRequest: jest.Mock;
   let mockLogDownload: jest.Mock;
   let mockBandwidthManager: any;
-  let mockGetIronSession: jest.Mock;
+  let mockAuth: jest.Mock;
+  let mockCheckDownloadAllowed: jest.Mock;
+  let mockIncrementDailyDownload: jest.Mock;
+  let mockLogDownloadDb: jest.Mock;
 
   beforeEach(() => {
     jest.clearAllMocks();
     
     // Setup mocks
-    mockGetPresignedUrl = jest.fn().mockResolvedValue('https://minio.example.com/download-url');
+    mockGenerateDownloadUrl = jest.fn().mockResolvedValue('https://snapshots.bryanlabs.net/download-url');
     mockCollectResponseTime = jest.fn().mockReturnValue(jest.fn());
     mockTrackRequest = jest.fn();
     mockTrackDownload = jest.fn();
@@ -49,16 +58,49 @@ describe('/api/v1/chains/[chainId]/download', () => {
     mockLogDownload = jest.fn();
     
     mockBandwidthManager = {
-      hasExceededLimit: jest.fn().mockReturnValue(false),
-      startConnection: jest.fn(),
+      canAllocate: jest.fn().mockReturnValue({ canAllocate: true, queuePosition: 0 }),
+      allocate: jest.fn().mockReturnValue({ allocated: 50 }),
+      getStats: jest.fn().mockReturnValue({
+        totalBandwidth: 1000,
+        allocatedBandwidth: 500,
+        queueLength: 0,
+      }),
     };
-    
-    mockGetIronSession = jest.fn().mockResolvedValue({
-      username: 'testuser',
-      tier: 'free',
+
+    mockAuth = jest.fn().mockResolvedValue({
+      user: {
+        id: 'user123',
+        email: 'test@example.com',
+        tier: 'free',
+      },
     });
 
-    (minioClient.getPresignedUrl as jest.Mock) = mockGetPresignedUrl;
+    mockCheckDownloadAllowed = jest.fn().mockResolvedValue({
+      allowed: true,
+      remaining: 4,
+      limit: 5,
+      resetTime: new Date(Date.now() + 86400000), // Tomorrow
+    });
+    
+    mockIncrementDailyDownload = jest.fn().mockResolvedValue(true);
+    mockLogDownloadDb = jest.fn().mockResolvedValue(true);
+    
+    // Mock global fetch for snapshot API calls
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        success: true,
+        data: [{
+          id: 'cosmos-hub-20250130.tar.lz4',
+          fileName: 'cosmos-hub-20250130.tar.lz4',
+          size: 1000000,
+          chainId: 'cosmos-hub',
+        }],
+      }),
+    });
+
+    // Assign mocks
+    (nginxOperations.generateDownloadUrl as jest.Mock) = mockGenerateDownloadUrl;
     (metrics.collectResponseTime as jest.Mock) = mockCollectResponseTime;
     (metrics.trackRequest as jest.Mock) = mockTrackRequest;
     (metrics.trackDownload as jest.Mock) = mockTrackDownload;
@@ -66,172 +108,190 @@ describe('/api/v1/chains/[chainId]/download', () => {
     (logger.logRequest as jest.Mock) = mockLogRequest;
     (logger.logDownload as jest.Mock) = mockLogDownload;
     (bandwidthManager.bandwidthManager as any) = mockBandwidthManager;
-    (getIronSession as jest.Mock) = mockGetIronSession;
+    (auth as jest.Mock) = mockAuth;
+    (downloadTracker.checkDownloadAllowed as jest.Mock) = mockCheckDownloadAllowed;
+    (downloadTracker.incrementDailyDownload as jest.Mock) = mockIncrementDailyDownload;
+    (downloadTracker.logDownload as jest.Mock) = mockLogDownloadDb;
   });
 
   describe('POST', () => {
-    it('should generate download URL successfully', async () => {
+    it('should generate download URL for valid request', async () => {
       const request = new NextRequest('http://localhost:3000/api/v1/chains/cosmos-hub/download', {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-forwarded-for': '192.168.1.1',
+        },
         body: JSON.stringify({
-          snapshotId: 'snapshot-123',
-          email: 'user@example.com',
+          snapshotId: 'cosmos-hub-20250130.tar.lz4',
         }),
       });
-      const params = Promise.resolve({ chainId: 'cosmos-hub' });
       
-      const response = await POST(request, { params });
+      // Mock request.json() method
+      request.json = jest.fn().mockResolvedValue({
+        snapshotId: 'cosmos-hub-20250130.tar.lz4',
+      });
+
+      const response = await POST(request, { params: Promise.resolve({ chainId: 'cosmos-hub' }) });
       const data = await response.json();
 
       expect(response.status).toBe(200);
       expect(data.success).toBe(true);
-      expect(data.data.downloadUrl).toBe('https://minio.example.com/download-url');
+      expect(data.data.downloadUrl).toBe('https://snapshots.bryanlabs.net/download-url');
       expect(data.message).toBe('Download URL generated successfully');
     });
 
-    it('should validate request body', async () => {
+    it('should reject request when daily limit exceeded', async () => {
+      mockCheckDownloadAllowed.mockResolvedValue({
+        allowed: false,
+        remaining: 0,
+        limit: 5,
+        resetTime: new Date(Date.now() + 86400000), // Tomorrow
+      });
+
       const request = new NextRequest('http://localhost:3000/api/v1/chains/cosmos-hub/download', {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          // Missing snapshotId
-          email: 'user@example.com',
+          snapshotId: 'cosmos-hub-20250130.tar.lz4',
         }),
       });
-      const params = Promise.resolve({ chainId: 'cosmos-hub' });
       
-      const response = await POST(request, { params });
-      const data = await response.json();
-
-      expect(response.status).toBe(400);
-      expect(data.success).toBe(false);
-      expect(data.error).toBe('Invalid request');
-    });
-
-    it('should validate email format when provided', async () => {
-      const request = new NextRequest('http://localhost:3000/api/v1/chains/cosmos-hub/download', {
-        method: 'POST',
-        body: JSON.stringify({
-          snapshotId: 'snapshot-123',
-          email: 'invalid-email',
-        }),
+      // Mock request.json() method
+      request.json = jest.fn().mockResolvedValue({
+        snapshotId: 'cosmos-hub-20250130.tar.lz4',
       });
-      const params = Promise.resolve({ chainId: 'cosmos-hub' });
-      
-      const response = await POST(request, { params });
-      const data = await response.json();
 
-      expect(response.status).toBe(400);
-      expect(data.success).toBe(false);
-      expect(data.error).toBe('Invalid request');
-    });
-
-    it('should handle bandwidth limit exceeded', async () => {
-      mockBandwidthManager.hasExceededLimit.mockReturnValue(true);
-      
-      const request = new NextRequest('http://localhost:3000/api/v1/chains/cosmos-hub/download', {
-        method: 'POST',
-        body: JSON.stringify({
-          snapshotId: 'snapshot-123',
-        }),
-      });
-      const params = Promise.resolve({ chainId: 'cosmos-hub' });
-      
-      const response = await POST(request, { params });
+      const response = await POST(request, { params: Promise.resolve({ chainId: 'cosmos-hub' }) });
       const data = await response.json();
 
       expect(response.status).toBe(429);
       expect(data.success).toBe(false);
-      expect(data.error).toBe('Bandwidth limit exceeded');
-      expect(data.message).toBe('You have exceeded your monthly bandwidth limit');
+      expect(data.error).toContain('Daily download limit exceeded');
     });
 
-    it('should work without email', async () => {
+
+    it('should use premium tier for authenticated premium users', async () => {
+      // Update the auth mock for this test
+      (auth as jest.Mock).mockResolvedValue({
+        user: {
+          id: 'premium123',
+          email: 'premium@example.com',
+          tier: 'premium',
+        },
+      });
+
       const request = new NextRequest('http://localhost:3000/api/v1/chains/cosmos-hub/download', {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          snapshotId: 'snapshot-123',
+          snapshotId: 'cosmos-hub-20250130.tar.lz4',
         }),
       });
-      const params = Promise.resolve({ chainId: 'cosmos-hub' });
       
-      const response = await POST(request, { params });
+      // Mock request.json() method
+      request.json = jest.fn().mockResolvedValue({
+        snapshotId: 'cosmos-hub-20250130.tar.lz4',
+      });
+
+      const response = await POST(request, { params: Promise.resolve({ chainId: 'cosmos-hub' }) });
       const data = await response.json();
 
       expect(response.status).toBe(200);
-      expect(data.success).toBe(true);
-      expect(data.data.downloadUrl).toBe('https://minio.example.com/download-url');
-    });
-
-    it('should track download metrics', async () => {
-      const request = new NextRequest('http://localhost:3000/api/v1/chains/cosmos-hub/download', {
-        method: 'POST',
-        body: JSON.stringify({
-          snapshotId: 'snapshot-123',
-        }),
-      });
-      const params = Promise.resolve({ chainId: 'cosmos-hub' });
-      
-      await POST(request, { params });
-
-      expect(mockTrackDownload).toHaveBeenCalledWith('free', 'snapshot-123');
-      expect(mockLogDownload).toHaveBeenCalledWith('testuser', 'snapshot-123', 'free', true);
-    });
-
-    it('should start bandwidth connection tracking', async () => {
-      const request = new NextRequest('http://localhost:3000/api/v1/chains/cosmos-hub/download', {
-        method: 'POST',
-        body: JSON.stringify({
-          snapshotId: 'snapshot-123',
-        }),
-      });
-      const params = Promise.resolve({ chainId: 'cosmos-hub' });
-      
-      await POST(request, { params });
-
-      expect(mockBandwidthManager.startConnection).toHaveBeenCalledWith(
-        expect.stringContaining('testuser-snapshot-123-'),
-        'testuser',
-        'free'
+      expect(mockGenerateDownloadUrl).toHaveBeenCalledWith(
+        'cosmos-hub',
+        'cosmos-hub-20250130.tar.lz4',
+        'premium',
+        expect.any(String)
       );
     });
 
-    it('should handle anonymous users', async () => {
-      mockGetIronSession.mockResolvedValue(null);
+    it('should track metrics for successful download', async () => {
+      // Reset auth mock to free tier
+      (auth as jest.Mock).mockResolvedValue({
+        user: {
+          id: 'user123',
+          email: 'test@example.com',
+          tier: 'free',
+        },
+      });
       
       const request = new NextRequest('http://localhost:3000/api/v1/chains/cosmos-hub/download', {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          snapshotId: 'snapshot-123',
+          snapshotId: 'cosmos-hub-20250130.tar.lz4',
         }),
       });
-      const params = Promise.resolve({ chainId: 'cosmos-hub' });
       
-      const response = await POST(request, { params });
-      const data = await response.json();
+      // Mock request.json() method
+      request.json = jest.fn().mockResolvedValue({
+        snapshotId: 'cosmos-hub-20250130.tar.lz4',
+      });
 
-      expect(response.status).toBe(200);
-      expect(data.success).toBe(true);
-      expect(mockBandwidthManager.hasExceededLimit).toHaveBeenCalledWith('anonymous', 'free');
+      await POST(request, { params: Promise.resolve({ chainId: 'cosmos-hub' }) });
+
+      expect(mockTrackRequest).toHaveBeenCalledWith('POST', '/api/v1/chains/[chainId]/download', 200);
+      expect(mockTrackDownload).toHaveBeenCalledWith('free', 'cosmos-hub-20250130.tar.lz4');
+      expect(mockLogDownload).toHaveBeenCalled();
+      expect(mockLogDownloadDb).toHaveBeenCalled();
     });
 
-    it('should handle errors gracefully', async () => {
-      mockGetPresignedUrl.mockRejectedValue(new Error('MinIO connection failed'));
+    it('should handle invalid request body', async () => {
+      const request = new NextRequest('http://localhost:3000/api/v1/chains/cosmos-hub/download', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          // Missing required snapshotId
+        }),
+      });
+      
+      // Mock request.json() method
+      request.json = jest.fn().mockResolvedValue({
+        // Missing required snapshotId
+      });
+
+      const response = await POST(request, { params: Promise.resolve({ chainId: 'cosmos-hub' }) });
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.success).toBe(false);
+      expect(data.error).toContain('Invalid request');
+    });
+
+    it('should extract client IP from headers correctly', async () => {
+      // Reset auth mock to free tier
+      (auth as jest.Mock).mockResolvedValue({
+        user: {
+          id: 'user123',
+          email: 'test@example.com',
+          tier: 'free',
+        },
+      });
       
       const request = new NextRequest('http://localhost:3000/api/v1/chains/cosmos-hub/download', {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-forwarded-for': '192.168.1.1, 10.0.0.1',
+        },
         body: JSON.stringify({
-          snapshotId: 'snapshot-123',
+          snapshotId: 'cosmos-hub-20250130.tar.lz4',
         }),
       });
-      const params = Promise.resolve({ chainId: 'cosmos-hub' });
       
-      const response = await POST(request, { params });
-      const data = await response.json();
+      // Mock request.json() method
+      request.json = jest.fn().mockResolvedValue({
+        snapshotId: 'cosmos-hub-20250130.tar.lz4',
+      });
 
-      expect(response.status).toBe(500);
-      expect(data.success).toBe(false);
-      expect(data.error).toBe('Failed to generate download URL');
-      expect(data.message).toBe('MinIO connection failed');
+      await POST(request, { params: Promise.resolve({ chainId: 'cosmos-hub' }) });
+
+      expect(mockCheckDownloadAllowed).toHaveBeenCalledWith(
+        '192.168.1.1',
+        'free',
+        expect.any(Number)
+      );
     });
   });
 });

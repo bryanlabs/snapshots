@@ -1,0 +1,294 @@
+==========================================
+Snapshots Service API Test Suite
+Base URL: http://localhost:3000
+==========================================
+
+=== Testing Public API (v1) ===
+[1;33m→ Testing: List all chains[0m
+[0;32m✓ List all chains (HTTP 200)[0m
+[1;39m{
+  [0m[1;34m"success"[0m[1;39m: [0m[0;39mtrue[0m[1;39m,
+  [0m[1;34m"data"[0m[1;39m: [0m[1;39m[
+    [1;39m{
+      [0m[1;34m"id"[0m[1;39m: [0m[0;32m"agoric-3"[0m[1;39m,
+      [0m[1;34m"name"[0m[1;39m: [0m[0;32m"Agoric"[0m[1;39m,
+      [0m[1;34m"network"[0m[1;39m: [0m[0;32m"agoric-3"[0m[1;39m,
+      [0m[1;34m"logoUrl"[0m[1;39m: [0m[0;32m"/chains/agoric.png"[0m[1;39m,
+      [0m[1;34m"accentColor"[0m[1;39m: [0m[0;32m"#DB2777"[0m[1;39m,
+      [0m[1;34m"snapshotCount"[0m[1;39m: [0m[0;39m0[0m[1;39m
+    [1;39m}[0m[1;39m,
+    [1;39m{
+      [0m[1;34m"id"[0m[1;39m: [0m[0;32m"columbus-5"[0m[1;39m,
+      [0m[1;34m"name"[0m[1;39m: [0m[0;32m"Terra Classic"[0m[1;39m,
+      [0m[1;34m"network"[0m[1;39m: [0m[0;32m"columbus-5"[0m[1;39m,
+      [0m[1;34m"logoUrl"[0m[1;39m: [0m[0;32m"/chains/terra.png"[0m[1;39m,
+      [0m[1;34m"accentColor"[0m[1;39m: [0m[0;32m"#FF6B6B"[0m[1;39m,
+      [0m[1;34m"snapshotCount"[0m[1;39m: [0m[0;39m0[0m[1;39m
+    [1;39m}[0m[1;39m,
+    [1;39m{
+      [0m[1;34m"id"[0m[1;39m: [0m[0;32m"cosmoshub-4"[0m[1;39m,
+      [0m[1;34m"name"[0m[1;39m: [0m[0;32m"Cosmos Hub"[0m[1;39m,
+      [0m[1;34m"network"[0m[1;39m: [0m[0;32m"cosmoshub-4"[0m[1;39m,
+      [0m[1;34m"logoUrl"[0m[1;39m: [0m[0;32m"/chains/cosmos.png"[0m[1;39m,
+      [0m[1;34m"accentColor"[0m[1;39m: [0m[0;32m"#5E72E4"[0m[1;39m,
+      [0m[1;34m"snapshotCount"[0m[1;39m: [0m[0;39m0[0m[1;39m
+    [1;39m}[0m[1;39m,
+    [1;39m{
+      [0m[1;34m"id"[0m[1;39m: [0m[0;32m"kaiyo-1"[0m[1;39m,
+      [0m[1;34m"name"[0m[1;39m: [0m[0;32m"Kujira"[0m[1;39m,
+      [0m[1;34m"network"[0m[1;39m: [0m[0;32m"kaiyo-1"[0m[1;39m,
+      [0m[1;34m"logoUrl"[0m[1;39m: [0m[0;32m"/chains/kujira.png"[0m[1;39m,
+      [0m[1;34m"accentColor"[0m[1;39m: [0m[0;32m"#DC3545"[0m[1;39m,
+      [0m[1;34m"snapshotCount"[0m[1;39m: [0m[0;39m0[0m[1;39m
+    [1;39m}[0m[1;39m,
+    [1;39m{
+      [0m[1;34m"id"[0m[1;39m: [0m[0;32m"noble-1"[0m[1;39m,
+      [0m[1;34m"name"[0m[1;39m: [0m[0;32m"Noble"[0m[1;39m,
+      [0m[1;34m"network"[0m[1;39m: [0m[0;32m"noble-1"[0m[1;39m,
+      [0m[1;34m"logoUrl"[0m[1;39m: [0m[0;32m"/chains/noble.png"[0m[1;39m,
+      [0m[1;34m"accentColor"[0m[1;39m: [0m[0;32m"#FFB800"[0m[1;39m,
+      [0m[1;34m"snapshotCount"[0m[1;39m: [0m[0;39m1[0m[1;39m,
+      [0m[1;34m"latestSnapshot"[0m[1;39m: [0m[1;39m{
+        [0m[1;34m"size"[0m[1;39m: [0m[0;39m1620600176[0m[1;39m,
+        [0m[1;34m"lastModified"[0m[1;39m: [0m[0;32m"2025-07-30T02:21:33.000Z"[0m[1;39m,
+        [0m[1;34m"compressionType"[0m[1;39m: [0m[0;32m"zst"[0m[1;39m
+      [1;39m}[0m[1;39m
+    [1;39m}[0m[1;39m,
+    [1;39m{
+      [0m[1;34m"id"[0m[1;39m: [0m[0;32m"osmosis-1"[0m[1;39m,
+      [0m[1;34m"name"[0m[1;39m: [0m[0;32m"Osmosis"[0m[1;39m,
+      [0m[1;34m"network"[0m[1;39m: [0m[0;32m"osmosis-1"[0m[1;39m,
+      [0m[1;34m"logoUrl"[0m[1;39m: [0m[0;32m"/chains/osmosis.png"[0m[1;39m,
+      [0m[1;34m"accentColor"[0m[1;39m: [0m[0;32m"#9945FF"[0m[1;39m,
+      [0m[1;34m"snapshotCount"[0m[1;39m: [0m[0;39m0[0m[1;39m
+    [1;39m}[0m[1;39m,
+    [1;39m{
+      [0m[1;34m"id"[0m[1;39m: [0m[0;32m"phoenix-1"[0m[1;39m,
+      [0m[1;34m"name"[0m[1;39m: [0m[0;32m"Terra"[0m[1;39m,
+      [0m[1;34m"network"[0m[1;39m: [0m[0;32m"phoenix-1"[0m[1;39m,
+      [0m[1;34m"logoUrl"[0m[1;39m: [0m[0;32m"/chains/terra2.png"[0m[1;39m,
+      [0m[1;34m"accentColor"[0m[1;39m: [0m[0;32m"#FF6B6B"[0m[1;39m,
+      [0m[1;34m"snapshotCount"[0m[1;39m: [0m[0;39m0[0m[1;39m
+    [1;39m}[0m[1;39m,
+    [1;39m{
+      [0m[1;34m"id"[0m[1;39m: [0m[0;32m"thorchain-1"[0m[1;39m,
+      [0m[1;34m"name"[0m[1;39m: [0m[0;32m"THORChain"[0m[1;39m,
+      [0m[1;34m"network"[0m[1;39m: [0m[0;32m"thorchain-1"[0m[1;39m,
+      [0m[1;34m"logoUrl"[0m[1;39m: [0m[0;32m"/chains/thorchain.png"[0m[1;39m,
+      [0m[1;34m"accentColor"[0m[1;39m: [0m[0;32m"#00D4AA"[0m[1;39m,
+      [0m[1;34m"snapshotCount"[0m[1;39m: [0m[0;39m0[0m[1;39m
+    [1;39m}[0m[1;39m
+  [1;39m][0m[1;39m
+[1;39m}[0m
+
+[1;33m→ Testing: Get specific chain[0m
+[0;31m✗ Get specific chain (HTTP 404)[0m
+[1;39m{
+  [0m[1;34m"success"[0m[1;39m: [0m[0;39mfalse[0m[1;39m,
+  [0m[1;34m"error"[0m[1;39m: [0m[0;32m"Chain not found"[0m[1;39m,
+  [0m[1;34m"message"[0m[1;39m: [0m[0;32m"Chain with ID noble-1 not found"[0m[1;39m
+[1;39m}[0m
+
+[1;33m→ Testing: Get chain info[0m
+[0;32m✓ Get chain info (HTTP 200)[0m
+[1;39m{
+  [0m[1;34m"success"[0m[1;39m: [0m[0;39mtrue[0m[1;39m,
+  [0m[1;34m"data"[0m[1;39m: [0m[1;39m{
+    [0m[1;34m"chain_id"[0m[1;39m: [0m[0;32m"noble-1"[0m[1;39m,
+    [0m[1;34m"latest_snapshot"[0m[1;39m: [0m[1;39m{
+      [0m[1;34m"height"[0m[1;39m: [0m[0;39m22059[0m[1;39m,
+      [0m[1;34m"size"[0m[1;39m: [0m[0;39m1620600176[0m[1;39m,
+      [0m[1;34m"age_hours"[0m[1;39m: [0m[0;39m1[0m[1;39m
+    [1;39m}[0m[1;39m,
+    [0m[1;34m"snapshot_schedule"[0m[1;39m: [0m[0;32m"every 6 hours"[0m[1;39m,
+    [0m[1;34m"average_size"[0m[1;39m: [0m[0;39m1620600176[0m[1;39m,
+    [0m[1;34m"compression_ratio"[0m[1;39m: [0m[0;39m0.3[0m[1;39m
+  [1;39m}[0m[1;39m
+[1;39m}[0m
+
+[1;33m→ Testing: List snapshots[0m
+[0;32m✓ List snapshots (HTTP 200)[0m
+[1;39m{
+  [0m[1;34m"success"[0m[1;39m: [0m[0;39mtrue[0m[1;39m,
+  [0m[1;34m"data"[0m[1;39m: [0m[1;39m[
+    [1;39m{
+      [0m[1;34m"id"[0m[1;39m: [0m[0;32m"noble-1-snapshot-0"[0m[1;39m,
+      [0m[1;34m"chainId"[0m[1;39m: [0m[0;32m"noble-1"[0m[1;39m,
+      [0m[1;34m"height"[0m[1;39m: [0m[0;39m22059[0m[1;39m,
+      [0m[1;34m"size"[0m[1;39m: [0m[0;39m1620600176[0m[1;39m,
+      [0m[1;34m"fileName"[0m[1;39m: [0m[0;32m"noble-1-20250730-022059.tar.zst"[0m[1;39m,
+      [0m[1;34m"createdAt"[0m[1;39m: [0m[0;32m"2025-07-30T02:21:33.000Z"[0m[1;39m,
+      [0m[1;34m"updatedAt"[0m[1;39m: [0m[0;32m"2025-07-30T02:21:33.000Z"[0m[1;39m,
+      [0m[1;34m"type"[0m[1;39m: [0m[0;32m"pruned"[0m[1;39m,
+      [0m[1;34m"compressionType"[0m[1;39m: [0m[0;32m"zst"[0m[1;39m
+    [1;39m}[0m[1;39m
+  [1;39m][0m[1;39m
+[1;39m}[0m
+
+[1;33m→ Testing: Get latest snapshot[0m
+[0;32m✓ Get latest snapshot (HTTP 200)[0m
+[1;39m{
+  [0m[1;34m"success"[0m[1;39m: [0m[0;39mtrue[0m[1;39m,
+  [0m[1;34m"data"[0m[1;39m: [0m[1;39m{
+    [0m[1;34m"chain_id"[0m[1;39m: [0m[0;32m"noble-1"[0m[1;39m,
+    [0m[1;34m"height"[0m[1;39m: [0m[0;39m22059[0m[1;39m,
+    [0m[1;34m"size"[0m[1;39m: [0m[0;39m1620600176[0m[1;39m,
+    [0m[1;34m"compression"[0m[1;39m: [0m[0;32m"zst"[0m[1;39m,
+    [0m[1;34m"url"[0m[1;39m: [0m[0;32m"https://snaps.bryanlabs.net/snapshots/noble-1/noble-1-20250730-022059.tar.zst?md5=_8U6fhmohmsh8-6Q2vJYRg&expires=1753889864&tier=free"[0m[1;39m,
+    [0m[1;34m"expires_at"[0m[1;39m: [0m[0;32m"2025-07-30T04:37:44.267Z"[0m[1;39m,
+    [0m[1;34m"tier"[0m[1;39m: [0m[0;32m"free"[0m[1;39m
+  [1;39m}[0m[1;39m,
+  [0m[1;34m"message"[0m[1;39m: [0m[0;32m"Latest snapshot URL generated successfully"[0m[1;39m
+[1;39m}[0m
+
+[1;33m→ Getting latest snapshot filename...[0m
+[0;32m✓ Latest snapshot: null[0m
+[1;33m→ Testing: Request download URL (anonymous)[0m
+[0;31m✗ Request download URL (anonymous) (HTTP 400)[0m
+[1;39m{
+  [0m[1;34m"success"[0m[1;39m: [0m[0;39mfalse[0m[1;39m,
+  [0m[1;34m"error"[0m[1;39m: [0m[0;32m"Invalid request"[0m[1;39m,
+  [0m[1;34m"message"[0m[1;39m: [0m[0;32m"Required"[0m[1;39m
+[1;39m}[0m
+
+
+=== Testing Legacy Authentication ===
+[1;33m→ Testing legacy login...[0m
+[0;31m✗ Legacy login failed[0m
+
+=== Testing NextAuth Authentication ===
+[1;33m→ Getting CSRF token...[0m
+[0;32m✓ CSRF token obtained[0m
+[1;33m→ Testing: Get session (unauthenticated)[0m
+[0;32m✓ Get session (unauthenticated) (HTTP 200)[0m
+[0;90mnull[0m
+
+[1;33m→ Testing: List auth providers[0m
+[0;32m✓ List auth providers (HTTP 200)[0m
+[1;39m{
+  [0m[1;34m"credentials"[0m[1;39m: [0m[1;39m{
+    [0m[1;34m"id"[0m[1;39m: [0m[0;32m"credentials"[0m[1;39m,
+    [0m[1;34m"name"[0m[1;39m: [0m[0;32m"Email and Password"[0m[1;39m,
+    [0m[1;34m"type"[0m[1;39m: [0m[0;32m"credentials"[0m[1;39m,
+    [0m[1;34m"signinUrl"[0m[1;39m: [0m[0;32m"https://snapshots.bryanlabs.net/api/auth/signin/credentials"[0m[1;39m,
+    [0m[1;34m"callbackUrl"[0m[1;39m: [0m[0;32m"https://snapshots.bryanlabs.net/api/auth/callback/credentials"[0m[1;39m
+  [1;39m}[0m[1;39m,
+  [0m[1;34m"wallet"[0m[1;39m: [0m[1;39m{
+    [0m[1;34m"id"[0m[1;39m: [0m[0;32m"wallet"[0m[1;39m,
+    [0m[1;34m"name"[0m[1;39m: [0m[0;32m"Keplr Wallet"[0m[1;39m,
+    [0m[1;34m"type"[0m[1;39m: [0m[0;32m"credentials"[0m[1;39m,
+    [0m[1;34m"signinUrl"[0m[1;39m: [0m[0;32m"https://snapshots.bryanlabs.net/api/auth/signin/wallet"[0m[1;39m,
+    [0m[1;34m"callbackUrl"[0m[1;39m: [0m[0;32m"https://snapshots.bryanlabs.net/api/auth/callback/wallet"[0m[1;39m
+  [1;39m}[0m[1;39m
+[1;39m}[0m
+
+
+=== Testing System Endpoints ===
+[1;33m→ Testing: Health check[0m
+[0;32m✓ Health check (HTTP 200)[0m
+[1;39m{
+  [0m[1;34m"success"[0m[1;39m: [0m[0;39mtrue[0m[1;39m,
+  [0m[1;34m"data"[0m[1;39m: [0m[1;39m{
+    [0m[1;34m"status"[0m[1;39m: [0m[0;32m"healthy"[0m[1;39m,
+    [0m[1;34m"timestamp"[0m[1;39m: [0m[0;32m"2025-07-30T03:37:44.758Z"[0m[1;39m,
+    [0m[1;34m"services"[0m[1;39m: [0m[1;39m{
+      [0m[1;34m"database"[0m[1;39m: [0m[0;39mtrue[0m[1;39m,
+      [0m[1;34m"minio"[0m[1;39m: [0m[0;39mtrue[0m[1;39m
+    [1;39m}[0m[1;39m
+  [1;39m}[0m[1;39m
+[1;39m}[0m
+
+[1;33m→ Testing: Bandwidth status[0m
+[0;32m✓ Bandwidth status (HTTP 200)[0m
+[1;39m{
+  [0m[1;34m"tier"[0m[1;39m: [0m[0;32m"free"[0m[1;39m,
+  [0m[1;34m"currentSpeed"[0m[1;39m: [0m[0;39m0[0m[1;39m,
+  [0m[1;34m"maxSpeed"[0m[1;39m: [0m[0;39m50[0m[1;39m,
+  [0m[1;34m"activeConnections"[0m[1;39m: [0m[0;39m0[0m[1;39m,
+  [0m[1;34m"totalActiveConnections"[0m[1;39m: [0m[0;39m0[0m[1;39m
+[1;39m}[0m
+
+[1;33m→ Testing: Download status (anonymous)[0m
+[0;32m✓ Download status (anonymous) (HTTP 200)[0m
+[1;39m{
+  [0m[1;34m"success"[0m[1;39m: [0m[0;39mtrue[0m[1;39m,
+  [0m[1;34m"data"[0m[1;39m: [0m[1;39m{
+    [0m[1;34m"allowed"[0m[1;39m: [0m[0;39mtrue[0m[1;39m,
+    [0m[1;34m"remaining"[0m[1;39m: [0m[0;39m5[0m[1;39m,
+    [0m[1;34m"limit"[0m[1;39m: [0m[0;39m5[0m[1;39m,
+    [0m[1;34m"resetTime"[0m[1;39m: [0m[0;32m"2025-07-31T00:00:00.000Z"[0m[1;39m,
+    [0m[1;34m"tier"[0m[1;39m: [0m[0;32m"free"[0m[1;39m
+  [1;39m}[0m[1;39m
+[1;39m}[0m
+
+
+=== Testing Account Endpoints ===
+[1;33m→ Testing: Get avatar (should fail without auth)[0m
+[0;31m✗ Get avatar (should fail without auth) (HTTP 405)[0m
+
+
+=== Testing Admin Endpoints ===
+[1;33m→ Testing: Admin stats (should fail without admin)[0m
+[0;31m✗ Admin stats (should fail without admin) (HTTP 401)[0m
+[1;39m{
+  [0m[1;34m"error"[0m[1;39m: [0m[0;32m"Unauthorized"[0m[1;39m
+[1;39m}[0m
+
+[1;33m→ Testing: Download analytics (should fail without admin)[0m
+[0;31m✗ Download analytics (should fail without admin) (HTTP 401)[0m
+[1;39m{
+  [0m[1;34m"success"[0m[1;39m: [0m[0;39mfalse[0m[1;39m,
+  [0m[1;34m"error"[0m[1;39m: [0m[0;32m"Unauthorized"[0m[1;39m,
+  [0m[1;34m"message"[0m[1;39m: [0m[0;32m"Admin access required"[0m[1;39m
+[1;39m}[0m
+
+
+=== Testing Error Handling ===
+[1;33m→ Testing: Invalid chain (should 404)[0m
+[0;31m✗ Invalid chain (should 404) (HTTP 404)[0m
+[1;39m{
+  [0m[1;34m"success"[0m[1;39m: [0m[0;39mfalse[0m[1;39m,
+  [0m[1;34m"error"[0m[1;39m: [0m[0;32m"Chain not found"[0m[1;39m,
+  [0m[1;34m"message"[0m[1;39m: [0m[0;32m"Chain with ID invalid-chain not found"[0m[1;39m
+[1;39m}[0m
+
+[1;33m→ Testing: Download with invalid filename[0m
+[0;31m✗ Download with invalid filename (HTTP 400)[0m
+[1;39m{
+  [0m[1;34m"success"[0m[1;39m: [0m[0;39mfalse[0m[1;39m,
+  [0m[1;34m"error"[0m[1;39m: [0m[0;32m"Invalid request"[0m[1;39m,
+  [0m[1;34m"message"[0m[1;39m: [0m[0;32m"Required"[0m[1;39m
+[1;39m}[0m
+
+[1;33m→ Testing: Invalid query parameter[0m
+[0;32m✓ Invalid query parameter (HTTP 200)[0m
+[1;39m{
+  [0m[1;34m"success"[0m[1;39m: [0m[0;39mtrue[0m[1;39m,
+  [0m[1;34m"data"[0m[1;39m: [0m[1;39m[
+    [1;39m{
+      [0m[1;34m"id"[0m[1;39m: [0m[0;32m"noble-1-snapshot-0"[0m[1;39m,
+      [0m[1;34m"chainId"[0m[1;39m: [0m[0;32m"noble-1"[0m[1;39m,
+      [0m[1;34m"height"[0m[1;39m: [0m[0;39m22059[0m[1;39m,
+      [0m[1;34m"size"[0m[1;39m: [0m[0;39m1620600176[0m[1;39m,
+      [0m[1;34m"fileName"[0m[1;39m: [0m[0;32m"noble-1-20250730-022059.tar.zst"[0m[1;39m,
+      [0m[1;34m"createdAt"[0m[1;39m: [0m[0;32m"2025-07-30T02:21:33.000Z"[0m[1;39m,
+      [0m[1;34m"updatedAt"[0m[1;39m: [0m[0;32m"2025-07-30T02:21:33.000Z"[0m[1;39m,
+      [0m[1;34m"type"[0m[1;39m: [0m[0;32m"pruned"[0m[1;39m,
+      [0m[1;34m"compressionType"[0m[1;39m: [0m[0;32m"zst"[0m[1;39m
+    [1;39m}[0m[1;39m
+  [1;39m][0m[1;39m
+[1;39m}[0m
+
+
+=== Testing Rate Limiting ===
+[1;33m→ Making rapid requests to test rate limiting...[0m
+
+==========================================
+API Test Suite Complete
+==========================================
+
+Next steps:
+1. Review any failed tests above
+2. Run this script after implementing changes
+3. Compare results to ensure no regressions
+4. Add new tests for any new endpoints

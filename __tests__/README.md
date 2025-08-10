@@ -76,8 +76,8 @@ The test suite aims for:
 ## Mocking Strategy
 
 ### API Routes
-- MinIO client is mocked to avoid external dependencies
-- Session management is mocked using jest mocks
+- Nginx client is mocked to avoid external dependencies
+- NextAuth session management is mocked using jest mocks
 - Monitoring metrics are mocked to prevent side effects
 
 ### Components
@@ -87,7 +87,7 @@ The test suite aims for:
 
 ### Integration Tests
 - End-to-end flows are tested with minimal mocking
-- Only external services (MinIO, metrics) are mocked
+- Only external services (nginx, Redis, metrics) are mocked
 
 ## Writing New Tests
 

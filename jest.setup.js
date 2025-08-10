@@ -1,57 +1,67 @@
+// Setup global mocks for tests
 import '@testing-library/jest-dom'
 
-// Mock environment variables
-process.env.MINIO_ENDPOINT = 'localhost'
-process.env.MINIO_PORT = '9000'
-process.env.MINIO_ACCESS_KEY = 'test-access-key'
-process.env.MINIO_SECRET_KEY = 'test-secret-key'
-process.env.MINIO_BUCKET = 'test-bucket'
-process.env.MINIO_USE_SSL = 'false'
-process.env.SESSION_SECRET = 'test-session-secret-32-characters-long'
-process.env.ADMIN_PASSWORD_HASH = '$2a$10$test-hashed-password'
-process.env.RATE_LIMIT_WINDOW = '60000'
-process.env.RATE_LIMIT_MAX_REQUESTS = '100'
-process.env.BANDWIDTH_LIMIT_MONTHLY_GB = '1000'
-process.env.BANDWIDTH_LIMIT_DAILY_GB = '100'
-process.env.BANDWIDTH_LIMIT_RATE_LIMIT_MB = '100'
+// Mock setImmediate if not available
+if (typeof global.setImmediate === 'undefined') {
+  global.setImmediate = (fn, ...args) => {
+    return setTimeout(fn, 0, ...args);
+  };
+}
 
-// Mock fetch for tests
-global.fetch = jest.fn()
+// Mock performance API
+if (typeof global.performance === 'undefined') {
+  global.performance = {
+    now: () => Date.now(),
+    mark: jest.fn(),
+    measure: jest.fn(),
+    getEntriesByType: jest.fn(() => []),
+    getEntriesByName: jest.fn(() => []),
+    clearMarks: jest.fn(),
+    clearMeasures: jest.fn(),
+    clearResourceTimings: jest.fn(),
+    setResourceTimingBufferSize: jest.fn(),
+    addEventListener: jest.fn(),
+    removeEventListener: jest.fn(),
+    dispatchEvent: jest.fn(() => true),
+    navigation: {
+      type: 0,
+      redirectCount: 0,
+    },
+    timing: {},
+    timeOrigin: Date.now(),
+    onresourcetimingbufferfull: null,
+    toJSON: () => ({}),
+  };
+}
 
-// Mock Next.js router
-jest.mock('next/navigation', () => ({
-  useRouter() {
-    return {
-      push: jest.fn(),
-      replace: jest.fn(),
-      prefetch: jest.fn(),
-      back: jest.fn(),
-      pathname: '/',
-      query: {},
-    }
-  },
-  useSearchParams() {
-    return new URLSearchParams()
-  },
-  usePathname() {
-    return '/'
-  },
-}))
+// Mock PerformanceObserver
+if (typeof global.PerformanceObserver === 'undefined') {
+  global.PerformanceObserver = jest.fn().mockImplementation(() => ({
+    observe: jest.fn(),
+    disconnect: jest.fn(),
+    takeRecords: jest.fn(() => []),
+  }));
+  
+  global.PerformanceObserver.supportedEntryTypes = [
+    'navigation',
+    'resource',
+    'paint',
+    'first-input',
+    'layout-shift',
+    'largest-contentful-paint',
+    'element',
+  ];
+}
 
-// Silence console errors during tests unless explicitly needed
-const originalError = console.error
-beforeAll(() => {
-  console.error = (...args) => {
-    if (
-      typeof args[0] === 'string' &&
-      args[0].includes('Warning: ReactDOMTestUtils.act')
-    ) {
-      return
-    }
-    originalError.call(console, ...args)
-  }
-})
+// Ensure fetch is available
+if (typeof global.fetch === 'undefined') {
+  global.fetch = jest.fn();
+}
 
-afterAll(() => {
-  console.error = originalError
-})
+// Ensure navigator.sendBeacon is available
+if (typeof navigator.sendBeacon === 'undefined') {
+  Object.defineProperty(navigator, 'sendBeacon', {
+    value: jest.fn(),
+    writable: true,
+  });
+}

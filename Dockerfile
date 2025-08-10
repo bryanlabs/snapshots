@@ -15,6 +15,9 @@ RUN npm ci --legacy-peer-deps
 # Copy source code
 COPY . .
 
+# Generate Prisma client
+RUN npx prisma generate
+
 # Build the application
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
@@ -22,7 +25,12 @@ RUN npm run build
 # Production stage
 FROM node:20-alpine AS runner
 
+LABEL org.opencontainers.image.source=https://github.com/bryanlabs/snapshots
+
 WORKDIR /app
+
+# Install SQLite for database initialization
+RUN apk add --no-cache sqlite
 
 # Add non-root user
 RUN addgroup -g 1001 -S nodejs
@@ -32,9 +40,20 @@ RUN adduser -S nextjs -u 1001
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
+COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
+COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
+COPY --from=builder /app/node_modules/.bin ./node_modules/.bin
+COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/scripts ./scripts
+
+# Create avatars directory
+RUN mkdir -p /app/public/avatars
 
 # Set permissions
 RUN chown -R nextjs:nodejs /app
+RUN chmod +x /app/scripts/init-db.sh
+RUN chmod +x /app/scripts/init-db-proper.sh
 
 USER nextjs
 
@@ -51,5 +70,5 @@ ENV PORT=3000
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD node -e "require('http').get('http://localhost:3000/api/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1); })"
 
-# Start the application
-CMD ["node", "server.js"]
+# Start the application with initialization
+CMD ["/app/scripts/init-db-proper.sh"]

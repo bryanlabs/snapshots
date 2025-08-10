@@ -1,27 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { bandwidthManager } from '@/lib/bandwidth/manager';
 import { register } from '@/lib/monitoring/metrics';
-import { getIronSession } from 'iron-session';
-import { User } from '@/types/user';
-import { sessionOptions } from '@/lib/session';
-import { cookies } from 'next/headers';
+import { withAdminAuth } from '@/lib/auth/admin-middleware';
 
 /**
  * Admin endpoint to view system statistics
  * Requires admin authentication
  */
-async function handleGetStats(request: NextRequest) {
-  // Check authentication
-  const cookieStore = await cookies();
-  const session = await getIronSession<User>(cookieStore, sessionOptions);
-  
-  // For now, just check if logged in - you might want to add admin role check
-  if (!session?.isLoggedIn) {
-    return NextResponse.json(
-      { error: 'Unauthorized' },
-      { status: 401 }
-    );
-  }
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+async function handleGetStats(_request: NextRequest) {
   
   try {
     // Get bandwidth statistics
@@ -52,9 +39,9 @@ async function handleGetStats(request: NextRequest) {
 }
 
 // Helper function to parse Prometheus metrics into JSON
-function parseMetrics(metricsText: string): Record<string, any> {
+function parseMetrics(metricsText: string): Record<string, unknown> {
   const lines = metricsText.split('\n');
-  const metrics: Record<string, any> = {};
+  const metrics: Record<string, unknown> = {};
   
   for (const line of lines) {
     if (line.startsWith('#') || !line.trim()) continue;
@@ -75,4 +62,4 @@ function parseMetrics(metricsText: string): Record<string, any> {
   return metrics;
 }
 
-export const GET = handleGetStats;
+export const GET = withAdminAuth(handleGetStats);

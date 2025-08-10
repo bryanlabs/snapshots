@@ -1,22 +1,108 @@
+'use client';
+
 import Link from 'next/link';
 import Image from 'next/image';
+import { motion } from 'framer-motion';
+import { useRouter } from 'next/navigation';
 import { Chain } from '@/lib/types';
+import { formatTimeAgo, formatBytes, formatExactDateTime, calculateNextUpdateTime } from '@/lib/utils';
+import { CountdownTimer } from './CountdownTimer';
+import { Tooltip } from '@/components/common';
+import { QuickActionsMenu } from './QuickActionsMenu';
 
 interface ChainCardProps {
   chain: Chain;
 }
 
 export function ChainCard({ chain }: ChainCardProps) {
-  const snapshotCount = chain.snapshots?.length || 0;
-  const latestSnapshot = chain.snapshots?.[0];
+  const router = useRouter();
+  const snapshotCount = chain.snapshotCount || chain.snapshots?.length || 0;
+  const accentColor = chain.accentColor || '#3b82f6';
+
+  // Calculate progress for mini progress bar
+  const calculateProgress = () => {
+    if (!chain.latestSnapshot) return 0;
+    const lastUpdateTime = new Date(chain.latestSnapshot.lastModified).getTime();
+    const now = Date.now();
+    const timeSinceUpdate = now - lastUpdateTime;
+    const updateInterval = 6 * 60 * 60 * 1000; // 6 hours
+    const progress = Math.min((timeSinceUpdate / updateInterval) * 100, 100);
+    return progress;
+  };
+
+  const progress = calculateProgress();
+
+  // Calculate total size of all snapshots
+  const totalSize = chain.snapshots?.reduce((total, snapshot) => total + snapshot.size, 0) || 0;
+
+  const handleSnapshotCountClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    router.push(`/chains/${chain.id}`);
+  };
 
   return (
     <Link href={`/chains/${chain.id}`}>
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 p-6 cursor-pointer border border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-400">
-        <div className="flex items-start justify-between mb-4">
+      <motion.div 
+        className="relative bg-card backdrop-blur-sm rounded-lg shadow-lg hover:shadow-2xl transition-all duration-300 p-4 cursor-pointer border border-border overflow-hidden group"
+        style={{
+          '--chain-accent': accentColor,
+          boxShadow: `0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06), 0 0 0 1px ${accentColor}10`,
+        } as React.CSSProperties}
+        whileHover={{ 
+          y: -4,
+          boxShadow: `0 20px 25px -5px ${accentColor}20, 0 10px 10px -5px ${accentColor}10, 0 0 0 1px ${accentColor}30`
+        }}
+        transition={{ duration: 0.2 }}
+      >
+        {/* Glassmorphism overlay on hover */}
+        <div 
+          className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg"
+          style={{
+            background: `linear-gradient(135deg, ${accentColor}10 0%, transparent 50%)`,
+            backdropFilter: 'blur(8px)',
+          }}
+        />
+        
+        {/* Colored border on hover */}
+        <div 
+          className="absolute inset-0 rounded-lg pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+          style={{
+            boxShadow: `inset 0 0 0 1px ${accentColor}50`,
+          }}
+        />
+
+        {/* Progress bar at bottom */}
+        <Tooltip 
+          content={`${Math.round(progress)}% until next update`}
+          position="top"
+          className="w-full"
+        >
+          <div className="absolute bottom-0 left-0 right-0 h-1 bg-muted">
+          <motion.div
+            className="h-full rounded-r-full"
+            style={{ 
+              backgroundColor: accentColor,
+              width: `${progress}%`
+            }}
+            initial={{ width: 0 }}
+            animate={{ width: `${progress}%` }}
+            transition={{ duration: 1, ease: "easeOut" }}
+          />
+          </div>
+        </Tooltip>
+        
+        <div className="relative z-10">
+        <div className="flex items-start justify-between mb-3">
           <div className="flex items-center space-x-3">
             {chain.logoUrl && (
-              <div className="relative w-12 h-12 flex-shrink-0">
+              <Tooltip content={chain.name} position="top">
+              <div 
+                className="relative w-14 h-14 flex-shrink-0 rounded-full overflow-hidden"
+                style={{
+                  boxShadow: `0 0 20px ${accentColor}20`,
+                }}
+              >
                 <Image
                   src={chain.logoUrl}
                   alt={`${chain.name} logo`}
@@ -24,53 +110,93 @@ export function ChainCard({ chain }: ChainCardProps) {
                   className="object-contain rounded-full"
                 />
               </div>
+              </Tooltip>
             )}
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+              <h3 className="text-base font-semibold text-card-foreground">
                 {chain.name}
               </h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
+              <p className="text-xs text-muted-foreground">
                 {chain.network}
               </p>
             </div>
           </div>
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-            Active
-          </span>
+          <div onClick={(e) => e.preventDefault()}>
+            <QuickActionsMenu chain={chain} />
+          </div>
         </div>
 
-        {chain.description && (
-          <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
-            {chain.description}
-          </p>
-        )}
+        {/* Standardized two-row structure for consistent card height */}
+        <div className="space-y-2 mb-3 min-h-[44px]">
+          {chain.latestSnapshot ? (
+            <>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">Last updated</span>
+                <span className="text-card-foreground font-medium">
+                  {formatTimeAgo(chain.latestSnapshot.lastModified)}
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">Next snapshot in</span>
+                <Tooltip 
+                  content={`Next update: ${formatExactDateTime(calculateNextUpdateTime(chain.latestSnapshot.lastModified))}`}
+                  position="top"
+                >
+                  <CountdownTimer lastUpdated={chain.latestSnapshot.lastModified} />
+                </Tooltip>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">Status</span>
+                <span className="text-card-foreground font-medium">
+                  No snapshots available
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">Action</span>
+                <span className="text-card-foreground font-medium">
+                  Check back later
+                </span>
+              </div>
+            </>
+          )}
+        </div>
 
         <div className="flex items-center justify-between text-sm">
           <div className="flex items-center space-x-4">
-            <span className="text-gray-500 dark:text-gray-400">
-              {snapshotCount} snapshot{snapshotCount !== 1 ? 's' : ''}
-            </span>
-            {latestSnapshot && (
-              <span className="text-gray-500 dark:text-gray-400">
-                Latest: Block #{latestSnapshot.height.toLocaleString()}
-              </span>
-            )}
+            <Tooltip 
+              content={totalSize > 0 ? `Total size: ${formatBytes(totalSize)}` : 'Click to view snapshots'}
+              position="top"
+            >
+              <button
+                onClick={handleSnapshotCountClick}
+                className="text-muted-foreground hover:text-foreground transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background rounded px-1 -mx-1"
+                aria-label={`View ${snapshotCount} snapshots for ${chain.name}`}
+              >
+                {snapshotCount} snapshot{snapshotCount !== 1 ? 's' : ''}
+              </button>
+            </Tooltip>
           </div>
-          <svg
-            className="w-5 h-5 text-gray-400"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M9 5l7 7-7 7"
-            />
-          </svg>
+          <div className="flex items-center gap-2">
+            <svg
+              className="w-5 h-5 text-muted-foreground"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 5l7 7-7 7"
+              />
+            </svg>
+          </div>
         </div>
-      </div>
+        </div>
+      </motion.div>
     </Link>
   );
 }

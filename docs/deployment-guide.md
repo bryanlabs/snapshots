@@ -1,310 +1,279 @@
-# Deployment Guide - Connecting Real Snapshots
+# Deployment Guide - Snapshot Service Web Application
 
-This guide explains how to deploy the snapshot service with your existing Kubernetes infrastructure that creates VolumeSnapshots.
+This guide explains how the snapshot service web application is deployed as part of the BryanLabs bare-metal Kubernetes infrastructure.
 
 ## Architecture Overview
 
 ```
-ScheduledVolumeSnapshot (CRD) → VolumeSnapshot → Processing Pod → tar.lz4 → Nginx Server → Next.js App
+VolumeSnapshot → Snapshot Processor → Nginx Storage → Next.js Web App → Users
+                       ↓                    ↓              ↓
+                  Request API          Shared PVC      Redis Cache
+```
+
+## Current Infrastructure
+
+The snapshot service infrastructure consists of:
+
+1. **Nginx Storage Service** - Serves processed snapshot files from shared PVC
+2. **Snapshot Processor** - Request-based system that creates and compresses snapshots
+3. **Redis** - Caching and session storage
+4. **Web Application** - Next.js UI for browsing and downloading snapshots
+
+## Deployment Architecture
+
+The web application is deployed within the bare-metal repository structure:
+
+```
+bare-metal/
+└── cluster/
+    └── chains/
+        └── cosmos/
+            └── fullnode/
+                └── snapshot-service/
+                    ├── processor/      # Snapshot processor deployment
+                    ├── nginx/          # Nginx storage service
+                    └── webapp/         # Web application (this service)
+                        ├── deployment.yaml
+                        ├── configmap.yaml
+                        ├── secrets.yaml
+                        ├── pvc.yaml
+                        └── kustomization.yaml
 ```
 
 ## Prerequisites
 
-- Kubernetes cluster with TopoLVM CSI driver
-- ScheduledVolumeSnapshot CRDs already creating snapshots
-- 5-10TB storage for processed snapshots
-- Docker registry for the cosmos-snapshotter image
+- Access to the bare-metal repository
+- Kubernetes cluster with snapshot infrastructure deployed
+- Docker registry access (ghcr.io/bryanlabs)
+- Nginx and snapshot-processor services running in `fullnodes` namespace
 
-## Step 1: Build the Cosmos Snapshotter Image
-
-First, create the Docker image that includes cosmprund and lz4 tools:
-
-```dockerfile
-# Dockerfile.cosmos-snapshotter
-FROM golang:1.21-alpine AS builder
-
-# Install build dependencies
-RUN apk add --no-cache git make gcc musl-dev
-
-# Clone and build cosmprund
-RUN git clone https://github.com/binaryholdings/cosmprund /cosmprund && \
-    cd /cosmprund && \
-    go build -o /usr/local/bin/cosmprund ./cmd/cosmprund
-
-FROM alpine:3.19
-
-# Install runtime dependencies
-RUN apk add --no-cache \
-    bash \
-    lz4 \
-    jq \
-    curl \
-    bc \
-    kubectl
-
-# Copy cosmprund from builder
-COPY --from=builder /usr/local/bin/cosmprund /usr/local/bin/cosmprund
-
-# Make sure cosmprund is executable
-RUN chmod +x /usr/local/bin/cosmprund
-
-ENTRYPOINT ["/bin/bash"]
-```
-
-Build and push:
+## Step 1: Build and Push the Web Application
 
 ```bash
-docker build -f Dockerfile.cosmos-snapshotter -t ghcr.io/bryanlabs/cosmos-snapshotter:v1.0.0 .
-docker push ghcr.io/bryanlabs/cosmos-snapshotter:v1.0.0
+# IMPORTANT: Always use semantic versioning, never "latest"
+# Build and push the Docker image
+docker buildx build --builder cloud-bryanlabs-builder \
+  --platform linux/amd64 \
+  -t ghcr.io/bryanlabs/snapshots:v1.5.0 \
+  --push .
 ```
 
-## Step 2: Deploy the Snapshot Processing Infrastructure
+## Step 2: Update Kubernetes Manifests
 
-Deploy all the Kubernetes resources:
-
-```bash
-cd kubernetes/snapshot-processor
-kubectl apply -k .
-```
-
-This creates:
-- `snapshots` namespace with resource quotas
-- RBAC for snapshot processing
-- 5TB storage PVC for processed snapshots
-- Nginx server to serve snapshots
-- Processing scripts as ConfigMaps
-- CronJob to process snapshots every 6 hours
-
-## Step 3: Configure the Next.js Application
-
-Update your `.env` file to use real snapshots:
-
-```env
-# Existing MinIO config (keep as fallback)
-MINIO_ENDPOINT=http://minio:9000
-MINIO_ACCESS_KEY=minioadmin
-MINIO_SECRET_KEY=minioadmin
-
-# Enable real snapshots
-USE_REAL_SNAPSHOTS=true
-SNAPSHOT_SERVER_URL=http://snapshot-server.snapshots.svc.cluster.local
-
-# Or if deploying outside the cluster
-# SNAPSHOT_SERVER_URL=https://snapshots.yourdomain.com
-```
-
-## Step 4: Update Kubernetes Deployment
-
-Create a Kubernetes deployment for the Next.js app:
+The deployment is managed through the bare-metal repository. Update the image version in:
 
 ```yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: snapshot-ui
-  namespace: snapshots
-spec:
-  replicas: 2
-  selector:
-    matchLabels:
-      app: snapshot-ui
-  template:
-    metadata:
-      labels:
-        app: snapshot-ui
-    spec:
-      containers:
-      - name: app
-        image: ghcr.io/bryanlabs/snapshots:latest
-        ports:
-        - containerPort: 3000
-        env:
-        - name: USE_REAL_SNAPSHOTS
-          value: "true"
-        - name: SNAPSHOT_SERVER_URL
-          value: "http://snapshot-server.snapshots.svc.cluster.local"
-        - name: PREMIUM_USERNAME
-          value: "admin@example.com"
-        - name: PREMIUM_PASSWORD_HASH
-          value: "$2a$10$YourHashHere"
-        - name: JWT_SECRET
-          valueFrom:
-            secretKeyRef:
-              name: jwt-secret
-              key: secret
-        resources:
-          requests:
-            cpu: 200m
-            memory: 512Mi
-          limits:
-            cpu: 1000m
-            memory: 1Gi
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: snapshot-ui
-  namespace: snapshots
-spec:
-  selector:
-    app: snapshot-ui
-  ports:
-  - port: 80
-    targetPort: 3000
+# bare-metal/cluster/chains/cosmos/fullnode/snapshot-service/webapp/kustomization.yaml
+images:
+  - name: ghcr.io/bryanlabs/snapshots
+    newTag: v1.5.0  # Update to your new version
 ```
 
-## Step 5: Create Ingress for External Access
+## Step 3: Deploy via Kustomize
 
-```yaml
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: snapshots
-  namespace: snapshots
-  annotations:
-    nginx.ingress.kubernetes.io/proxy-body-size: "0"
-    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
-    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
-spec:
-  ingressClassName: nginx
-  rules:
-  - host: snapshots.yourdomain.com
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: snapshot-ui
-            port:
-              number: 80
-  - host: files.snapshots.yourdomain.com
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: snapshot-server
-            port:
-              number: 80
-```
-
-## Step 6: Configure Bandwidth Limiting (Optional)
-
-To implement bandwidth limiting at the ingress level:
-
-```yaml
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: snapshot-files
-  namespace: snapshots
-  annotations:
-    nginx.ingress.kubernetes.io/limit-rate: "52428800" # 50MB/s for free tier
-    nginx.ingress.kubernetes.io/limit-rate-after: "104857600" # After 100MB
-spec:
-  ingressClassName: nginx
-  rules:
-  - host: files.snapshots.yourdomain.com
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: snapshot-server
-            port:
-              number: 80
-```
-
-## Step 7: Manual Snapshot Processing
-
-To manually process existing VolumeSnapshots:
+**⚠️ CRITICAL: Never apply individual files or subdirectories!**
 
 ```bash
-# Process a specific snapshot
-kubectl exec -n snapshots deployment/snapshot-server -- \
-  /scripts/process-single-snapshot.sh "osmosis-daily-20240111" "fullnodes"
+# Navigate to bare-metal repository root
+cd /Users/danb/code/github.com/bryanlabs/bare-metal
 
-# Process all pending snapshots
-kubectl create job --from=cronjob/scheduled-snapshot-processor manual-process-$(date +%s) -n snapshots
+# Preview changes
+kubectl diff -k cluster
+
+# Apply ALL changes from cluster root
+kubectl apply -k cluster
+
+# Check deployment status
+kubectl get pods -n fullnodes -l app=webapp
+kubectl get svc -n fullnodes webapp
 ```
 
-## Step 8: Monitoring
+## Step 4: Integration Points
 
-Check the status of snapshot processing:
+The web application integrates with the existing infrastructure:
+
+### 1. **Nginx Storage Access**
+- Internal endpoint: `nginx.fullnodes.svc.cluster.local:32708`
+- Reads snapshots from shared PVC mounted at `/snapshots`
+- Uses nginx autoindex JSON format for file listing
+- Generates secure download URLs with nginx secure_link module
+
+### 2. **Snapshot Processor Integration**
+- Processor API: `http://snapshot-processor.fullnodes.svc.cluster.local:8080`
+- Web app can request on-demand snapshots via API
+- Processor handles compression (ZST/LZ4) and uploads to nginx storage
+
+### 3. **Redis Integration**
+- Endpoint: `redis.fullnodes.svc.cluster.local:6379`
+- Used for session storage and caching
+- Tracks download counts and bandwidth usage
+
+### 4. **File Organization**
+```
+/snapshots/{chain-id}/
+  ├── {chain-id}-{timestamp}.tar.zst    # ZST compressed snapshots
+  ├── {chain-id}-{timestamp}.tar.lz4    # LZ4 compressed snapshots
+  └── latest.json                        # Pointer to latest snapshot
+```
+
+## Step 5: Configuration
+
+### Environment Variables (via ConfigMap)
+```yaml
+# nginx storage
+NGINX_ENDPOINT: nginx
+NGINX_PORT: "32708"
+NGINX_USE_SSL: "false"
+NGINX_EXTERNAL_URL: https://snapshots.bryanlabs.net
+
+# authentication
+NEXTAUTH_URL: https://snapshots.bryanlabs.net
+NODE_ENV: production
+
+# bandwidth management
+BANDWIDTH_FREE_TOTAL: "50"
+BANDWIDTH_PREMIUM_TOTAL: "250"
+
+# redis
+REDIS_HOST: redis
+REDIS_PORT: "6379"
+
+# limits
+DAILY_DOWNLOAD_LIMIT: "10"
+```
+
+### Secrets
+```yaml
+# Required secrets in webapp-secrets
+NEXTAUTH_SECRET: <generated-secret>
+DATABASE_URL: file:/app/prisma/dev.db
+SECURE_LINK_SECRET: <nginx-secure-link-secret>
+PREMIUM_USERNAME: premium_user
+PREMIUM_PASSWORD_HASH: <bcrypt-hash>
+SESSION_PASSWORD: <session-encryption-password>
+```
+
+## Step 6: Verify Deployment
 
 ```bash
-# View processing jobs
-kubectl get jobs -n snapshots
+# Check pod status
+kubectl get pods -n fullnodes -l app=webapp
 
-# Check logs
-kubectl logs -n snapshots job/scheduled-snapshot-processor-xxxxx
+# View logs
+kubectl logs -n fullnodes -l app=webapp
 
-# View available snapshots
-kubectl exec -n snapshots deployment/snapshot-server -- ls -la /usr/share/nginx/html/
+# Test internal connectivity
+kubectl exec -n fullnodes deployment/webapp -- wget -O- http://nginx:32708/noble-1/
 
-# Check snapshot metadata
-curl http://snapshot-server.snapshots.svc.cluster.local/osmosis-1/metadata.json | jq
+# Check health endpoint
+kubectl port-forward -n fullnodes svc/webapp 8080:3000
+curl http://localhost:8080/api/health
 ```
+
+## Monitoring and Health Checks
+
+### Health Monitoring
+```bash
+# Check pod health
+kubectl get pods -n fullnodes -l app=webapp
+
+# View real-time logs
+kubectl logs -f -n fullnodes -l app=webapp
+
+# Check resource usage
+kubectl top pod -n fullnodes -l app=webapp
+
+# Access health endpoint
+kubectl port-forward -n fullnodes svc/webapp 8080:3000
+curl http://localhost:8080/api/health
+```
+
+### Prometheus Metrics
+The application exports metrics at `/api/metrics`:
+- Request counts and latencies
+- Download statistics by tier
+- Authentication success/failure rates
+- Database query performance
 
 ## Troubleshooting
 
-### VolumeSnapshots not being processed
+### Pod Issues
+```bash
+# Check pod events
+kubectl describe pod -n fullnodes -l app=webapp
 
-1. Check if the CronJob is running:
-   ```bash
-   kubectl get cronjobs -n snapshots
-   kubectl describe cronjob scheduled-snapshot-processor -n snapshots
-   ```
+# Verify secrets exist
+kubectl get secret -n fullnodes webapp-secrets
 
-2. Check RBAC permissions:
-   ```bash
-   kubectl auth can-i get volumesnapshots -n fullnodes --as=system:serviceaccount:snapshots:snapshot-creator
-   ```
+# Check configmap
+kubectl get configmap -n fullnodes webapp-config
+```
 
-3. Check if VolumeSnapshots exist:
-   ```bash
-   kubectl get volumesnapshots -n fullnodes
-   ```
+### Database Issues
+```bash
+# Access pod shell
+kubectl exec -it -n fullnodes deployment/webapp -- /bin/sh
 
-### Storage filling up
+# Initialize database manually
+cd /app && ./scripts/init-db-proper.sh
 
-1. Adjust retention in the cleanup script
-2. Manually clean old snapshots:
-   ```bash
-   kubectl exec -n snapshots deployment/snapshot-server -- \
-     find /usr/share/nginx/html -name "*.tar.lz4" -mtime +7 -delete
-   ```
+# Check database file
+ls -la /app/prisma/dev.db
+```
 
-### Next.js app not showing snapshots
+### Connectivity Issues
+```bash
+# Test nginx connectivity
+kubectl exec -n fullnodes deployment/webapp -- wget -O- http://nginx:32708/
 
-1. Check connectivity:
-   ```bash
-   kubectl exec -n snapshots deployment/snapshot-ui -- \
-     curl -I http://snapshot-server.snapshots.svc.cluster.local/
-   ```
+# Test redis connectivity
+kubectl exec -n fullnodes deployment/webapp -- nc -zv redis 6379
 
-2. Check environment variables:
-   ```bash
-   kubectl describe deployment snapshot-ui -n snapshots
-   ```
+# Test snapshot-processor API
+kubectl exec -n fullnodes deployment/webapp -- wget -O- http://snapshot-processor:8080/api/health
+```
 
-## Migration from Mock Data
+## Security Considerations
 
-To transition from mock data to real snapshots:
+1. **Authentication**: NextAuth.js v5 with CSRF protection
+2. **Secrets Management**: All sensitive data in Kubernetes secrets
+3. **Database**: SQLite with restricted PVC access
+4. **Downloads**: Secure URLs with nginx secure_link module
+5. **TLS**: Ingress with cert-manager for HTTPS
 
-1. Deploy the infrastructure (Steps 1-4)
-2. Let the CronJob process existing VolumeSnapshots
-3. Update Next.js app environment to `USE_REAL_SNAPSHOTS=true`
-4. Redeploy the Next.js app
-5. Verify snapshots appear in the UI
+## Integration with Snapshot Processor
 
-## Production Considerations
+The web app can request on-demand snapshots:
 
-1. **Storage**: Monitor storage usage and adjust retention policies
-2. **Backup**: Consider backing up processed snapshots to object storage
-3. **Security**: Implement proper authentication for snapshot downloads
-4. **Performance**: Use CDN for serving large snapshot files
-5. **Monitoring**: Set up alerts for failed processing jobs
+```bash
+# Request a new snapshot (from within cluster)
+curl -X POST http://snapshot-processor.fullnodes.svc.cluster.local:8080/api/v1/request \
+  -H "Content-Type: application/json" \
+  -d '{
+    "chain_id": "noble-1",
+    "compression": "lz4",
+    "request_type": "on_demand"
+  }'
+```
+
+## Maintenance Tasks
+
+### Update Image Version
+1. Build new image with semantic version
+2. Update `bare-metal/cluster/chains/cosmos/fullnode/snapshot-service/webapp/kustomization.yaml`
+3. Deploy via `kubectl apply -k cluster` from bare-metal root
+
+### Database Backup
+```bash
+# Create backup
+kubectl exec -n fullnodes deployment/webapp -- \
+  sqlite3 /app/prisma/dev.db ".backup /tmp/backup.db"
+
+# Copy backup locally
+kubectl cp fullnodes/webapp-pod:/tmp/backup.db ./webapp-backup.db
+```
+
+### Clear Redis Cache
+```bash
+kubectl exec -n fullnodes deployment/redis -- redis-cli FLUSHDB
+```

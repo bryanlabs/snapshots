@@ -4,13 +4,24 @@ This document covers the authentication endpoints and security mechanisms for th
 
 ## Overview
 
-The API uses JWT (JSON Web Tokens) for authentication. Premium users can authenticate to access enhanced features and faster download speeds.
+The API supports two authentication methods:
+1. **Cookie-based authentication** - For web applications
+2. **Bearer token authentication** - For programmatic API access
 
-### Authentication Flow
+Premium users can authenticate to access enhanced features and faster download speeds.
+
+### Cookie Authentication Flow
 
 1. User sends credentials to `/api/v1/auth/login`
 2. Server validates credentials and returns JWT token in secure cookie
 3. Subsequent requests include the cookie automatically
+4. Token is validated on each request requiring authentication
+
+### Bearer Token Authentication Flow
+
+1. User sends credentials to `/api/v1/auth/login` with `return_token: true`
+2. Server validates credentials and returns JWT token in response body
+3. Client includes token in `Authorization: Bearer <token>` header
 4. Token is validated on each request requiring authentication
 
 ## Endpoints
@@ -29,13 +40,14 @@ Content-Type: application/json
 ```json
 {
   "email": "user@example.com",
-  "password": "your-secure-password"
+  "password": "your-secure-password",
+  "return_token": false  // Optional, set to true for Bearer token
 }
 ```
 
 #### Response
 
-**Success (200 OK)**
+**Success (200 OK) - Cookie Authentication**
 ```json
 {
   "success": true,
@@ -43,7 +55,30 @@ Content-Type: application/json
     "id": "1",
     "email": "user@example.com",
     "name": "John Doe",
-    "role": "premium"
+    "role": "premium",
+    "tier": "premium"
+  },
+  "message": "Login successful"
+}
+```
+
+**Success (200 OK) - Bearer Token Authentication**
+```json
+{
+  "success": true,
+  "data": {
+    "user": {
+      "id": "1",
+      "email": "user@example.com",
+      "name": "John Doe",
+      "role": "premium",
+      "tier": "premium"
+    },
+    "token": {
+      "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+      "token_type": "Bearer",
+      "expires_in": 604800
+    }
   },
   "message": "Login successful"
 }
@@ -157,6 +192,43 @@ Authentication cookies are set with the following flags:
 - `SameSite=Lax`: CSRF protection
 - `Max-Age=604800`: 7-day expiration
 
+## Bearer Token Usage
+
+### Including Bearer Token in Requests
+
+Once you have obtained a Bearer token, include it in the `Authorization` header:
+
+```http
+GET /api/v1/chains/osmosis/snapshots/latest
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
+
+### POST /api/v1/auth/token
+
+Generate a new API token for the currently authenticated user (requires cookie authentication).
+
+#### Request
+
+```http
+POST /api/v1/auth/token
+Cookie: auth-token=eyJhbGc...
+```
+
+#### Response
+
+**Success (200 OK)**
+```json
+{
+  "success": true,
+  "data": {
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "expires_in": 604800,
+    "token_type": "Bearer"
+  },
+  "message": "API token generated successfully"
+}
+```
+
 ## Client Examples
 
 ### JavaScript/Fetch
@@ -205,6 +277,7 @@ const logout = async () => {
 ### cURL
 
 ```bash
+# Cookie Authentication
 # Login and save cookies
 curl -c cookies.txt -X POST https://snapshots.bryanlabs.net/api/v1/auth/login \
   -H "Content-Type: application/json" \
@@ -215,6 +288,17 @@ curl -b cookies.txt https://snapshots.bryanlabs.net/api/v1/auth/me
 
 # Logout
 curl -b cookies.txt -X POST https://snapshots.bryanlabs.net/api/v1/auth/logout
+
+# Bearer Token Authentication
+# Login and get token
+TOKEN=$(curl -s -X POST https://snapshots.bryanlabs.net/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"user@example.com","password":"password","return_token":true}' \
+  | jq -r '.data.token.access_token')
+
+# Use token for authenticated requests
+curl -H "Authorization: Bearer $TOKEN" \
+  https://snapshots.bryanlabs.net/api/v1/chains/osmosis/snapshots/latest
 ```
 
 ### Python

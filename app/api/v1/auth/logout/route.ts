@@ -1,23 +1,14 @@
 import { NextResponse } from 'next/server';
 import { ApiResponse } from '@/lib/types';
-import { logout } from '@/lib/auth/session';
 
+// This endpoint is deprecated - use NextAuth endpoints instead
 export async function POST() {
-  try {
-    await logout();
-    
-    return NextResponse.json<ApiResponse>({
-      success: true,
-      message: 'Logged out successfully',
-    });
-  } catch (error) {
-    return NextResponse.json<ApiResponse>(
-      {
-        success: false,
-        error: 'Logout failed',
-        message: error instanceof Error ? error.message : 'Unknown error',
-      },
-      { status: 500 }
-    );
-  }
+  return NextResponse.json<ApiResponse>(
+    {
+      success: false,
+      error: 'Deprecated endpoint',
+      message: 'This legacy authentication endpoint is deprecated. Please use the NextAuth endpoints at /api/auth/*',
+    },
+    { status: 410 } // 410 Gone
+  );
 }
