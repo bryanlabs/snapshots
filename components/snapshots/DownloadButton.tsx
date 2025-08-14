@@ -39,6 +39,15 @@ export function DownloadButton({ snapshot, chainName, chainLogoUrl, disabled = f
   const handleDownloadClick = () => {
     if (disabled) return;
     
+    // Debug logging for tier detection
+    console.log('DownloadButton Debug:', {
+      userTier: user?.tier,
+      userName: user?.name,
+      userEmail: user?.email,
+      isPremiumTier: isPremiumTier(user?.tier),
+      user: user
+    });
+    
     // Premium tier users (premium, ultra, unlimited, etc.) get instant download, others see modal
     if (isPremiumTier(user?.tier)) {
       handleDownload();

@@ -4,7 +4,6 @@ import { collectResponseTime, trackRequest } from '@/lib/monitoring/metrics';
 import { extractRequestMetadata, logRequest } from '@/lib/middleware/logger';
 import { listChains } from '@/lib/nginx/operations';
 import { config } from '@/lib/config';
-import { cache, cacheKeys } from '@/lib/cache/redis-cache';
 import { getChainConfig } from '@/lib/config/chains';
 
 export async function GET(request: NextRequest) {
@@ -13,45 +12,39 @@ export async function GET(request: NextRequest) {
   const requestLog = extractRequestMetadata(request);
   
   try {
-    // Use cache with stale-while-revalidate pattern
-    const chains = await cache.staleWhileRevalidate<Chain[]>(
-      cacheKeys.chains(),
-      async () => {
-        // Fetch from nginx
-        console.log('Fetching chains from nginx...');
-        const chainInfos = await listChains();
-        console.log('Chain infos from nginx:', chainInfos);
-        
-        // Map chain infos to Chain objects with metadata from centralized config
-        return chainInfos.map((chainInfo) => {
-          const config = getChainConfig(chainInfo.chainId);
-          
-          return {
-            id: chainInfo.chainId,
-            name: config.name,
-            network: chainInfo.chainId,
-            logoUrl: config.logoUrl,
-            accentColor: config.accentColor,
-            // Include basic snapshot info for the chain card
-            snapshotCount: chainInfo.snapshotCount,
-            latestSnapshot: chainInfo.latestSnapshot ? {
-              size: chainInfo.latestSnapshot.size,
-              lastModified: chainInfo.latestSnapshot.lastModified.toISOString(),
-              compressionType: chainInfo.latestSnapshot.compressionType || 'zst',
-            } : undefined,
-          };
-        });
-      },
-      {
-        ttl: 300, // 5 minutes fresh
-        staleTime: 3600, // 1 hour stale
-        tags: ['chains'],
-      }
-    );
+    // Fetch from nginx
+    console.log('Fetching chains from nginx...');
+    const chainInfos = await listChains();
+    console.log('Chain infos from nginx:', chainInfos);
+    
+    // Map chain infos to Chain objects with metadata from centralized config
+    const chains = chainInfos.map((chainInfo) => {
+      const chainConfig = getChainConfig(chainInfo.chainId);
+      
+      return {
+        id: chainInfo.chainId,
+        name: chainConfig.name,
+        network: chainInfo.chainId,
+        logoUrl: chainConfig.logoUrl,
+        accentColor: chainConfig.accentColor,
+        // Include basic snapshot info for the chain card
+        snapshotCount: chainInfo.snapshotCount,
+        latestSnapshot: chainInfo.latestSnapshot ? {
+          size: chainInfo.latestSnapshot.size,
+          lastModified: chainInfo.latestSnapshot.lastModified.toISOString(),
+          compressionType: chainInfo.latestSnapshot.compressionType || 'zst',
+        } : undefined,
+      };
+    });
+
+    // Filter out empty chains if configured to hide them
+    const filteredChains = config.features.showEmptyChains 
+      ? chains 
+      : chains.filter(chain => chain.snapshotCount > 0);
     
     const response = NextResponse.json<ApiResponse<Chain[]>>({
       success: true,
-      data: chains,
+      data: filteredChains,
     });
     
     endTimer();

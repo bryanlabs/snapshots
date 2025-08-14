@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authConfig } from '@/auth.config';
+import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 import { hasPremiumFeatures, hasUltraFeatures } from '@/lib/utils/tier';
 import { randomBytes } from 'crypto';
@@ -8,7 +7,7 @@ import { randomBytes } from 'crypto';
 // GET /api/account/telegram - Get user's telegram invitation status
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authConfig);
+    const session = await auth();
     
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -90,7 +89,7 @@ export async function GET(request: NextRequest) {
 // POST /api/account/telegram - Request telegram invitation or update telegram info
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authConfig);
+    const session = await auth();
     
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -232,7 +231,7 @@ export async function POST(request: NextRequest) {
 // DELETE /api/account/telegram - Cancel or revoke telegram invitation
 export async function DELETE(request: NextRequest) {
   try {
-    const session = await getServerSession(authConfig);
+    const session = await auth();
     
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

@@ -114,7 +114,7 @@ describe('SnapshotList', () => {
     expect(screen.getByText('No snapshots available for this chain yet.')).toBeInTheDocument();
   });
 
-  it('renders snapshots with filter tabs', () => {
+  it('renders all snapshots without filter tabs', () => {
     mockUseSnapshots.mockReturnValue({
       snapshots: mockSnapshots,
       loading: false,
@@ -123,81 +123,19 @@ describe('SnapshotList', () => {
     });
 
     render(<SnapshotList chainId="cosmos-hub" chainName="Cosmos Hub" />);
-
-    // Check filter tabs with counts
-    expect(screen.getByText('all (3)')).toBeInTheDocument();
-    expect(screen.getByText('default (1)')).toBeInTheDocument();
-    expect(screen.getByText('pruned (1)')).toBeInTheDocument();
-    expect(screen.getByText('archive (1)')).toBeInTheDocument();
 
     // Check all snapshots are displayed
     expect(screen.getByTestId('snapshot-snap-1')).toBeInTheDocument();
     expect(screen.getByTestId('snapshot-snap-2')).toBeInTheDocument();
     expect(screen.getByTestId('snapshot-snap-3')).toBeInTheDocument();
+
+    // Check filter tabs are not present
+    expect(screen.queryByText('all (3)')).not.toBeInTheDocument();
+    expect(screen.queryByText('default (1)')).not.toBeInTheDocument();
+    expect(screen.queryByText('pruned (1)')).not.toBeInTheDocument();
+    expect(screen.queryByText('archive (1)')).not.toBeInTheDocument();
   });
 
-  it('filters snapshots by type', () => {
-    mockUseSnapshots.mockReturnValue({
-      snapshots: mockSnapshots,
-      loading: false,
-      error: null,
-      refetch: jest.fn(),
-    });
-
-    render(<SnapshotList chainId="cosmos-hub" chainName="Cosmos Hub" />);
-
-    // Click on pruned filter
-    fireEvent.click(screen.getByText('pruned (1)'));
-
-    // Should only show pruned snapshots
-    expect(screen.queryByTestId('snapshot-snap-1')).not.toBeInTheDocument();
-    expect(screen.getByTestId('snapshot-snap-2')).toBeInTheDocument();
-    expect(screen.queryByTestId('snapshot-snap-3')).not.toBeInTheDocument();
-
-    // Click on archive filter
-    fireEvent.click(screen.getByText('archive (1)'));
-
-    // Should only show archive snapshots
-    expect(screen.queryByTestId('snapshot-snap-1')).not.toBeInTheDocument();
-    expect(screen.queryByTestId('snapshot-snap-2')).not.toBeInTheDocument();
-    expect(screen.getByTestId('snapshot-snap-3')).toBeInTheDocument();
-
-    // Click back to all
-    fireEvent.click(screen.getByText('all (3)'));
-
-    // Should show all snapshots again
-    expect(screen.getByTestId('snapshot-snap-1')).toBeInTheDocument();
-    expect(screen.getByTestId('snapshot-snap-2')).toBeInTheDocument();
-    expect(screen.getByTestId('snapshot-snap-3')).toBeInTheDocument();
-  });
-
-  it('highlights active filter tab', () => {
-    mockUseSnapshots.mockReturnValue({
-      snapshots: mockSnapshots,
-      loading: false,
-      error: null,
-      refetch: jest.fn(),
-    });
-
-    render(<SnapshotList chainId="cosmos-hub" chainName="Cosmos Hub" />);
-
-    // Check initial state - 'all' should be active
-    const allButton = screen.getByText('all (3)');
-    expect(allButton.className).toContain('border-blue-500');
-    expect(allButton.className).toContain('text-blue-600');
-
-    // Click on pruned
-    const prunedButton = screen.getByText('pruned (1)');
-    fireEvent.click(prunedButton);
-
-    // Pruned should now be active
-    expect(prunedButton.className).toContain('border-blue-500');
-    expect(prunedButton.className).toContain('text-blue-600');
-    
-    // All should no longer be active
-    expect(allButton.className).toContain('border-transparent');
-    expect(allButton.className).toContain('text-gray-500');
-  });
 
   it('handles null snapshots gracefully', () => {
     mockUseSnapshots.mockReturnValue({

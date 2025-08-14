@@ -112,14 +112,16 @@ describe('SnapshotListClient', () => {
     it('should render snapshots correctly', () => {
       render(<SnapshotListClient {...defaultProps} />);
 
-      expect(screen.getByText('all (3)')).toBeInTheDocument();
-      expect(screen.getByText('default (1)')).toBeInTheDocument();
-      expect(screen.getByText('pruned (1)')).toBeInTheDocument();
-      expect(screen.getByText('archive (1)')).toBeInTheDocument();
-
+      // Check that all snapshots are displayed
       mockSnapshots.forEach(snapshot => {
         expect(screen.getByTestId(`snapshot-${snapshot.id}`)).toBeInTheDocument();
       });
+
+      // Check that filter tabs are not present
+      expect(screen.queryByText('all (3)')).not.toBeInTheDocument();
+      expect(screen.queryByText('default (1)')).not.toBeInTheDocument();
+      expect(screen.queryByText('pruned (1)')).not.toBeInTheDocument();
+      expect(screen.queryByText('archive (1)')).not.toBeInTheDocument();
     });
 
     it('should render empty state when no snapshots', () => {
@@ -129,37 +131,6 @@ describe('SnapshotListClient', () => {
     });
   });
 
-  describe('Filtering', () => {
-    it('should filter snapshots by type', () => {
-      render(<SnapshotListClient {...defaultProps} />);
-
-      // Initially all snapshots are shown
-      expect(screen.getByTestId('snapshot-1')).toBeInTheDocument();
-      expect(screen.getByTestId('snapshot-2')).toBeInTheDocument();
-      expect(screen.getByTestId('snapshot-3')).toBeInTheDocument();
-
-      // Click on 'default' filter
-      fireEvent.click(screen.getByText('default (1)'));
-
-      expect(screen.getByTestId('snapshot-1')).toBeInTheDocument();
-      expect(screen.queryByTestId('snapshot-2')).not.toBeInTheDocument();
-      expect(screen.queryByTestId('snapshot-3')).not.toBeInTheDocument();
-
-      // Click on 'pruned' filter
-      fireEvent.click(screen.getByText('pruned (1)'));
-
-      expect(screen.queryByTestId('snapshot-1')).not.toBeInTheDocument();
-      expect(screen.getByTestId('snapshot-2')).toBeInTheDocument();
-      expect(screen.queryByTestId('snapshot-3')).not.toBeInTheDocument();
-
-      // Click on 'all' filter
-      fireEvent.click(screen.getByText('all (3)'));
-
-      expect(screen.getByTestId('snapshot-1')).toBeInTheDocument();
-      expect(screen.getByTestId('snapshot-2')).toBeInTheDocument();
-      expect(screen.getByTestId('snapshot-3')).toBeInTheDocument();
-    });
-  });
 
   describe('Download functionality', () => {
     it('should handle download query parameter for free users', async () => {

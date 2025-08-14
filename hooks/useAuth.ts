@@ -25,7 +25,7 @@ export function useAuth() {
   // Merge session data with tier information
   const user = session?.user ? {
     ...session.user,
-    tier: userTierData?.tier || 'free'
+    tier: userTierData?.tier || session.user.tier || 'free'
   } : null;
   
   return {

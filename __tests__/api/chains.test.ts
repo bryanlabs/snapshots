@@ -6,18 +6,14 @@
 jest.mock('@/lib/monitoring/metrics');
 jest.mock('@/lib/middleware/logger');
 jest.mock('@/lib/nginx/operations');
-jest.mock('@/lib/cache/redis-cache', () => ({
-  cache: {
-    staleWhileRevalidate: jest.fn(),
-  },
-  cacheKeys: {
-    chains: jest.fn().mockReturnValue('chains-cache-key'),
-  },
-}));
+// Cache removed - no longer needed
 jest.mock('@/lib/config', () => ({
   config: {
     nginx: {
       baseUrl: 'http://nginx',
+    },
+    features: {
+      showEmptyChains: false,
     },
   },
 }));
@@ -86,11 +82,7 @@ describe('/api/v1/chains', () => {
       },
     ]);
 
-    // Set up cache mock to call the function directly
-    const { cache } = require('@/lib/cache/redis-cache');
-    cache.staleWhileRevalidate.mockImplementation(async (key: string, fn: () => Promise<any>) => {
-      return await fn();
-    });
+    // Cache removed - direct nginx calls now
 
     (metrics.collectResponseTime as jest.Mock) = mockCollectResponseTime;
     (metrics.trackRequest as jest.Mock) = mockTrackRequest;
@@ -248,8 +240,20 @@ describe('/api/v1/chains', () => {
       expect(cosmosHub.latestSnapshot.compressionType).toBe('lz4');
     });
 
-    it('should handle chains without latest snapshot', async () => {
+    it('should handle chains with 0 snapshots when returned by nginx', async () => {
+      // Test that we can handle the data structure when nginx returns empty chains
       mockListChains.mockResolvedValue([
+        {
+          chainId: 'chain-with-snapshots', 
+          snapshotCount: 1,
+          latestSnapshot: {
+            filename: 'chain-with-snapshots-20250130.tar.lz4',
+            size: 1000000000,
+            lastModified: new Date('2025-01-30'),
+            compressionType: 'lz4',
+          },
+          totalSize: 1000000000,
+        },
         {
           chainId: 'empty-chain',
           snapshotCount: 0,
@@ -263,26 +267,50 @@ describe('/api/v1/chains', () => {
       const response = await GET(request);
       const data = await response.json();
 
-      const emptyChain = data.data[0];
-      expect(emptyChain.snapshotCount).toBe(0);
-      expect(emptyChain.latestSnapshot).toBeUndefined();
+      // With showEmptyChains: false (default), should filter out empty chains
+      expect(data.data.length).toBe(1);
+      expect(data.data[0].id).toBe('chain-with-snapshots');
+      expect(data.data[0].snapshotCount).toBe(1);
     });
 
-    it('should use stale-while-revalidate caching', async () => {
-      const { cache } = require('@/lib/cache/redis-cache');
+    it('should filter out empty chains by default (showEmptyChains: false)', async () => {
+      mockListChains.mockResolvedValue([
+        {
+          chainId: 'chain-with-snapshots',
+          snapshotCount: 2,
+          latestSnapshot: {
+            filename: 'chain-with-snapshots-20250130.tar.lz4',
+            size: 1000000000,
+            lastModified: new Date('2025-01-30'),
+            compressionType: 'lz4',
+          },
+          totalSize: 2000000000,
+        },
+        {
+          chainId: 'empty-chain',
+          snapshotCount: 0,
+          latestSnapshot: undefined,
+          totalSize: 0,
+        },
+      ]);
+
+      const request = new NextRequest('http://localhost:3000/api/v1/chains');
+      
+      const response = await GET(request);
+      const data = await response.json();
+
+      // Should only return chains with snapshots (filter out empty chain)
+      expect(data.data.length).toBe(1);
+      expect(data.data[0].id).toBe('chain-with-snapshots');
+      expect(data.data[0].snapshotCount).toBe(2);
+    });
+
+    it('should call listChains directly (no caching)', async () => {
       const request = new NextRequest('http://localhost:3000/api/v1/chains');
       
       await GET(request);
 
-      expect(cache.staleWhileRevalidate).toHaveBeenCalledWith(
-        'chains-cache-key',
-        expect.any(Function),
-        {
-          ttl: 300, // 5 minutes fresh
-          staleTime: 3600, // 1 hour stale
-          tags: ['chains'],
-        }
-      );
+      expect(mockListChains).toHaveBeenCalled();
     });
 
     it('should handle empty chains list', async () => {
@@ -346,7 +374,7 @@ describe('/api/v1/chains', () => {
         { id: 'noble-1', name: 'Noble', color: '#FFB800' },
         { id: 'cosmoshub-4', name: 'Cosmos Hub', color: '#5E72E4' },
         { id: 'osmosis-1', name: 'Osmosis', color: '#9945FF' },
-        { id: 'juno-1', name: 'Juno', color: '#3B82F6' },
+        { id: 'juno-1', name: 'Juno', color: '#F0827D' },
         { id: 'kaiyo-1', name: 'Kujira', color: '#DC3545' },
         { id: 'columbus-5', name: 'Terra Classic', color: '#FF6B6B' },
         { id: 'phoenix-1', name: 'Terra', color: '#FF6B6B' },
@@ -396,9 +424,8 @@ describe('/api/v1/chains', () => {
       expect(endTimerMock).toHaveBeenCalled();
     });
 
-    it('should handle cache errors gracefully', async () => {
-      const { cache } = require('@/lib/cache/redis-cache');
-      cache.staleWhileRevalidate.mockRejectedValue(new Error('Cache error'));
+    it('should handle nginx errors gracefully', async () => {
+      mockListChains.mockRejectedValue(new Error('Nginx error'));
 
       const request = new NextRequest('http://localhost:3000/api/v1/chains');
       

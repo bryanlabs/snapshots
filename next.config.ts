@@ -31,7 +31,6 @@ const nextConfig: NextConfig = {
   // Performance optimizations
   experimental: {
     optimizePackageImports: ["framer-motion", "@heroicons/react"],
-    instrumentationHook: true,
   },
   
   // Turbopack configuration
@@ -49,6 +48,22 @@ const nextConfig: NextConfig = {
 
   // Bundle optimization
   webpack: (config, { dev, isServer }) => {
+    const webpack = require('webpack');
+    
+    // Handle missing optional dependencies
+    config.resolve.fallback = {
+      ...config.resolve.fallback,
+      "starknet": false,
+    };
+
+    // Ignore optional dependencies that aren't needed
+    config.plugins.push(
+      new webpack.IgnorePlugin({
+        resourceRegExp: /^starknet$/,
+        contextRegExp: /@keplr-wallet/,
+      })
+    );
+
     // Production optimizations
     if (!dev && !isServer) {
       config.optimization.splitChunks = {
