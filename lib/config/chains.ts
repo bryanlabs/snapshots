@@ -147,6 +147,50 @@ export const CHAIN_CONFIGS: Record<string, ChainConfig> = {
   },
 };
 
+export interface SnapshotStorageVariant {
+  storageChainId: string;
+  chainId: string;
+  databaseBackend: 'goleveldb' | 'pebbledb';
+  databaseLabel: string;
+}
+
+export const SNAPSHOT_STORAGE_VARIANTS: Record<string, SnapshotStorageVariant> = {
+  'cosmoshub-4': {
+    storageChainId: 'cosmoshub-4',
+    chainId: 'cosmoshub-4',
+    databaseBackend: 'goleveldb',
+    databaseLabel: 'LevelDB',
+  },
+  'cosmoshub-4-pebble': {
+    storageChainId: 'cosmoshub-4-pebble',
+    chainId: 'cosmoshub-4',
+    databaseBackend: 'pebbledb',
+    databaseLabel: 'PebbleDB',
+  },
+};
+
+export function getSnapshotStorageVariant(storageChainId: string): SnapshotStorageVariant {
+  return SNAPSHOT_STORAGE_VARIANTS[storageChainId] || {
+    storageChainId,
+    chainId: storageChainId,
+    databaseBackend: 'goleveldb',
+    databaseLabel: 'LevelDB',
+  };
+}
+
+export function getCanonicalChainId(storageChainId: string): string {
+  return getSnapshotStorageVariant(storageChainId).chainId;
+}
+
+export function getStorageChainIdsForChain(chainId: string): string[] {
+  const canonicalChainId = getCanonicalChainId(chainId);
+  const storageChainIds = Object.values(SNAPSHOT_STORAGE_VARIANTS)
+    .filter((variant) => variant.chainId === canonicalChainId)
+    .map((variant) => variant.storageChainId);
+
+  return storageChainIds.length > 0 ? storageChainIds : [canonicalChainId];
+}
+
 /**
  * Get chain configuration by ID
  * Returns a default configuration if chain not found

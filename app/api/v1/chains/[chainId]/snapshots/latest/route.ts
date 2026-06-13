@@ -6,6 +6,7 @@ import { config } from '@/lib/config';
 import { collectResponseTime, trackRequest } from '@/lib/monitoring/metrics';
 import { extractRequestMetadata, logRequest } from '@/lib/middleware/logger';
 import { auth } from '@/auth';
+import { getCanonicalChainId } from '@/lib/config/chains';
 
 interface LatestSnapshotResponse {
   chain_id: string;
@@ -16,6 +17,8 @@ interface LatestSnapshotResponse {
   expires_at: string;
   tier: 'free' | 'premium' | 'unlimited';
   checksum?: string;
+  database_backend?: string;
+  database_label?: string;
 }
 
 export async function GET(
@@ -28,6 +31,7 @@ export async function GET(
   
   try {
     const { chainId } = await params;
+    const canonicalChainId = getCanonicalChainId(chainId);
     
     // Determine tier based on authentication
     const session = await auth();
@@ -35,15 +39,15 @@ export async function GET(
     const userId = session?.user?.id || 'anonymous';
     
     // Fetch latest snapshot from nginx
-    console.log(`Fetching latest snapshot for chain: ${chainId}`);
-    const latestSnapshot = await getLatestSnapshot(chainId);
+    console.log(`Fetching latest snapshot for chain: ${canonicalChainId}`);
+    const latestSnapshot = await getLatestSnapshot(canonicalChainId);
     
     if (!latestSnapshot) {
       const response = NextResponse.json<ApiResponse>(
         {
           success: false,
           error: 'No snapshots found',
-          message: `No snapshots available for chain ${chainId}`,
+          message: `No snapshots available for chain ${canonicalChainId}`,
         },
         { status: 404 }
       );
@@ -68,26 +72,28 @@ export async function GET(
     const expiresAt = new Date(Date.now() + expiryHours * 3600 * 1000);
     
     const downloadUrl = await generateDownloadUrl(
-      chainId,
+      latestSnapshot.storageChainId || canonicalChainId,
       latestSnapshot.filename,
       tier,
       userId
     );
     
-    console.log(`Generated secure link for ${chainId}/${latestSnapshot.filename}, tier: ${tier}, expires: ${expiresAt.toISOString()}`);
+    console.log(`Generated secure link for ${latestSnapshot.storageChainId || canonicalChainId}/${latestSnapshot.filename}, tier: ${tier}, expires: ${expiresAt.toISOString()}`);
     
     // Extract height from snapshot if not already set
     const height = latestSnapshot.height || extractHeightFromFilename(latestSnapshot.filename) || 0;
     
     // Prepare response
     const responseData: LatestSnapshotResponse = {
-      chain_id: chainId,
+      chain_id: canonicalChainId,
       height,
       size: latestSnapshot.size,
       compression: latestSnapshot.compressionType || 'zst',
       url: downloadUrl,
       expires_at: expiresAt.toISOString(),
       tier,
+      database_backend: latestSnapshot.databaseBackend,
+      database_label: latestSnapshot.databaseLabel,
     };
     
     const response = NextResponse.json<ApiResponse<LatestSnapshotResponse>>({

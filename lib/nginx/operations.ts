@@ -5,13 +5,22 @@ import {
   getCompressionType, 
   extractHeightFromFilename 
 } from '../config/supported-formats';
+import {
+  getCanonicalChainId,
+  getSnapshotStorageVariant,
+  getStorageChainIdsForChain,
+} from '../config/chains';
 
 export interface Snapshot {
   filename: string;
+  chainId: string;
+  storageChainId: string;
   size: number;
   lastModified: Date;
   height?: number;
   compressionType?: string;
+  databaseBackend?: string;
+  databaseLabel?: string;
 }
 
 export interface ChainInfo {
@@ -19,6 +28,65 @@ export interface ChainInfo {
   snapshotCount: number;
   latestSnapshot?: Snapshot;
   totalSize: number;
+}
+
+async function listObjectsForStorageChain(storageChainId: string) {
+  const isDevelopment = process.env.NODE_ENV === 'development';
+
+  if (isDevelopment) {
+    const nginxClient = getNginxClient();
+    return nginxClient.listObjects(`/snapshots/${storageChainId}/`);
+  }
+
+  return listObjects(storageChainId);
+}
+
+async function listSnapshotsForStorageChain(storageChainId: string): Promise<Snapshot[]> {
+  let objects;
+
+  try {
+    objects = await listObjectsForStorageChain(storageChainId);
+  } catch (error) {
+    console.error(`Error listing snapshots for ${storageChainId}:`, error);
+    return [];
+  }
+
+  const variant = getSnapshotStorageVariant(storageChainId);
+  const snapshots: Snapshot[] = [];
+
+  for (const obj of objects) {
+    // Skip directories and non-snapshot files
+    if (obj.type === 'directory' || !isValidSnapshotFile(obj.name)) {
+      continue;
+    }
+
+    // Skip latest.tar.zst as it's a pointer
+    if (obj.name === 'latest.tar.zst') {
+      continue;
+    }
+
+    const compressionType = getCompressionType(obj.name);
+    const snapshot: Snapshot = {
+      filename: obj.name,
+      chainId: variant.chainId,
+      storageChainId,
+      size: obj.size,
+      lastModified: new Date(obj.mtime),
+      compressionType,
+      databaseBackend: variant.databaseBackend,
+      databaseLabel: variant.databaseLabel,
+    };
+
+    const height = extractHeightFromFilename(obj.name);
+    if (height) {
+      snapshot.height = height;
+    }
+
+    snapshots.push(snapshot);
+  }
+
+  snapshots.sort((a, b) => b.lastModified.getTime() - a.lastModified.getTime());
+  return snapshots;
 }
 
 /**
@@ -33,22 +101,31 @@ export async function listChains(): Promise<ChainInfo[]> {
     try {
       const nginxClient = getNginxClient();
       const objects = await nginxClient.listObjects('/snapshots/');
-      const chains: ChainInfo[] = [];
+      const chainsById = new Map<string, ChainInfo>();
       
       for (const obj of objects) {
         if (obj.type === 'directory') {
-          const chainId = obj.name.replace(/\/$/, '');
-          const snapshots = await listSnapshots(chainId);
-          
-          chains.push({
+          const storageChainId = obj.name.replace(/\/$/, '');
+          const chainId = getCanonicalChainId(storageChainId);
+          const snapshots = await listSnapshotsForStorageChain(storageChainId);
+          const existing = chainsById.get(chainId) || {
             chainId,
-            snapshotCount: snapshots.length,
-            latestSnapshot: snapshots[0], // Already sorted by height desc
-            totalSize: snapshots.reduce((sum, s) => sum + s.size, 0)
+            snapshotCount: 0,
+            totalSize: 0,
+          };
+          const allSnapshots = [existing.latestSnapshot, ...snapshots].filter(Boolean) as Snapshot[];
+          allSnapshots.sort((a, b) => b.lastModified.getTime() - a.lastModified.getTime());
+          
+          chainsById.set(chainId, {
+            chainId,
+            snapshotCount: existing.snapshotCount + snapshots.length,
+            latestSnapshot: allSnapshots[0],
+            totalSize: existing.totalSize + snapshots.reduce((sum, s) => sum + s.size, 0)
           });
         }
       }
       
+      const chains = Array.from(chainsById.values());
       console.log(`Chain infos from nginx: ${JSON.stringify(chains.map(c => ({ chainId: c.chainId, count: c.snapshotCount })))}`);
       return chains;
     } catch (error) {
@@ -59,75 +136,41 @@ export async function listChains(): Promise<ChainInfo[]> {
   
   // Production code (original implementation)
   const objects = await listObjects('');
-  const chains: ChainInfo[] = [];
+  const chainsById = new Map<string, ChainInfo>();
   
   for (const obj of objects) {
     if (obj.type === 'directory') {
-      const chainId = obj.name.replace(/\/$/, '');
-      const snapshots = await listSnapshots(chainId);
-      
-      chains.push({
+      const storageChainId = obj.name.replace(/\/$/, '');
+      const chainId = getCanonicalChainId(storageChainId);
+      const snapshots = await listSnapshotsForStorageChain(storageChainId);
+      const existing = chainsById.get(chainId) || {
         chainId,
-        snapshotCount: snapshots.length,
-        latestSnapshot: snapshots[0], // Already sorted by height desc
-        totalSize: snapshots.reduce((sum, s) => sum + s.size, 0)
+        snapshotCount: 0,
+        totalSize: 0,
+      };
+      const allSnapshots = [existing.latestSnapshot, ...snapshots].filter(Boolean) as Snapshot[];
+      allSnapshots.sort((a, b) => b.lastModified.getTime() - a.lastModified.getTime());
+      
+      chainsById.set(chainId, {
+        chainId,
+        snapshotCount: existing.snapshotCount + snapshots.length,
+        latestSnapshot: allSnapshots[0],
+        totalSize: existing.totalSize + snapshots.reduce((sum, s) => sum + s.size, 0)
       });
     }
   }
   
-  return chains;
+  return Array.from(chainsById.values());
 }
 
 /**
  * List snapshots for a specific chain
  */
 export async function listSnapshots(chainId: string): Promise<Snapshot[]> {
-  const isDevelopment = process.env.NODE_ENV === 'development';
-  let objects;
-  
-  if (isDevelopment) {
-    try {
-      const nginxClient = getNginxClient();
-      objects = await nginxClient.listObjects(`/snapshots/${chainId}/`);
-    } catch (error) {
-      console.error(`Error listing snapshots for ${chainId}:`, error);
-      return [];
-    }
-  } else {
-    objects = await listObjects(chainId);
-  }
-  
-  const snapshots: Snapshot[] = [];
-  
-  for (const obj of objects) {
-    // Skip directories and non-snapshot files
-    if (obj.type === 'directory' || !isValidSnapshotFile(obj.name)) {
-      continue;
-    }
-    
-    // Skip latest.tar.zst as it's a pointer
-    if (obj.name === 'latest.tar.zst') {
-      continue;
-    }
-    
-    // Parse snapshot info from filename
-    // Format: chainId-YYYYMMDD-HHMMSS.tar.zst or chainId-height.tar.zst
-    const compressionType = getCompressionType(obj.name);
-    const snapshot: Snapshot = {
-      filename: obj.name,
-      size: obj.size,
-      lastModified: new Date(obj.mtime),
-      compressionType
-    };
-    
-    // Try to extract height from filename
-    const height = extractHeightFromFilename(obj.name);
-    if (height) {
-      snapshot.height = height;
-    }
-    
-    snapshots.push(snapshot);
-  }
+  const canonicalChainId = getCanonicalChainId(chainId);
+  const storageChainIds = getStorageChainIdsForChain(canonicalChainId);
+  const snapshotGroups = await Promise.all(storageChainIds.map(listSnapshotsForStorageChain));
+  const snapshots = snapshotGroups.flat();
   
   // Sort by last modified date (newest first)
   snapshots.sort((a, b) => b.lastModified.getTime() - a.lastModified.getTime());
@@ -139,9 +182,12 @@ export async function listSnapshots(chainId: string): Promise<Snapshot[]> {
  * Get the latest snapshot for a chain
  */
 export async function getLatestSnapshot(chainId: string): Promise<Snapshot | null> {
+  const canonicalChainId = getCanonicalChainId(chainId);
+  const storageChainIds = getStorageChainIdsForChain(canonicalChainId);
+
   // First check if latest.json exists
-  const latestJsonPath = `/${chainId}/latest.json`;
-  if (await objectExists(latestJsonPath)) {
+  const latestJsonPath = `/${canonicalChainId}/latest.json`;
+  if (storageChainIds.length === 1 && await objectExists(latestJsonPath)) {
     // Fetch latest.json to get the actual filename
     const endpoint = process.env.NGINX_ENDPOINT || 'nginx';
     const port = process.env.NGINX_PORT || '32708';
@@ -155,6 +201,8 @@ export async function getLatestSnapshot(chainId: string): Promise<Snapshot | nul
         const data = await response.json();
         return {
           filename: data.filename,
+          chainId: canonicalChainId,
+          storageChainId: canonicalChainId,
           size: data.size_bytes,
           lastModified: new Date(data.timestamp),
           compressionType: 'zst'
@@ -166,7 +214,7 @@ export async function getLatestSnapshot(chainId: string): Promise<Snapshot | nul
   }
   
   // Fallback to listing snapshots and getting the newest
-  const snapshots = await listSnapshots(chainId);
+  const snapshots = await listSnapshots(canonicalChainId);
   return snapshots[0] || null;
 }
 

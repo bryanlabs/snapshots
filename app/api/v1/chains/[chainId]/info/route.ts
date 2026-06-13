@@ -9,6 +9,7 @@ import {
 } from '@/lib/config/supported-formats';
 import { collectResponseTime, trackRequest } from '@/lib/monitoring/metrics';
 import { extractRequestMetadata, logRequest } from '@/lib/middleware/logger';
+import { getCanonicalChainId } from '@/lib/config/chains';
 
 interface ChainMetadata {
   chain_id: string;
@@ -32,10 +33,11 @@ export async function GET(
   
   try {
     const { chainId } = await params;
+    const canonicalChainId = getCanonicalChainId(chainId);
     
     // Fetch all snapshots for this chain from nginx
-    console.log(`Fetching chain metadata for: ${chainId}`);
-    const nginxSnapshots = await listSnapshots(chainId);
+    console.log(`Fetching chain metadata for: ${canonicalChainId}`);
+    const nginxSnapshots = await listSnapshots(canonicalChainId);
     
     // Filter only actual snapshot files
     const validSnapshots = nginxSnapshots.filter(s => 
@@ -47,7 +49,7 @@ export async function GET(
         {
           success: false,
           error: 'Chain not found',
-          message: `No snapshots found for chain ID ${chainId}`,
+          message: `No snapshots found for chain ID ${canonicalChainId}`,
         },
         { status: 404 }
       );
@@ -83,13 +85,13 @@ export async function GET(
     const compressionRatio = getEstimatedCompressionRatio(compressionType);
     
     const metadata: ChainMetadata = {
-      chain_id: chainId,
+      chain_id: canonicalChainId,
       latest_snapshot: {
         height,
         size: latestSnapshot.size,
         age_hours: ageHours,
       },
-      snapshot_schedule: 'every 6 hours', // Hardcoded as requested
+      snapshot_schedule: 'every 4 hours per database backend',
       average_size: averageSize,
       compression_ratio: compressionRatio,
     };

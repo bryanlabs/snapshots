@@ -62,6 +62,16 @@ export function SnapshotItem({ snapshot, chainName, chainLogoUrl }: SnapshotCard
               generationCycle={snapshot.generationCycle}
               hourGenerated={snapshot.hourGenerated}
             />
+            {snapshot.databaseLabel && (
+              <span className={cn(
+                components.badge.base,
+                snapshot.databaseBackend === 'pebbledb'
+                  ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300'
+                  : 'bg-slate-100 text-slate-800 dark:bg-slate-900/30 dark:text-slate-300'
+              )}>
+                {snapshot.databaseLabel}
+              </span>
+            )}
             {(() => {
               const archiveFormat = getArchiveFormat(snapshot.fileName);
               return (

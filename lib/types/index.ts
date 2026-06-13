@@ -17,6 +17,9 @@ export interface Chain {
 export interface Snapshot {
   id: string;
   chainId: string;
+  storageChainId?: string;
+  databaseBackend?: string;
+  databaseLabel?: string;
   height: number;
   size: number;
   fileName: string;

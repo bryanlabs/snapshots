@@ -205,18 +205,18 @@ Get a list of all chains with available snapshots.
   "success": true,
   "data": [
     {
-      "id": "noble-1",
-      "name": "Noble",
-      "description": "Native asset issuance chain for the Cosmos ecosystem",
-      "logoUrl": "/chains/noble.png",
-      "snapshotCount": 14,
+      "id": "cosmoshub-4",
+      "name": "Cosmos Hub",
+      "description": "The Internet of Blockchains",
+      "logoUrl": "/chains/cosmos.png",
+      "snapshotCount": 4,
       "latestSnapshot": {
-        "height": 20250722,
-        "size": 7069740384,
-        "lastModified": "2025-07-22T18:03:00Z",
-        "compressionType": "lz4"
+        "height": 31552799,
+        "size": 120000000000,
+        "lastModified": "2026-06-13T00:12:18Z",
+        "compressionType": "zst"
       },
-      "totalSize": 98765432100
+      "totalSize": 480000000000
     }
   ]
 }
@@ -230,16 +230,16 @@ Get details for a specific chain.
 {
   "success": true,
   "data": {
-    "id": "noble-1",
-    "name": "Noble",
-    "description": "Native asset issuance chain for the Cosmos ecosystem",
-    "logoUrl": "/chains/noble.png",
-    "snapshotCount": 14,
+    "id": "cosmoshub-4",
+    "name": "Cosmos Hub",
+    "description": "The Internet of Blockchains",
+    "logoUrl": "/chains/cosmos.png",
+    "snapshotCount": 4,
     "latestSnapshot": {
-      "height": 20250722,
-      "size": 7069740384,
-      "lastModified": "2025-07-22T18:03:00Z",
-      "compressionType": "lz4"
+      "height": 31552799,
+      "size": 120000000000,
+      "lastModified": "2026-06-13T00:12:18Z",
+      "compressionType": "zst"
     }
   }
 }
@@ -260,24 +260,30 @@ Get available snapshots for a specific chain.
   "success": true,
   "data": [
     {
-      "id": "noble-1-snapshot-1",
-      "chainId": "noble-1",
-      "height": 20250722,
-      "size": 7069740384,
-      "fileName": "noble-1-20250722-175949.tar.lz4",
-      "createdAt": "2025-07-22T17:59:49Z",
-      "updatedAt": "2025-07-22T18:03:00Z",
+      "id": "cosmoshub-4-snapshot-1",
+      "chainId": "cosmoshub-4",
+      "storageChainId": "cosmoshub-4",
+      "databaseBackend": "goleveldb",
+      "databaseLabel": "LevelDB",
+      "height": 31551542,
+      "size": 118000000000,
+      "fileName": "cosmoshub-4-31551542-20260612-220008.tar.zst",
+      "createdAt": "2026-06-12T22:18:19Z",
+      "updatedAt": "2026-06-12T22:18:19Z",
       "type": "pruned",
-      "compressionType": "lz4"
+      "compressionType": "zst"
     },
     {
-      "id": "noble-1-snapshot-2",
-      "chainId": "noble-1",
-      "height": 20250722,
-      "size": 4929377924,
-      "fileName": "noble-1-20250722-174634.tar.zst",
-      "createdAt": "2025-07-22T17:46:34Z",
-      "updatedAt": "2025-07-22T17:47:00Z",
+      "id": "cosmoshub-4-snapshot-2",
+      "chainId": "cosmoshub-4",
+      "storageChainId": "cosmoshub-4-pebble",
+      "databaseBackend": "pebbledb",
+      "databaseLabel": "PebbleDB",
+      "height": 31552799,
+      "size": 120000000000,
+      "fileName": "cosmoshub-4-pebble-31552799-20260613-000007.tar.zst",
+      "createdAt": "2026-06-13T00:12:18Z",
+      "updatedAt": "2026-06-13T00:12:18Z",
       "type": "pruned",
       "compressionType": "zst"
     }
@@ -286,22 +292,26 @@ Get available snapshots for a specific chain.
 ```
 
 #### GET /v1/chains/[chainId]/snapshots/latest
-Get the latest snapshot for a chain.
+Get the latest snapshot for a canonical chain. For Cosmos Hub, LevelDB and
+PebbleDB snapshots are database variants under `cosmoshub-4`; the endpoint
+returns the most recently modified snapshot across the configured variants.
 
 **Response:**
 ```json
 {
   "success": true,
   "data": {
-    "id": "noble-1-latest",
-    "chainId": "noble-1",
-    "height": 20250722,
-    "size": 7069740384,
-    "fileName": "noble-1-20250722-175949.tar.lz4",
-    "createdAt": "2025-07-22T17:59:49Z",
-    "type": "pruned",
-    "compressionType": "lz4"
-  }
+    "chain_id": "cosmoshub-4",
+    "height": 31552799,
+    "size": 120000000000,
+    "compression": "zst",
+    "url": "https://snapshots.bryanlabs.net/snapshots/cosmoshub-4-pebble/cosmoshub-4-pebble-31552799-20260613-000007.tar.zst?...",
+    "expires_at": "2026-06-13T01:00:00.000Z",
+    "tier": "free",
+    "database_backend": "pebbledb",
+    "database_label": "PebbleDB"
+  },
+  "message": "Latest snapshot URL generated successfully"
 }
 ```
 
@@ -313,17 +323,15 @@ Get metadata and statistics for a specific chain.
 {
   "success": true,
   "data": {
-    "chainId": "noble-1",
-    "name": "Noble",
-    "latestHeight": 20250722,
-    "snapshotSchedule": "Every 3 hours",
-    "averageSize": 5899559154,
-    "compressionRatio": {
-      "zst": 0.45,
-      "lz4": 0.64
+    "chain_id": "cosmoshub-4",
+    "latest_snapshot": {
+      "height": 31552799,
+      "size": 120000000000,
+      "age_hours": 1
     },
-    "totalSnapshots": 14,
-    "oldestSnapshot": "2025-07-20T18:09:38Z"
+    "snapshot_schedule": "every 4 hours per database backend",
+    "average_size": 119000000000,
+    "compression_ratio": 0.45
   }
 }
 ```
@@ -334,7 +342,7 @@ Generate a secure download URL for a snapshot.
 **Request Body:**
 ```json
 {
-  "filename": "noble-1-20250722-175949.tar.lz4"
+  "snapshotId": "cosmoshub-4-snapshot-1"
 }
 ```
 
@@ -343,11 +351,9 @@ Generate a secure download URL for a snapshot.
 {
   "success": true,
   "data": {
-    "url": "https://snapshots.bryanlabs.net/snapshots/noble-1/noble-1-20250722-175949.tar.lz4?md5=abc123&expires=1234567890&tier=free",
-    "expires": "2025-07-22T19:00:00Z",
-    "size": 7069740384,
-    "tier": "free"
-  }
+    "downloadUrl": "https://snapshots.bryanlabs.net/snapshots/cosmoshub-4/cosmoshub-4-31551542-20260612-220008.tar.zst?..."
+  },
+  "message": "Download URL generated successfully"
 }
 ```
 

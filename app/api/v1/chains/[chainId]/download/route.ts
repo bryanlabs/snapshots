@@ -116,16 +116,18 @@ async function handleDownload(
         { status: 404 }
       );
     }
+    const canonicalChainId = snapshot.chainId || chainId;
+    const storageChainId = snapshot.storageChainId || canonicalChainId;
     
     // Generate secure link URL with nginx (12 hour expiry by default)
     const downloadUrl = await generateDownloadUrl(
-      chainId,
+      storageChainId,
       snapshot.fileName,
       tier as 'free' | 'premium' | 'unlimited',
       userId
     );
     
-    console.log(`Generated secure link URL for file: ${chainId}/${snapshot.fileName}`);
+    console.log(`Generated secure link URL for file: ${storageChainId}/${snapshot.fileName}`);
     
     // Increment download counter for free tier
     if (tier === 'free') {
@@ -135,7 +137,7 @@ async function handleDownload(
     // Log download for analytics
     await logDownload({
       snapshotId,
-      chainId,
+      chainId: canonicalChainId,
       userId,
       ip: clientIp,
       tier: tier as 'free' | 'premium' | 'unlimited',

@@ -5,6 +5,7 @@ import { extractHeightFromFilename } from '@/lib/config/supported-formats';
 import { config } from '@/lib/config';
 import { getUserSession, getGuestUserTier } from '@/lib/auth/user-session';
 import { canAccessSnapshot } from '@/lib/utils/tier';
+import { getCanonicalChainId } from '@/lib/config/chains';
 
 export async function GET(
   request: NextRequest,
@@ -12,14 +13,15 @@ export async function GET(
 ) {
   try {
     const { chainId } = await params;
+    const canonicalChainId = getCanonicalChainId(chainId);
     
     // Get user session and tier
     const userSession = await getUserSession();
     const userTier = userSession.user?.tier || getGuestUserTier();
     
     // Fetch real snapshots from nginx
-    console.log(`Fetching snapshots for chain: ${chainId}`);
-    const nginxSnapshots = await listSnapshots(chainId);
+    console.log(`Fetching snapshots for chain: ${canonicalChainId}`);
+    const nginxSnapshots = await listSnapshots(canonicalChainId);
     console.log(`Found ${nginxSnapshots.length} snapshots from nginx`);
     
     // Transform nginx snapshots to match our Snapshot type
@@ -29,8 +31,11 @@ export async function GET(
         const height = extractHeightFromFilename(s.filename) || s.height || 0;
         
         return {
-          id: `${chainId}-snapshot-${index}`,
-          chainId: chainId,
+          id: `${canonicalChainId}-snapshot-${index}`,
+          chainId: canonicalChainId,
+          storageChainId: s.storageChainId,
+          databaseBackend: s.databaseBackend,
+          databaseLabel: s.databaseLabel,
           height: height,
           size: s.size,
           fileName: s.filename,

@@ -72,8 +72,11 @@ export function getArchiveFormat(filename: string): ArchiveFormat | null {
 }
 
 /**
- * Extract block height from snapshot filename
- * Supports formats like: chain-name-12345678.tar.zst, snapshot-12345678.zip, etc.
+ * Extract block height from snapshot filename.
+ * Supports:
+ * - chain-name-12345678.tar.zst
+ * - chain-name-12345678-20260612-190333.tar.zst
+ * - chain-name-20260612-190333-12345678.tar.zst
  */
 export function extractHeightFromFilename(filename: string): number | null {
   // Remove file extensions to get to the height
@@ -85,6 +88,22 @@ export function extractHeightFromFilename(filename: string): number | null {
       baseName = baseName.slice(0, -pattern.length);
     }
   });
+
+  const heightBeforeTimestamp = baseName.match(/-(\d{6,})-\d{8}-\d{6}$/);
+  if (heightBeforeTimestamp) {
+    return parseInt(heightBeforeTimestamp[1], 10);
+  }
+
+  const heightAfterTimestamp = baseName.match(/-\d{8}-\d{6}-(\d{6,})$/);
+  if (heightAfterTimestamp) {
+    return parseInt(heightAfterTimestamp[1], 10);
+  }
+
+  // Timestamp-only processor names look like chain-id-YYYYMMDD-HHMMSS.
+  // The final HHMMSS segment is not a block height.
+  if (/-\d{8}-\d{6}$/.test(baseName)) {
+    return null;
+  }
   
   // Try to extract height - usually the last numeric segment
   const heightMatch = baseName.match(/(\d{6,})$/); // At least 6 digits for a block height
