@@ -8,9 +8,9 @@ import type { Metadata } from 'next';
 import { Chain, Snapshot } from '@/lib/types';
 import { auth } from '@/auth';
 import { Button } from '@/components/ui/button';
-import { SparklesIcon } from '@heroicons/react/24/outline';
 import { CustomSnapshotModal } from '@/components/chains/CustomSnapshotModal';
-import { getChainConfig, getChainLogoUrl, getChainAccentColor, getChainBannerUrl } from '@/lib/config/chains';
+import { getChainLogoUrl, getChainAccentColor } from '@/lib/config/chains';
+import { getEffectiveAccessTier, getServerTierCapabilities } from '@/lib/utils/tier';
 
 async function getChain(chainId: string): Promise<Chain | null> {
   try {
@@ -88,6 +88,7 @@ export default async function ChainDetailPage({
   const chain = await getChain(chainId);
   const snapshots = await getSnapshots(chainId);
   const session = await auth();
+  const effectiveAccessTier = getEffectiveAccessTier(session?.user?.tier);
 
   if (!chain) {
     notFound();
@@ -194,27 +195,20 @@ export default async function ChainDetailPage({
               />
             )}
             {(() => {
-              // Use centralized tier access validation - supports all premium tiers including ultra/unlimited
-              const { getServerTierCapabilities } = require("@/lib/utils/tier");
               const capabilities = getServerTierCapabilities(session?.user?.tier);
-              
+
               return capabilities.canRequestCustomSnapshots ? (
-                <CustomSnapshotModal chainId={chainId} chainName={chain.name} />
-              ) : session?.user ? (
-                <Link href="/pricing#premium">
-                  <Button 
-                    variant="outline" 
-                    className="bg-gray-800/50 border-gray-700 hover:bg-gray-700/50 text-gray-300 hover:text-white transition-colors"
-                  >
-                    <SparklesIcon className="w-5 h-5 mr-2" />
-                    Custom Snapshot
-                    <span className="ml-2 text-xs bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 px-1.5 py-0.5 rounded">
-                      Premium
-                    </span>
-                  </Button>
-                </Link>
+                <CustomSnapshotModal chainId={chainId} chainName={chain.name} chainLogoUrl={getChainLogoUrl(chain.id)} />
               ) : null;
             })()}
+            <Link href="/api-docs">
+              <Button
+                variant="outline"
+                className="bg-gray-800/50 border-gray-700 hover:bg-gray-700/50 text-gray-300 hover:text-white transition-colors"
+              >
+                API and CLI
+              </Button>
+            </Link>
           </div>
 
           <SnapshotListRealtime 
@@ -223,32 +217,9 @@ export default async function ChainDetailPage({
             chainLogoUrl={getChainLogoUrl(chain.id)}
             initialSnapshots={snapshots} 
             pollInterval={30000} // Poll every 30 seconds
+            effectiveAccessTier={effectiveAccessTier}
           />
           
-          {/* Custom Snapshots Upsell for Free Users */}
-          {(() => {
-            const { getServerTierCapabilities } = require("@/lib/utils/tier");
-            const capabilities = getServerTierCapabilities(session?.user?.tier);
-            
-            return session?.user && capabilities.upgradePromptEnabled ? (
-              <div className="mt-8 p-4 bg-gray-800/30 rounded-lg border border-gray-700">
-                <div className="flex items-start gap-3">
-                  <SparklesIcon className="w-5 h-5 text-purple-400 flex-shrink-0 mt-0.5" />
-                  <div className="flex-1">
-                    <h3 className="text-sm font-medium text-white mb-1">
-                      Need a specific block height?
-                    </h3>
-                    <p className="text-xs text-gray-400 mb-3">
-                      Premium users can request custom snapshots from any block height with priority processing.
-                    </p>
-                    <Link href="/pricing#premium" className="inline-flex items-center gap-1 text-xs font-medium text-purple-400 hover:text-purple-300">
-                      Learn more about premium features →
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            ) : null;
-          })()}
         </div>
       </section>
     </div>

@@ -12,7 +12,6 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { useToast } from "@/components/ui/toast";
 import { UserAvatar } from "@/components/common/UserAvatar";
 import { LinkEmailForm } from "@/components/account/LinkEmailForm";
-import { TelegramCommunityAccess } from "@/components/account/TelegramCommunityAccess";
 import { CameraIcon, TrashIcon } from "@heroicons/react/24/outline";
 
 export default function AccountPage() {
@@ -230,9 +229,6 @@ export default function AccountPage() {
             </CardContent>
           </Card>
         )}
-
-        {/* Telegram Community Access */}
-        <TelegramCommunityAccess />
 
         {/* Link Email - Show for users without email (temporarily showing for all) */}
         {!session?.user?.email && (

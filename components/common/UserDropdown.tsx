@@ -9,9 +9,10 @@ import {
   UserCircleIcon, 
   Cog6ToothIcon, 
   ArrowRightOnRectangleIcon,
-  CreditCardIcon,
   CloudArrowDownIcon,
-  CurrencyDollarIcon
+  CodeBracketIcon,
+  ShieldCheckIcon,
+  SparklesIcon
 } from '@heroicons/react/24/outline';
 
 interface UserDropdownProps {
@@ -20,6 +21,7 @@ interface UserDropdownProps {
     email?: string | null;
     image?: string | null;
     tier?: string | null;
+    role?: string | null;
   };
 }
 
@@ -70,11 +72,11 @@ export function UserDropdown({ user }: UserDropdownProps) {
                   <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium mt-1 ${
                     user.tier === 'premium' 
                       ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300'
-                      : user.tier === 'unlimited'
+                      : user.tier === 'ultra' || user.tier === 'unlimited'
                       ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300'
                       : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
                   }`}>
-                    {user.tier === 'premium' ? 'Premium' : user.tier === 'unlimited' ? 'Ultimate' : 'Free'} Tier
+                    {user.tier === 'premium' ? 'Premium' : user.tier === 'ultra' || user.tier === 'unlimited' ? 'Ultra' : 'Free'} Tier
                   </span>
                 )}
               </div>
@@ -102,21 +104,12 @@ export function UserDropdown({ user }: UserDropdownProps) {
             </Link>
             
             <Link
-              href="/pricing"
+              href="/api-docs"
               className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
               onClick={() => setIsOpen(false)}
             >
-              <CurrencyDollarIcon className="w-5 h-5 mr-3" />
-              Pricing & Plans
-            </Link>
-            
-            <Link
-              href="/billing"
-              className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
-              onClick={() => setIsOpen(false)}
-            >
-              <CreditCardIcon className="w-5 h-5 mr-3" />
-              Credits & Billing
+              <CodeBracketIcon className="w-5 h-5 mr-3" />
+              API and CLI
             </Link>
             
             <Link
@@ -127,6 +120,35 @@ export function UserDropdown({ user }: UserDropdownProps) {
               <Cog6ToothIcon className="w-5 h-5 mr-3" />
               Account Settings
             </Link>
+
+            {user.role === 'admin' && (
+              <>
+                <Link
+                  href="/admin/users"
+                  className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  onClick={() => setIsOpen(false)}
+                >
+                  <ShieldCheckIcon className="w-5 h-5 mr-3" />
+                  User Management
+                </Link>
+                <Link
+                  href="/admin/snapshots"
+                  className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  onClick={() => setIsOpen(false)}
+                >
+                  <SparklesIcon className="w-5 h-5 mr-3" />
+                  Custom Snapshots
+                </Link>
+                <Link
+                  href="/admin/settings"
+                  className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  onClick={() => setIsOpen(false)}
+                >
+                  <Cog6ToothIcon className="w-5 h-5 mr-3" />
+                  Admin Settings
+                </Link>
+              </>
+            )}
           </div>
           
           {/* Logout */}

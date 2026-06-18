@@ -39,9 +39,14 @@ async function handleGetStats(_request: NextRequest) {
 }
 
 // Helper function to parse Prometheus metrics into JSON
-function parseMetrics(metricsText: string): Record<string, unknown> {
+type ParsedMetric = {
+  labels: Record<string, string>;
+  value: number;
+};
+
+function parseMetrics(metricsText: string): Record<string, ParsedMetric[]> {
   const lines = metricsText.split('\n');
-  const metrics: Record<string, unknown> = {};
+  const metrics: Record<string, ParsedMetric[]> = {};
   
   for (const line of lines) {
     if (line.startsWith('#') || !line.trim()) continue;
