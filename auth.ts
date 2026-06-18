@@ -16,6 +16,7 @@ const WalletLoginSchema = z.object({
   walletAddress: z.string().min(1),
   signature: z.string().min(1),
   message: z.string().min(1),
+  pubkey: z.string().min(1),
 });
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
@@ -97,12 +98,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         walletAddress: { label: "Wallet Address", type: "text" },
         signature: { label: "Signature", type: "text" },
         message: { label: "Message", type: "text" },
+        pubkey: { label: "Public Key", type: "text" },
       },
       async authorize(credentials) {
         const parsed = WalletLoginSchema.safeParse(credentials);
         if (!parsed.success) return null;
 
-        const { walletAddress, signature, message } = parsed.data;
+        const { walletAddress, signature, message, pubkey } = parsed.data;
 
         // Import verification functions
         const { verifyCosmosSignature, validateSignatureMessage } = await import("@/lib/auth/cosmos-verify");
@@ -118,6 +120,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           walletAddress,
           signature,
           message,
+          pubkey,
         });
 
         if (!isValidSignature) {
@@ -208,7 +211,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         if (user) {
           // Import subscription utilities
           const { getEffectiveTier } = await import("@/lib/utils/subscription");
-          const { getApiRateLimit } = await import("@/lib/utils/tier");
+          const { getTierRateLimit } = await import("@/lib/utils/tier");
           
           // Calculate effective tier considering subscription status
           const effectiveTierName = getEffectiveTier(
@@ -218,10 +221,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           );
           
           // Get API rate limit for effective tier
-          const apiRateLimit = getApiRateLimit(effectiveTierName);
+          const apiRateLimit = getTierRateLimit(effectiveTierName);
 
           session.user.name = user.displayName || user.email?.split('@')[0] || undefined;
-          session.user.email = user.email || undefined;
+          session.user.email = user.email || "";
           session.user.walletAddress = user.walletAddress || undefined;
           session.user.image = user.avatarUrl || undefined;
           session.user.avatarUrl = user.avatarUrl || undefined;
@@ -231,7 +234,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           
           // New subscription fields
           session.user.subscriptionStatus = user.subscriptionStatus;
-          session.user.subscriptionExpiresAt = user.subscriptionExpiresAt;
+          session.user.subscriptionExpiresAt = user.subscriptionExpiresAt || undefined;
           session.user.apiRateLimit = apiRateLimit;
           
           session.user.teams = []; // Empty for now

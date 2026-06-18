@@ -1,10 +1,11 @@
 import { verifyCosmosSignature, validateSignatureMessage, VerifySignatureParams } from "../cosmos-verify";
 import { verifyADR36Amino } from "@keplr-wallet/cosmos";
 import { fromBase64, fromBech32 } from "@cosmjs/encoding";
-import { makeADR36AminoSignDoc, serializeSignDoc } from "@keplr-wallet/cosmos";
 
 // Mock all external dependencies
-jest.mock("@keplr-wallet/cosmos");
+jest.mock("@keplr-wallet/cosmos", () => ({
+  verifyADR36Amino: jest.fn(),
+}));
 jest.mock("@cosmjs/encoding");
 jest.mock("@cosmjs/amino", () => ({
   pubkeyToAddress: jest.fn(),
@@ -13,8 +14,6 @@ jest.mock("@cosmjs/amino", () => ({
 const mockVerifyADR36Amino = verifyADR36Amino as jest.MockedFunction<typeof verifyADR36Amino>;
 const mockFromBase64 = fromBase64 as jest.MockedFunction<typeof fromBase64>;
 const mockFromBech32 = fromBech32 as jest.MockedFunction<typeof fromBech32>;
-const mockMakeADR36AminoSignDoc = makeADR36AminoSignDoc as jest.MockedFunction<typeof makeADR36AminoSignDoc>;
-const mockSerializeSignDoc = serializeSignDoc as jest.MockedFunction<typeof serializeSignDoc>;
 
 describe("Cosmos Signature Verification", () => {
   beforeEach(() => {
@@ -99,11 +98,13 @@ describe("Cosmos Signature Verification", () => {
 
     beforeEach(() => {
       // Setup default successful mocks
-      mockFromBase64.mockReturnValue(validSignature);
+      mockFromBase64.mockImplementation((input) => {
+        if (input === mockParams.signature) return validSignature;
+        if (input === mockParams.pubkey) return validPubkey;
+        return new Uint8Array();
+      });
       mockFromBech32.mockReturnValue({ prefix: "cosmos", data: new Uint8Array() });
       mockVerifyADR36Amino.mockResolvedValue(true);
-      mockMakeADR36AminoSignDoc.mockReturnValue({} as any);
-      mockSerializeSignDoc.mockReturnValue(new Uint8Array());
       
       // Mock dynamic import
       const { pubkeyToAddress } = require("@cosmjs/amino");
@@ -114,10 +115,11 @@ describe("Cosmos Signature Verification", () => {
       const result = await verifyCosmosSignature(mockParams);
       expect(result).toBe(true);
       expect(mockVerifyADR36Amino).toHaveBeenCalledWith(
+        "cosmos",
         "cosmos1example",
         mockParams.message,
-        validSignature,
-        validPubkey
+        validPubkey,
+        validSignature
       );
     });
 
@@ -129,18 +131,6 @@ describe("Cosmos Signature Verification", () => {
       
       const result = await verifyCosmosSignature(osmoParams);
       expect(result).toBe(true);
-    });
-
-    it("should verify signature without pubkey", async () => {
-      const paramsWithoutPubkey = { ...mockParams, pubkey: undefined };
-      const result = await verifyCosmosSignature(paramsWithoutPubkey);
-      expect(result).toBe(true);
-      expect(mockVerifyADR36Amino).toHaveBeenCalledWith(
-        "cosmos1example",
-        mockParams.message,
-        validSignature,
-        undefined
-      );
     });
 
     it("should reject invalid wallet address format", async () => {
@@ -219,13 +209,13 @@ describe("Cosmos Signature Verification", () => {
     });
 
     it("should handle unexpected errors", async () => {
-      mockMakeADR36AminoSignDoc.mockImplementation(() => {
+      mockFromBech32.mockImplementation(() => {
         throw new Error("Unexpected error");
       });
       
       const result = await verifyCosmosSignature(mockParams);
       expect(result).toBe(false);
-      expect(console.error).toHaveBeenCalledWith("Error during signature verification:", expect.any(Error));
+      expect(console.error).toHaveBeenCalledWith("Invalid wallet address bech32 encoding:", expect.any(Error));
     });
 
     it("should properly decode and pass pubkey when provided", async () => {
@@ -247,7 +237,7 @@ describe("Cosmos Signature Verification", () => {
       
       const result = await verifyCosmosSignature(mockParams);
       expect(result).toBe(false);
-      expect(console.error).toHaveBeenCalledWith("Failed to verify public key:", expect.any(Error));
+      expect(console.error).toHaveBeenCalledWith("Invalid wallet address bech32 encoding:", expect.any(Error));
     });
 
     it("should handle empty signature", async () => {
@@ -258,16 +248,5 @@ describe("Cosmos Signature Verification", () => {
       expect(console.error).toHaveBeenCalledWith("Invalid signature length: 0, expected 64");
     });
 
-    it("should call makeADR36AminoSignDoc and serializeSignDoc", async () => {
-      const mockSignDoc = { test: "doc" };
-      const mockSerializedDoc = new Uint8Array([1, 2, 3]);
-      mockMakeADR36AminoSignDoc.mockReturnValue(mockSignDoc as any);
-      mockSerializeSignDoc.mockReturnValue(mockSerializedDoc);
-      
-      await verifyCosmosSignature(mockParams);
-      
-      expect(mockMakeADR36AminoSignDoc).toHaveBeenCalledWith("cosmos1example", mockParams.message);
-      expect(mockSerializeSignDoc).toHaveBeenCalledWith(mockSignDoc);
-    });
   });
 });

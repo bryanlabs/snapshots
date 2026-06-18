@@ -27,6 +27,7 @@ describe('/api/v1/auth/wallet', () => {
         walletAddress: 'cosmos1abc123def456',
         signature: 'valid-signature-string',
         message: 'Sign this message to authenticate',
+        pubkey: 'valid-pubkey-string',
       };
       
       const request = new NextRequest('http://localhost:3000/api/v1/auth/wallet', {
@@ -49,6 +50,7 @@ describe('/api/v1/auth/wallet', () => {
         walletAddress: 'cosmos1abc123def456',
         signature: 'valid-signature-string',
         message: 'Sign this message to authenticate',
+        pubkey: 'valid-pubkey-string',
         redirect: false,
       });
     });
@@ -57,6 +59,7 @@ describe('/api/v1/auth/wallet', () => {
       const body = {
         signature: 'valid-signature-string',
         message: 'Sign this message',
+        pubkey: 'valid-pubkey-string',
       };
       
       const request = new NextRequest('http://localhost:3000/api/v1/auth/wallet', {
@@ -83,6 +86,7 @@ describe('/api/v1/auth/wallet', () => {
       const body = {
         walletAddress: 'cosmos1abc123def456',
         message: 'Sign this message',
+        pubkey: 'valid-pubkey-string',
       };
       
       const request = new NextRequest('http://localhost:3000/api/v1/auth/wallet', {
@@ -108,6 +112,7 @@ describe('/api/v1/auth/wallet', () => {
       const body = {
         walletAddress: 'cosmos1abc123def456',
         signature: 'valid-signature-string',
+        pubkey: 'valid-pubkey-string',
       };
       
       const request = new NextRequest('http://localhost:3000/api/v1/auth/wallet', {
@@ -134,6 +139,7 @@ describe('/api/v1/auth/wallet', () => {
         walletAddress: '',
         signature: '',
         message: '',
+        pubkey: '',
       };
       
       const request = new NextRequest('http://localhost:3000/api/v1/auth/wallet', {
@@ -162,6 +168,7 @@ describe('/api/v1/auth/wallet', () => {
         walletAddress: 'cosmos1abc123def456',
         signature: 'invalid-signature',
         message: 'Sign this message',
+        pubkey: 'valid-pubkey-string',
       };
       
       const request = new NextRequest('http://localhost:3000/api/v1/auth/wallet', {

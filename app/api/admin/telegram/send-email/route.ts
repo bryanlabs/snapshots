@@ -60,16 +60,16 @@ export async function POST(request: NextRequest) {
       // Prepare email data
       const emailData = {
         user: {
-          displayName: invitation.user.displayName,
-          email: invitation.user.email,
-          telegramUsername: invitation.user.telegramUsername
+          displayName: invitation.user.displayName || undefined,
+          email: invitation.user.email || '',
+          telegramUsername: invitation.user.telegramUsername || undefined
         },
         invitation: {
           id: invitation.id,
           groupType: invitation.groupType,
           groupName: invitation.groupName,
           inviteToken: invitation.inviteToken || '',
-          expiresAt: invitation.expiresAt
+          expiresAt: invitation.expiresAt || undefined
         },
         inviteLink: data?.inviteLink,
         personalMessage: data?.personalMessage
@@ -125,16 +125,16 @@ export async function POST(request: NextRequest) {
       const emailPromises = invitations.map(async (invitation) => {
         const emailData = {
           user: {
-            displayName: invitation.user.displayName,
-            email: invitation.user.email,
-            telegramUsername: invitation.user.telegramUsername
+            displayName: invitation.user.displayName || undefined,
+            email: invitation.user.email || '',
+            telegramUsername: invitation.user.telegramUsername || undefined
           },
           invitation: {
             id: invitation.id,
             groupType: invitation.groupType,
             groupName: invitation.groupName,
             inviteToken: invitation.inviteToken || '',
-            expiresAt: invitation.expiresAt
+            expiresAt: invitation.expiresAt || undefined
           },
           inviteLink: data?.inviteLinks?.[invitation.id],
           personalMessage: data?.personalMessage
@@ -206,12 +206,12 @@ export async function POST(request: NextRequest) {
 
       const reminderData = {
         user: {
-          displayName: invitation.user.displayName,
-          email: invitation.user.email
+          displayName: invitation.user.displayName || undefined,
+          email: invitation.user.email || ''
         },
         invitation: {
           groupName: invitation.groupName,
-          expiresAt: invitation.expiresAt
+          expiresAt: invitation.expiresAt || undefined
         },
         reminderCount: invitation.remindersSent + 1
       };

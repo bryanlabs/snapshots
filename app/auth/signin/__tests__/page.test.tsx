@@ -396,8 +396,8 @@ describe("SignInPage", () => {
     
     expect(screen.getByText("Why Create an Account?")).toBeInTheDocument();
     expect(screen.getByText("Personalized Experience")).toBeInTheDocument();
-    expect(screen.getByText("Daily Credits")).toBeInTheDocument();
-    expect(screen.getByText("Priority Access")).toBeInTheDocument();
+    expect(screen.getByText("Download History")).toBeInTheDocument();
+    expect(screen.getByText("Custom Snapshot Tracking")).toBeInTheDocument();
     expect(screen.getByText("API Access")).toBeInTheDocument();
   });
 });

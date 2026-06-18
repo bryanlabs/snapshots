@@ -1,13 +1,15 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { getEffectiveTier } from "@/lib/utils/subscription";
+import type { UserTier } from "@/types/user";
 
 export interface UserSessionInfo {
   user: {
     id: string;
     email: string;
     name?: string;
-    role: string;
-    tier?: string;
+    role: 'user' | 'admin';
+    tier?: UserTier;
   } | null;
   isAuthenticated: boolean;
 }
@@ -31,6 +33,8 @@ export async function getUserSession(): Promise<UserSessionInfo> {
         email: true,
         displayName: true,
         role: true,
+        subscriptionStatus: true,
+        subscriptionExpiresAt: true,
         personalTierId: true,
         personalTier: {
           select: {
@@ -48,10 +52,14 @@ export async function getUserSession(): Promise<UserSessionInfo> {
     return {
       user: {
         id: dbUser.id,
-        email: dbUser.email,
+        email: dbUser.email || '',
         name: dbUser.displayName || session.user.name || undefined,
-        role: dbUser.role,
-        tier: dbUser.personalTier?.name || 'free' // Default to free if no tier assigned
+        role: dbUser.role as 'user' | 'admin',
+        tier: getEffectiveTier(
+          dbUser.personalTier?.name || 'free',
+          dbUser.subscriptionStatus as any,
+          dbUser.subscriptionExpiresAt
+        )
       },
       isAuthenticated: true
     };

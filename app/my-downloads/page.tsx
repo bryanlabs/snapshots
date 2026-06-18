@@ -13,33 +13,6 @@ export default async function MyDownloadsPage() {
     redirect("/auth/signin");
   }
 
-  // Handle premium user specially
-  if (session.user.id === 'premium-user') {
-    return (
-      <div className="container mx-auto py-8 px-4 max-w-6xl">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold">My Downloads</h1>
-          <p className="text-muted-foreground">View your download history</p>
-        </div>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Premium Account</CardTitle>
-            <CardDescription>
-              Download history is not tracked for premium accounts
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground">
-              As a premium user, you have unlimited access to all snapshots.
-              Visit the <Link href="/chains" className="text-blue-600 hover:underline">chains page</Link> to browse and download snapshots.
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
   const downloads = await prisma.download.findMany({
     where: { userId: session.user.id },
     include: {
@@ -59,7 +32,7 @@ export default async function MyDownloadsPage() {
       {downloads.length === 0 ? (
         <Card>
           <CardContent className="text-center py-12">
-            <p className="text-muted-foreground mb-4">You haven't downloaded any snapshots yet.</p>
+            <p className="text-muted-foreground mb-4">You have not downloaded any snapshots yet.</p>
             <Button asChild>
               <Link href="/">Browse Snapshots</Link>
             </Button>
@@ -96,29 +69,23 @@ export default async function MyDownloadsPage() {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
                   <div>
                     <p className="text-muted-foreground">File Size</p>
                     <p className="font-medium">
-                      {(download.fileSizeBytes / (1024 ** 3)).toFixed(2)} GB
+                      {(Number(download.fileSizeBytes) / (1024 ** 3)).toFixed(2)} GB
                     </p>
                   </div>
                   <div>
                     <p className="text-muted-foreground">Downloaded</p>
                     <p className="font-medium">
-                      {(download.bytesTransferred / (1024 ** 3)).toFixed(2)} GB
+                      {(Number(download.bytesTransferred) / (1024 ** 3)).toFixed(2)} GB
                     </p>
                   </div>
                   <div>
                     <p className="text-muted-foreground">Speed</p>
                     <p className="font-medium">
                       {download.actualBandwidthMbps?.toFixed(1) || download.allocatedBandwidthMbps} Mbps
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">Credits Used</p>
-                    <p className="font-medium">
-                      {download.creditsUsed || 1}
                     </p>
                   </div>
                 </div>

@@ -1,4 +1,16 @@
-import { ChainSnapshot } from "../ui/SnapshotCard";
+type ChainSnapshot = {
+  name: string;
+  network: string;
+  description: string;
+  symbol: string;
+  latestBlock: number;
+  prunedSize: string;
+  nodeVersion: string;
+  updated: string;
+  endpoints: {
+    snapshot: string;
+  };
+};
 
 interface StructuredDataProps {
   type: "homepage" | "chain";

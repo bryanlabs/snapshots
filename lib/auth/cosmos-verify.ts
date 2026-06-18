@@ -1,13 +1,11 @@
 import { verifyADR36Amino } from "@keplr-wallet/cosmos";
 import { fromBase64, fromBech32 } from "@cosmjs/encoding";
-import { Secp256k1, Secp256k1Signature } from "@cosmjs/crypto";
-import { makeADR36AminoSignDoc, serializeSignDoc } from "@keplr-wallet/cosmos";
 
 export interface VerifySignatureParams {
   walletAddress: string;
   signature: string;
   message: string;
-  pubkey?: string;
+  pubkey: string;
 }
 
 /**
@@ -33,6 +31,14 @@ export async function verifyCosmosSignature({
       return false;
     }
 
+    let bech32Prefix: string;
+    try {
+      bech32Prefix = fromBech32(walletAddress).prefix;
+    } catch (error) {
+      console.error("Invalid wallet address bech32 encoding:", error);
+      return false;
+    }
+
     // Decode the signature from base64
     let signatureBytes: Uint8Array;
     try {
@@ -50,56 +56,30 @@ export async function verifyCosmosSignature({
       return false;
     }
 
-    // If pubkey is provided, verify it matches the address
-    if (pubkey) {
-      try {
-        const pubkeyBytes = fromBase64(pubkey);
-        // Verify the pubkey derives to the provided address
-        // This is an additional security check
-        const derivedAddress = await deriveAddressFromPubkey(pubkeyBytes, walletAddress);
-        if (derivedAddress !== walletAddress) {
-          console.error("Public key does not match wallet address");
-          return false;
-        }
-      } catch (error) {
-        console.error("Failed to verify public key:", error);
+    let pubkeyBytes: Uint8Array;
+    try {
+      pubkeyBytes = fromBase64(pubkey);
+      const derivedAddress = await deriveAddressFromPubkey(pubkeyBytes, walletAddress);
+      if (derivedAddress !== walletAddress) {
+        console.error("Public key does not match wallet address");
         return false;
       }
+    } catch (error) {
+      console.error("Failed to verify public key:", error);
+      return false;
     }
 
-    // Create the sign doc according to ADR-036
-    const signDoc = makeADR36AminoSignDoc(walletAddress, message);
-    const signBytes = serializeSignDoc(signDoc);
-
-    // For ADR-036, we need to verify against the actual signer's address
-    // The signature should be verifiable using the standard Cosmos SDK verification
     try {
-      // Try with undefined pubkey first (Keplr often doesn't provide pubkey)
-      const isValid = await verifyADR36Amino(
+      return await verifyADR36Amino(
+        bech32Prefix,
         walletAddress,
         message,
-        signatureBytes,
-        undefined  // Don't pass pubkey to avoid issues
+        pubkeyBytes,
+        signatureBytes
       );
-      return isValid;
     } catch (error) {
       console.error("Signature verification failed:", error);
-      
-      // Try alternative verification approach
-      try {
-        console.log("Trying alternative verification...");
-        // Create a simpler verification without pubkey constraints
-        const isValidAlt = await verifyADR36Amino(
-          walletAddress,
-          message.trim(), // Try trimmed message
-          signatureBytes,
-          undefined
-        );
-        return isValidAlt;
-      } catch (altError) {
-        console.error("Alternative verification also failed:", altError);
-        return false;
-      }
+      return false;
     }
   } catch (error) {
     console.error("Error during signature verification:", error);
@@ -156,6 +136,10 @@ export function validateSignatureMessage(message: string): boolean {
 
   try {
     const timestamp = new Date(timestampMatch[1]);
+    if (Number.isNaN(timestamp.getTime())) {
+      throw new Error("Invalid date");
+    }
+
     const now = new Date();
     const fiveMinutesAgo = new Date(now.getTime() - 5 * 60 * 1000);
 

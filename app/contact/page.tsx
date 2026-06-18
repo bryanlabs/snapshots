@@ -27,18 +27,6 @@ export default function ContactPage() {
       color: "from-indigo-500 to-purple-600"
     },
     {
-      name: "Telegram",
-      username: "@danbryan80",
-      displayUsername: "@danbryan80",
-      href: "https://t.me/danbryan80",
-      icon: (
-        <svg className="w-8 h-8" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M12 0C5.372 0 0 5.372 0 12s5.372 12 12 12 12-5.372 12-12S18.628 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.14.18-.357.295-.6.295l.213-3.053 5.56-5.023c.24-.213-.054-.334-.373-.121l-6.869 4.326-2.96-.924c-.64-.203-.658-.64.136-.953l11.57-4.461c.536-.194 1.006.131.823.943z"/>
-        </svg>
-      ),
-      color: "from-blue-400 to-blue-600"
-    },
-    {
       name: "X",
       username: "@danbryan80",
       displayUsername: "@danbryan80",
@@ -72,7 +60,7 @@ export default function ContactPage() {
             Get in Touch
           </h1>
           <p className="text-xl text-gray-300 max-w-2xl mx-auto">
-            Have questions about our snapshot service? Want to upgrade to premium? We&apos;re here to help!
+            Have questions about our snapshot service or need a chain added? We&apos;re here to help.
           </p>
         </div>
 
@@ -86,7 +74,7 @@ export default function ContactPage() {
               Schedule a Quick Call
             </h2>
             <p className="text-gray-300 text-center mb-6">
-              Book a quick call and get <span className="font-semibold text-purple-300">1 month of Premium free</span> to discuss your snapshot needs.
+              Book a quick call to discuss snapshot needs, chain support, or integration questions.
             </p>
             <a
               href="https://fantastical.app/bryanlabs/15-minutes"

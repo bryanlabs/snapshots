@@ -56,8 +56,8 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/pricing" className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium">
-                  Pricing Plans
+                <Link href="/api-docs" className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium">
+                  API and CLI
                 </Link>
               </li>
             </ul>
@@ -69,7 +69,7 @@ export function Footer() {
             <ul className="space-y-2">
               <li>
                 <span className="text-sm text-muted-foreground">
-                  50-500 Mbps Downloads
+                  Signed Download URLs
                 </span>
               </li>
               <li>
@@ -84,7 +84,7 @@ export function Footer() {
               </li>
               <li>
                 <span className="text-sm text-muted-foreground">
-                  Priority Support
+                  LevelDB and PebbleDB Variants
                 </span>
               </li>
             </ul>
@@ -135,18 +135,9 @@ export function Footer() {
               </div>
             </div>
             
-            {/* Upgrade CTA in Footer */}
-            <div className="flex items-center gap-3">
-              <span className="text-sm text-muted-foreground">
-                Need faster downloads?
-              </span>
-              <Link 
-                href="/pricing" 
-                className="bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-1.5 rounded-lg text-sm font-medium transition-colors"
-              >
-                View Plans
-              </Link>
-            </div>
+            <Link href="/api-docs" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+              API and CLI examples
+            </Link>
           </div>
         </div>
       </div>

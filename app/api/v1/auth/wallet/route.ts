@@ -6,6 +6,7 @@ const WalletAuthSchema = z.object({
   walletAddress: z.string().min(1),
   signature: z.string().min(1),
   message: z.string().min(1),
+  pubkey: z.string().min(1),
 });
 
 export async function POST(request: NextRequest) {
@@ -26,6 +27,7 @@ export async function POST(request: NextRequest) {
       walletAddress: parsed.data.walletAddress,
       signature: parsed.data.signature,
       message: parsed.data.message,
+      pubkey: parsed.data.pubkey,
       redirect: false,
     });
 

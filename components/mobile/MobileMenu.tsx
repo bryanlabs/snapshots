@@ -10,8 +10,7 @@ import {
   ServerStackIcon, 
   UserIcon,
   ArrowDownTrayIcon,
-  CreditCardIcon,
-  CurrencyDollarIcon,
+  CodeBracketIcon,
 } from '@heroicons/react/24/outline';
 
 export function MobileMenu() {
@@ -50,9 +49,9 @@ export function MobileMenu() {
       label: 'Chains',
     },
     {
-      href: '/pricing',
-      icon: CurrencyDollarIcon,
-      label: 'Pricing',
+      href: '/api-docs',
+      icon: CodeBracketIcon,
+      label: 'API',
     },
     {
       href: '/my-downloads',

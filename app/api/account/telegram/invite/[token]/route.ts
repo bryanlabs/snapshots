@@ -2,15 +2,15 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
 interface RouteParams {
-  params: {
+  params: Promise<{
     token: string;
-  };
+  }>;
 }
 
 // GET /api/account/telegram/invite/[token] - Get invitation details by token
-export async function GET(request: NextRequest, { params }: RouteParams) {
+export async function GET(_request: NextRequest, { params }: RouteParams) {
   try {
-    const { token } = params;
+    const { token } = await params;
 
     if (!token) {
       return NextResponse.json(
@@ -90,7 +90,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 // POST /api/account/telegram/invite/[token] - Confirm invitation join
 export async function POST(request: NextRequest, { params }: RouteParams) {
   try {
-    const { token } = params;
+    const { token } = await params;
     const body = await request.json();
     const { action } = body;
 

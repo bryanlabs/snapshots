@@ -11,7 +11,7 @@ import { PricingFAQ } from './PricingFAQ';
 import { PricingPerformance } from './PricingPerformance';
 
 export function PricingPage() {
-  const { user, session } = useAuth();
+  const { user } = useAuth();
   
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">

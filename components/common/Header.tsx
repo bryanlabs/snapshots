@@ -4,7 +4,6 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
-import { UpgradePrompt } from './UpgradePrompt';
 import { ThemeToggle } from './ThemeToggle';
 import { UserDropdown } from './UserDropdown';
 import { useSession, signOut } from 'next-auth/react';
@@ -30,14 +29,11 @@ export function Header() {
 
   return (
     <>
-      {/* Upgrade banner for free users */}
-      {session?.user?.tier === 'free' && <UpgradePrompt variant="banner" className="fixed top-0 left-0 right-0 z-50" />}
-      
       <header className={`fixed left-0 right-0 z-40 bg-background/95 backdrop-blur-md border-b transition-all duration-300 ${
         isScrolled 
           ? 'border-border shadow-lg' 
           : 'border-transparent'
-      } ${session?.user?.tier === 'free' ? 'top-12' : 'top-0'}`}>
+      } top-0`}>
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
@@ -59,10 +55,10 @@ export function Header() {
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-6">
             <Link
-              href="/pricing"
+              href="/api-docs"
               className="text-foreground hover:text-primary transition-colors font-medium"
             >
-              Pricing
+              API
             </Link>
             <ThemeToggle />
             {session ? (
@@ -97,11 +93,11 @@ export function Header() {
           <div className="md:hidden py-4 border-t border-border">
             <nav className="flex flex-col space-y-4">
               <Link
-                href="/pricing"
+                href="/api-docs"
                 className="text-foreground hover:text-primary transition-colors font-medium"
                 onClick={() => setIsMenuOpen(false)}
               >
-                Pricing
+                API
               </Link>
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">Theme</span>

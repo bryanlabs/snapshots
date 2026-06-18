@@ -123,10 +123,6 @@ describe("KeplrSignIn", () => {
 
     it("handles successful wallet sign in", async () => {
       const user = userEvent.setup({ delay: null });
-      (global.fetch as jest.Mock).mockResolvedValue({
-        ok: true,
-        json: async () => ({ success: true }),
-      });
       (signIn as jest.Mock).mockResolvedValue({ ok: true });
       
       render(<KeplrSignIn />);
@@ -143,22 +139,14 @@ describe("KeplrSignIn", () => {
         );
       });
       
-      // Verify API call
-      expect(global.fetch).toHaveBeenCalledWith("/api/v1/auth/wallet", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          walletAddress: "cosmos1testaddress",
-          signature: "base64signature",
-          message: expect.stringContaining("Sign this message to authenticate with Snapshots Service"),
-        }),
-      });
+      expect(global.fetch).not.toHaveBeenCalled();
       
       // Verify NextAuth sign in
       expect(signIn).toHaveBeenCalledWith("wallet", {
         walletAddress: "cosmos1testaddress",
         signature: "base64signature",
         message: expect.stringContaining("Timestamp:"),
+        pubkey: "base64pubkey",
         redirect: false,
       });
       
@@ -166,24 +154,12 @@ describe("KeplrSignIn", () => {
       expect(mockRouter.refresh).toHaveBeenCalled();
     });
 
-    it("shows error when Keplr not installed", async () => {
-      const user = userEvent.setup({ delay: null });
+    it("shows install state when Keplr is not installed", async () => {
       delete (window as any).keplr;
       
       render(<KeplrSignIn />);
-      
-      // Force state update to show Connect button
-      (window as any).keplr = null;
-      await act(async () => {
-        jest.advanceTimersByTime(100);
-      });
-      
-      const button = screen.getByRole("button");
-      await user.click(button);
-      
-      await waitFor(() => {
-        expect(screen.getByText("Please install Keplr wallet extension")).toBeInTheDocument();
-      });
+
+      expect(screen.getByRole("button", { name: "Install Keplr Wallet" })).toBeDisabled();
     });
 
     it("handles Keplr enable error", async () => {
@@ -227,44 +203,8 @@ describe("KeplrSignIn", () => {
       });
     });
 
-    it("handles API authentication error", async () => {
-      const user = userEvent.setup({ delay: null });
-      (global.fetch as jest.Mock).mockResolvedValue({
-        ok: false,
-        json: async () => ({ error: "Invalid signature" }),
-      });
-      
-      render(<KeplrSignIn />);
-      
-      await user.click(screen.getByText("Connect Keplr"));
-      
-      await waitFor(() => {
-        expect(screen.getByText("Invalid signature")).toBeInTheDocument();
-      });
-    });
-
-    it("handles API error without message", async () => {
-      const user = userEvent.setup({ delay: null });
-      (global.fetch as jest.Mock).mockResolvedValue({
-        ok: false,
-        json: async () => ({}),
-      });
-      
-      render(<KeplrSignIn />);
-      
-      await user.click(screen.getByText("Connect Keplr"));
-      
-      await waitFor(() => {
-        expect(screen.getByText("Authentication failed")).toBeInTheDocument();
-      });
-    });
-
     it("handles NextAuth sign in error", async () => {
       const user = userEvent.setup({ delay: null });
-      (global.fetch as jest.Mock).mockResolvedValue({
-        ok: true,
-        json: async () => ({ success: true }),
-      });
       (signIn as jest.Mock).mockResolvedValue({ error: "Invalid credentials" });
       
       render(<KeplrSignIn />);

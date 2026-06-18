@@ -23,7 +23,7 @@ export const metadata: Metadata = {
     template: "%s | BryanLabs Snapshots",
   },
   description:
-    "Fast, reliable blockchain snapshots for Cosmos ecosystem chains. Updated daily with pruned options available and global CDN delivery. Download latest snapshots for Juno, Osmosis, Cosmos Hub, and more.",
+    "Fast, reliable blockchain snapshots for Cosmos ecosystem chains. Download current public artifacts, request custom snapshots, and use signed URLs from scripts.",
   keywords: [
     "blockchain",
     "snapshots",
@@ -31,7 +31,6 @@ export const metadata: Metadata = {
     "cosmos-sdk",
     "devops",
     "infrastructure",
-    "juno",
     "osmosis",
     "cosmos hub",
     "blockchain data",
@@ -47,7 +46,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Blockchain Snapshots - BryanLabs",
     description:
-      "Fast, reliable blockchain snapshots for Cosmos ecosystem chains. Updated daily with global CDN delivery.",
+      "Fast, reliable blockchain snapshots for Cosmos ecosystem chains with browser and API access.",
     type: "website",
     locale: "en_US",
     siteName: "BryanLabs Snapshots",

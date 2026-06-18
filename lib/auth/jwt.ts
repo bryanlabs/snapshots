@@ -13,7 +13,7 @@ const JWT_AUDIENCE = 'bryanlabs-api';
 interface JWTPayload {
   sub: string; // user id
   email: string;
-  tier: 'free' | 'premium' | 'unlimited';
+  tier: 'free' | 'premium' | 'ultra' | 'unlimited';
   role: 'admin' | 'user';
   iat?: number;
   exp?: number;
@@ -47,7 +47,7 @@ export async function verifyJWT(token: string): Promise<JWTPayload | null> {
       audience: JWT_AUDIENCE,
     });
     
-    return payload as JWTPayload;
+    return payload as unknown as JWTPayload;
   } catch (error) {
     console.error('JWT verification failed:', error);
     return null;

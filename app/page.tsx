@@ -1,8 +1,6 @@
 import { ChainListServer } from '@/components/chains/ChainListServer';
-import Image from 'next/image';
 import Link from 'next/link';
 import { Suspense } from 'react';
-import { UpgradePrompt } from '@/components/common/UpgradePrompt';
 import { auth } from '@/auth';
 
 export default async function Home() {
@@ -23,7 +21,7 @@ export default async function Home() {
               Fast, reliable blockchain snapshots for Cosmos ecosystem chains
             </p>
             <p className="text-lg text-gray-300 mb-8">
-              From 50 Mbps free tier to 500 Mbps ultra-fast enterprise • Custom snapshots • Priority support
+              Updated public artifacts, custom snapshots, and script-friendly API access
             </p>
             
             <div className="flex flex-wrap justify-center items-center gap-4 text-gray-300 mb-8">
@@ -55,10 +53,16 @@ export default async function Home() {
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <Link
-                href="/pricing"
-                className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-3 rounded-lg font-semibold text-lg transition-all duration-300 hover:scale-105 hover:shadow-lg"
+                href="#chains"
+                className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-semibold text-lg transition-all duration-300 hover:scale-105 hover:shadow-lg"
               >
-                View Pricing Plans
+                Browse Snapshots
+              </Link>
+              <Link
+                href="/api-docs"
+                className="bg-transparent border-2 border-white text-white hover:bg-white hover:text-purple-600 px-8 py-3 rounded-lg font-semibold text-lg transition-all duration-300"
+              >
+                API and CLI
               </Link>
               {!user && (
                 <Link
@@ -68,18 +72,13 @@ export default async function Home() {
                   Get Started Free
                 </Link>
               )}
-              {user?.tier === 'free' && (
-                <span className="text-sm text-gray-300">
-                  Start with 50 Mbps • Upgrade for 5x faster speeds
-                </span>
-              )}
             </div>
           </div>
         </div>
       </section>
 
       {/* Chains Section */}
-      <section className="py-10 px-4">
+      <section id="chains" className="py-10 px-4">
         <div className="container mx-auto">
           <div className="text-center mb-8">
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
@@ -90,13 +89,6 @@ export default async function Home() {
               compressed with advanced zstd technology for faster downloads
             </p>
           </div>
-
-          {/* Upgrade prompt for free tier users only */}
-          {user?.tier === 'free' && (
-            <div className="mb-8">
-              <UpgradePrompt />
-            </div>
-          )}
 
           <Suspense
             fallback={

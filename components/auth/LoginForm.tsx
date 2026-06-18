@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '../providers/AuthProvider';
+import { useAuth } from '@/hooks/useAuth';
 import { LoadingSpinner } from '../common/LoadingSpinner';
 
 export function LoginForm() {
@@ -16,7 +16,7 @@ export function LoginForm() {
     e.preventDefault();
     setIsLoading(true);
 
-    const success = await login({ email: username, password });
+    const success = await login();
 
     if (success) {
       router.push('/');

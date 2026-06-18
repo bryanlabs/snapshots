@@ -5,12 +5,6 @@ import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 
-declare global {
-  interface Window {
-    keplr?: any;
-  }
-}
-
 export function KeplrSignIn() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
@@ -48,23 +42,16 @@ export function KeplrSignIn() {
       const chainId = "cosmoshub-4";
       await window.keplr.enable(chainId);
 
-      // Get the offline signer
-      const offlineSigner = window.keplr.getOfflineSigner(chainId);
-      const accounts = await offlineSigner.getAccounts();
-
-      if (!accounts || accounts.length === 0) {
-        throw new Error("No accounts found");
-      }
-
-      const account = accounts[0];
+      const account = await window.keplr.getKey(chainId);
+      const walletAddress = account.bech32Address;
       
       // Create a message to sign with timestamp for replay protection
-      const message = `Sign this message to authenticate with Snapshots Service\n\nAddress: ${account.address}\n\nTimestamp: ${new Date().toISOString()}`;
+      const message = `Sign this message to authenticate with Snapshots Service\n\nAddress: ${walletAddress}\n\nTimestamp: ${new Date().toISOString()}`;
       
       // Sign the message with Keplr
       const signature = await window.keplr.signArbitrary(
         chainId,
-        account.address,
+        walletAddress,
         message
       );
 
@@ -72,27 +59,17 @@ export function KeplrSignIn() {
         throw new Error("Failed to sign message");
       }
 
-      // Authenticate with our backend
-      const response = await fetch("/api/v1/auth/wallet", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          walletAddress: account.address,
-          signature: signature.signature,
-          message,
-        }),
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || "Authentication failed");
+      const pubkey = signature.pub_key?.value;
+      if (!pubkey) {
+        throw new Error("Keplr did not return a public key");
       }
 
       // Sign in with NextAuth
       const result = await signIn("wallet", {
-        walletAddress: account.address,
+        walletAddress,
         signature: signature.signature,
         message,
+        pubkey,
         redirect: false,
       });
 
@@ -102,9 +79,9 @@ export function KeplrSignIn() {
         router.push("/dashboard");
         router.refresh();
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error("Wallet sign in error:", error);
-      setError(error.message || "Failed to sign in with wallet");
+      setError(error instanceof Error ? error.message : "Failed to sign in with wallet");
     } finally {
       setIsLoading(false);
     }

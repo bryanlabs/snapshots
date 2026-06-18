@@ -6,6 +6,7 @@
  */
 
 import { prisma } from "@/lib/prisma";
+import { getEffectiveAccessTier } from "@/lib/utils/tier";
 import type { SubscriptionStatus, UserTier } from "@/types/user";
 
 /**
@@ -33,13 +34,16 @@ export function getEffectiveTier(
   subscriptionStatus: SubscriptionStatus,
   subscriptionExpiresAt?: Date | null
 ): UserTier {
+  let subscriptionTier: UserTier;
+
   // If subscription is not active, default to free
   if (!isSubscriptionActive(subscriptionStatus, subscriptionExpiresAt)) {
-    return 'free';
+    subscriptionTier = 'free';
+  } else {
+    subscriptionTier = personalTier as UserTier;
   }
-  
-  // Return the personal tier if subscription is active
-  return personalTier as UserTier;
+
+  return getEffectiveAccessTier(subscriptionTier) as UserTier;
 }
 
 /**

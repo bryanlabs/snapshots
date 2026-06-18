@@ -136,8 +136,8 @@ export default function SignInPage() {
     },
     {
       icon: CubeIcon,
-      title: "Multiple Chains",
-      description: "Support for Cosmos, Osmosis, and more"
+      title: "Live Chain Catalog",
+      description: "Browse the chains with snapshots currently available"
     }
   ];
 
@@ -149,18 +149,18 @@ export default function SignInPage() {
     },
     {
       icon: BoltIcon,
-      title: "Daily Credits",
-      description: "Get 5 free downloads every day"
+      title: "Download History",
+      description: "Track snapshot downloads on your account"
     },
     {
       icon: ClockIcon,
-      title: "Priority Access",
-      description: "Skip the queue during peak times"
+      title: "Custom Snapshot Tracking",
+      description: "Follow custom snapshot progress from request to completion"
     },
     {
       icon: ServerIcon,
       title: "API Access",
-      description: "Programmatic access to snapshots (coming soon)"
+      description: "Use latest snapshot URLs from scripts and command-line tools"
     }
   ];
 
