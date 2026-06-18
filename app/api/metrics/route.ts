@@ -1,18 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { register } from '@/lib/monitoring/metrics';
-import { auth } from '@/auth';
+import { refreshCustomSnapshotMetrics, register } from '@/lib/monitoring/metrics';
+
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
 export async function GET(_request: NextRequest) {
   try {
-    // Optional: Add authentication check for metrics endpoint
-    // You might want to restrict access to metrics
-    await auth();
-    
-    // Uncomment to require authentication for metrics
-    // if (!session) {
-    //   return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    // }
-    
+    await refreshCustomSnapshotMetrics();
+
     // Get metrics in Prometheus format
     const metrics = await register.metrics();
     
@@ -24,9 +19,11 @@ export async function GET(_request: NextRequest) {
     });
   } catch (error) {
     console.error('Error collecting metrics:', error);
-    return NextResponse.json(
-      { error: 'Failed to collect metrics' },
-      { status: 500 }
-    );
+    return new NextResponse('# Failed to collect metrics\n', {
+      status: 500,
+      headers: {
+        'Content-Type': register.contentType,
+      },
+    });
   }
 }

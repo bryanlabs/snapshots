@@ -115,12 +115,11 @@ export function clearUserContext() {
 export function startTransaction(
   name: string,
   op: string,
-  data?: Record<string, any>
+  _data?: Record<string, unknown>
 ) {
   return Sentry.startSpan({
     name,
     op,
-    data,
   }, () => {
     // Transaction logic here
   });

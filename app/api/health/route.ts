@@ -19,7 +19,8 @@ export async function GET() {
       timestamp: new Date().toISOString(),
       services: {
         database: true, // Placeholder - implement actual database check
-        minio: nginxHealthy, // Keep the key for compatibility, but it's actually nginx
+        storage: nginxHealthy, // nginx-backed snapshot storage
+        minio: nginxHealthy, // deprecated compat alias for `storage`
       },
     };
 

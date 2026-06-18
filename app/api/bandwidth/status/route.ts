@@ -1,20 +1,21 @@
 import { NextResponse } from 'next/server';
 import { bandwidthManager } from '@/lib/bandwidth/manager';
 import { auth } from '@/auth';
+import { getEffectiveAccessTier, getTierBandwidth, isPremiumTier } from '@/lib/utils/tier';
 
 export async function GET() {
   try {
     const session = await auth();
-    const tier = session?.user?.tier || 'free';
+    const tier = getEffectiveAccessTier(session?.user?.tier || 'free');
     const stats = bandwidthManager.getStats();
     
     // Calculate current speed based on active connections
-    const tierConnections = (tier === 'premium' || tier === 'unlimited')
+    const tierConnections = isPremiumTier(tier)
       ? stats.connectionsByTier.premium 
       : stats.connectionsByTier.free;
     
-    const maxSpeed = tier === 'unlimited' ? 999999 : (tier === 'premium' ? 250 : 50);
-    const currentSpeed = tier === 'unlimited' ? 999999 : (tierConnections > 0 ? maxSpeed / tierConnections : 0);
+    const maxSpeed = getTierBandwidth(tier);
+    const currentSpeed = tierConnections > 0 ? maxSpeed / tierConnections : maxSpeed;
     
     return NextResponse.json({
       tier,

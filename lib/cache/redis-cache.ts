@@ -161,7 +161,11 @@ export class RedisCache {
     // Try to acquire lock for revalidation
     let lockAcquired = false;
     try {
-      lockAcquired = await redis.set(lockKey, '1', 'NX', 'EX', 10) === 'OK';
+      const existingLock = await redis.get(lockKey);
+      if (!existingLock) {
+        await redis.setex(lockKey, 10, '1');
+        lockAcquired = true;
+      }
     } catch (error) {
       console.error('Lock acquisition error:', error);
     }

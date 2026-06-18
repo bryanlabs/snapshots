@@ -3,6 +3,9 @@ import { register, Counter, Histogram, Gauge } from 'prom-client';
 // Clear the register to prevent duplicate metrics
 register.clear();
 
+type SnapshotVisibility = 'private' | 'public' | 'scheduled' | 'unknown';
+type SnapshotMetricResult = 'success' | 'denied' | 'not_found' | 'invalid' | 'rate_limited' | 'error';
+
 // API request counter
 export const apiRequestsTotal = new Counter({
   name: 'api_requests_total',
@@ -23,6 +26,37 @@ export const downloadsInitiated = new Counter({
   name: 'downloads_initiated_total',
   help: 'Total number of downloads initiated',
   labelNames: ['tier', 'snapshot_id']
+});
+
+// Low-cardinality snapshot service usage metric. This intentionally does not
+// include snapshot IDs or filenames because those grow without bound.
+export const snapshotDownloadUrlRequests = new Counter({
+  name: 'snapshot_download_url_requests_total',
+  help: 'Total number of signed snapshot download URL requests',
+  labelNames: ['chain_id', 'database', 'tier', 'visibility', 'result']
+});
+
+export const snapshotCustomRequests = new Counter({
+  name: 'snapshot_custom_requests_total',
+  help: 'Total number of custom snapshot requests submitted through the webapp',
+  labelNames: ['chain_id', 'tier', 'visibility', 'result']
+});
+
+export const snapshotCustomRequestsCurrent = new Gauge({
+  name: 'snapshot_custom_requests_current',
+  help: 'Current custom snapshot request count by chain, visibility, and status',
+  labelNames: ['chain_id', 'visibility', 'status']
+});
+
+export const snapshotCustomStorageBytes = new Gauge({
+  name: 'snapshot_custom_storage_bytes',
+  help: 'Current custom snapshot storage bytes by chain and visibility',
+  labelNames: ['chain_id', 'visibility']
+});
+
+export const snapshotCustomStorageCapBytes = new Gauge({
+  name: 'snapshot_custom_storage_cap_bytes',
+  help: 'Configured custom snapshot storage cap in bytes'
 });
 
 // Authentication attempts counter
@@ -67,6 +101,80 @@ export function trackRequest(method: string, route: string, statusCode: number) 
 // Helper function to track download
 export function trackDownload(tier: string, snapshotId: string) {
   downloadsInitiated.inc({ tier, snapshot_id: snapshotId });
+}
+
+export function trackSnapshotDownloadUrlRequest(
+  chainId: string,
+  database: string | null | undefined,
+  tier: string,
+  visibility: SnapshotVisibility | string | null | undefined,
+  result: SnapshotMetricResult
+) {
+  snapshotDownloadUrlRequests.inc({
+    chain_id: chainId || 'unknown',
+    database: database || 'unknown',
+    tier: tier || 'unknown',
+    visibility: visibility || 'unknown',
+    result,
+  });
+}
+
+export function trackCustomSnapshotRequest(
+  chainId: string,
+  tier: string,
+  visibility: string | null | undefined,
+  result: SnapshotMetricResult
+) {
+  snapshotCustomRequests.inc({
+    chain_id: chainId || 'unknown',
+    tier: tier || 'unknown',
+    visibility: visibility || 'unknown',
+    result,
+  });
+}
+
+export async function refreshCustomSnapshotMetrics() {
+  const { prisma } = await import('@/lib/prisma');
+
+  snapshotCustomRequestsCurrent.reset();
+  snapshotCustomStorageBytes.reset();
+
+  const [requestGroups, storageGroups, systemConfig] = await Promise.all([
+    prisma.snapshotRequest.groupBy({
+      by: ['chainId', 'visibility', 'status'],
+      where: { deletedAt: null },
+      _count: { _all: true },
+    }),
+    prisma.snapshotRequest.groupBy({
+      by: ['chainId', 'visibility'],
+      where: {
+        deletedAt: null,
+        resultFileSizeBytes: { not: null },
+      },
+      _sum: { resultFileSizeBytes: true },
+    }),
+    prisma.systemConfig.findUnique({
+      where: { id: 'system' },
+      select: { customSnapshotGlobalCapGb: true },
+    }),
+  ]);
+
+  for (const group of requestGroups) {
+    snapshotCustomRequestsCurrent.set({
+      chain_id: group.chainId,
+      visibility: group.visibility,
+      status: group.status,
+    }, group._count._all);
+  }
+
+  for (const group of storageGroups) {
+    snapshotCustomStorageBytes.set({
+      chain_id: group.chainId,
+      visibility: group.visibility,
+    }, Number(group._sum.resultFileSizeBytes ?? 0));
+  }
+
+  snapshotCustomStorageCapBytes.set((systemConfig?.customSnapshotGlobalCapGb || 0) * 1024 * 1024 * 1024);
 }
 
 // Helper function to track auth attempt

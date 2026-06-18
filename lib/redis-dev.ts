@@ -154,8 +154,6 @@ export function getRedisClient(): Redis | MockRedis {
           host,
           port,
           password: process.env.REDIS_PASSWORD,
-          retryDelayOnFailover: 100,
-          retryDelayOnClusterDown: 300,
           maxRetriesPerRequest: 1,
           lazyConnect: true,
           enableOfflineQueue: false,

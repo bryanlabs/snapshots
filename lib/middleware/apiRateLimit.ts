@@ -8,7 +8,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
-import { getApiRateLimit } from '@/lib/utils/tier';
+import { getTierRateLimit } from '@/lib/utils/tier';
 import { getEffectiveTier, isSubscriptionActive } from '@/lib/utils/subscription';
 import type { SubscriptionStatus } from '@/types/user';
 
@@ -34,7 +34,7 @@ async function getOrCreateUsageRecord(
       userId_hourBucket_endpoint: {
         userId,
         hourBucket,
-        endpoint: endpoint || null,
+        endpoint: endpoint || '',
       },
     },
   });
@@ -45,7 +45,7 @@ async function getOrCreateUsageRecord(
       data: {
         userId,
         hourBucket,
-        endpoint: endpoint || null,
+        endpoint: endpoint || '',
         requestCount: 0,
       },
     });
@@ -81,7 +81,7 @@ async function getUserRateLimit(userId: string): Promise<{
   );
 
   // Get rate limit for effective tier
-  const rateLimit = getApiRateLimit(effectiveTier);
+  const rateLimit = getTierRateLimit(effectiveTier);
 
   // Get current usage for this hour
   const hourBucket = getCurrentHourBucket();
@@ -117,7 +117,7 @@ async function incrementUsage(
       userId_hourBucket_endpoint: {
         userId,
         hourBucket,
-        endpoint: endpoint || null,
+        endpoint: endpoint || '',
       },
     },
     update: {

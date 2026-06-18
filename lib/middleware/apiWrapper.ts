@@ -3,10 +3,10 @@ import { collectResponseTime, trackRequest } from '@/lib/monitoring/metrics';
 import { extractRequestMetadata, logRequest } from '@/lib/middleware/logger';
 import { withRateLimit, RateLimitType } from '@/lib/middleware/rateLimiter';
 
-type ApiHandler<T = any> = (
+type ApiHandler = (
   request: NextRequest,
-  params?: any
-) => Promise<NextResponse<T>>;
+  params?: unknown
+) => Promise<NextResponse>;
 
 interface WrapperOptions {
   rateLimit?: RateLimitType;
@@ -16,15 +16,15 @@ interface WrapperOptions {
 /**
  * Wraps an API handler with monitoring, logging, and optional rate limiting
  */
-export function withApiMonitoring<T = any>(
-  handler: ApiHandler<T>,
+export function withApiMonitoring(
+  handler: ApiHandler,
   route: string,
   options: WrapperOptions = {}
-): ApiHandler<T> {
+): ApiHandler {
   const wrappedHandler = async (
     request: NextRequest,
-    params?: any
-  ): Promise<NextResponse<T>> => {
+    params?: unknown
+  ): Promise<NextResponse> => {
     const method = request.method;
     const endTimer = collectResponseTime(method, route);
     const startTime = Date.now();
