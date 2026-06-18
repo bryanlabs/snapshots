@@ -6,6 +6,13 @@ jest.mock('@/lib/monitoring/metrics');
 jest.mock('@/lib/middleware/logger');
 jest.mock('@/lib/bandwidth/manager');
 jest.mock('@/lib/download/tracker');
+jest.mock('@/lib/download/events', () => ({
+  downloadTokenHashFromUrl: jest.fn(),
+  recordDownloadEvent: jest.fn(),
+}));
+jest.mock('@/lib/snapshots/custom-catalog', () => ({
+  getSnapshotFromCatalog: jest.fn(),
+}));
 jest.mock('@/auth', () => ({
   auth: jest.fn(),
 }));
@@ -24,6 +31,8 @@ import * as metrics from '@/lib/monitoring/metrics';
 import * as logger from '@/lib/middleware/logger';
 import * as bandwidthManager from '@/lib/bandwidth/manager';
 import * as downloadTracker from '@/lib/download/tracker';
+import * as downloadEvents from '@/lib/download/events';
+import { getSnapshotFromCatalog } from '@/lib/snapshots/custom-catalog';
 import { auth } from '@/auth';
 
 describe('/api/v1/chains/[chainId]/download', () => {
@@ -31,6 +40,7 @@ describe('/api/v1/chains/[chainId]/download', () => {
   let mockCollectResponseTime: jest.Mock;
   let mockTrackRequest: jest.Mock;
   let mockTrackDownload: jest.Mock;
+  let mockTrackSnapshotDownloadUrlRequest: jest.Mock;
   let mockExtractRequestMetadata: jest.Mock;
   let mockLogRequest: jest.Mock;
   let mockLogDownload: jest.Mock;
@@ -39,6 +49,9 @@ describe('/api/v1/chains/[chainId]/download', () => {
   let mockCheckDownloadAllowed: jest.Mock;
   let mockIncrementDailyDownload: jest.Mock;
   let mockLogDownloadDb: jest.Mock;
+  let mockDownloadTokenHashFromUrl: jest.Mock;
+  let mockRecordDownloadEvent: jest.Mock;
+  let mockGetSnapshotFromCatalog: jest.Mock;
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -48,6 +61,7 @@ describe('/api/v1/chains/[chainId]/download', () => {
     mockCollectResponseTime = jest.fn().mockReturnValue(jest.fn());
     mockTrackRequest = jest.fn();
     mockTrackDownload = jest.fn();
+    mockTrackSnapshotDownloadUrlRequest = jest.fn();
     mockExtractRequestMetadata = jest.fn().mockReturnValue({
       method: 'POST',
       path: '/api/v1/chains/cosmos-hub/download',
@@ -84,6 +98,19 @@ describe('/api/v1/chains/[chainId]/download', () => {
     
     mockIncrementDailyDownload = jest.fn().mockResolvedValue(true);
     mockLogDownloadDb = jest.fn().mockResolvedValue(true);
+    mockDownloadTokenHashFromUrl = downloadEvents.downloadTokenHashFromUrl as jest.Mock;
+    mockDownloadTokenHashFromUrl.mockReturnValue('hashed-download-token');
+    mockRecordDownloadEvent = downloadEvents.recordDownloadEvent as jest.Mock;
+    mockRecordDownloadEvent.mockResolvedValue(undefined);
+    mockGetSnapshotFromCatalog = jest.fn().mockResolvedValue({
+      id: 'cosmos-hub-20250130.tar.lz4',
+      fileName: 'cosmos-hub-20250130.tar.lz4',
+      chainId: 'cosmos-hub',
+      storageChainId: 'cosmos-hub',
+      databaseBackend: 'goleveldb',
+      isCustom: false,
+      isAccessible: true,
+    });
     
     // Mock global fetch for snapshot API calls
     global.fetch = jest.fn().mockResolvedValue({
@@ -104,14 +131,16 @@ describe('/api/v1/chains/[chainId]/download', () => {
     (metrics.collectResponseTime as jest.Mock) = mockCollectResponseTime;
     (metrics.trackRequest as jest.Mock) = mockTrackRequest;
     (metrics.trackDownload as jest.Mock) = mockTrackDownload;
+    (metrics.trackSnapshotDownloadUrlRequest as jest.Mock) = mockTrackSnapshotDownloadUrlRequest;
     (logger.extractRequestMetadata as jest.Mock) = mockExtractRequestMetadata;
     (logger.logRequest as jest.Mock) = mockLogRequest;
     (logger.logDownload as jest.Mock) = mockLogDownload;
     (bandwidthManager.bandwidthManager as any) = mockBandwidthManager;
-    (auth as jest.Mock) = mockAuth;
+    (auth as jest.Mock).mockImplementation(mockAuth);
     (downloadTracker.checkDownloadAllowed as jest.Mock) = mockCheckDownloadAllowed;
     (downloadTracker.incrementDailyDownload as jest.Mock) = mockIncrementDailyDownload;
     (downloadTracker.logDownload as jest.Mock) = mockLogDownloadDb;
+    (getSnapshotFromCatalog as jest.Mock).mockImplementation(mockGetSnapshotFromCatalog);
   });
 
   describe('POST', () => {
@@ -139,6 +168,15 @@ describe('/api/v1/chains/[chainId]/download', () => {
       expect(data.success).toBe(true);
       expect(data.data.downloadUrl).toBe('https://snapshots.bryanlabs.net/download-url');
       expect(data.message).toBe('Download URL generated successfully');
+      expect(mockRecordDownloadEvent).toHaveBeenCalledWith(expect.objectContaining({
+        eventType: 'url_issued',
+        result: 'success',
+        chainId: 'cosmos-hub',
+        snapshotId: 'cosmos-hub-20250130.tar.lz4',
+        fileName: 'cosmos-hub-20250130.tar.lz4',
+        ipAddress: '192.168.1.1',
+        downloadTokenHash: 'hashed-download-token',
+      }));
     });
 
     it('should reject request when daily limit exceeded', async () => {
@@ -168,10 +206,17 @@ describe('/api/v1/chains/[chainId]/download', () => {
       expect(response.status).toBe(429);
       expect(data.success).toBe(false);
       expect(data.error).toContain('Daily download limit exceeded');
+      expect(mockRecordDownloadEvent).toHaveBeenCalledWith(expect.objectContaining({
+        eventType: 'url_denied',
+        result: 'rate_limited',
+        chainId: 'cosmos-hub',
+        snapshotId: 'cosmos-hub-20250130.tar.lz4',
+        httpStatus: 429,
+      }));
     });
 
 
-    it('should use premium tier for authenticated premium users', async () => {
+    it('should use effective ultra tier while billing is disabled', async () => {
       // Update the auth mock for this test
       (auth as jest.Mock).mockResolvedValue({
         user: {
@@ -201,7 +246,7 @@ describe('/api/v1/chains/[chainId]/download', () => {
       expect(mockGenerateDownloadUrl).toHaveBeenCalledWith(
         'cosmos-hub',
         'cosmos-hub-20250130.tar.lz4',
-        'premium',
+        'ultra',
         expect.any(String)
       );
     });
@@ -232,7 +277,14 @@ describe('/api/v1/chains/[chainId]/download', () => {
       await POST(request, { params: Promise.resolve({ chainId: 'cosmos-hub' }) });
 
       expect(mockTrackRequest).toHaveBeenCalledWith('POST', '/api/v1/chains/[chainId]/download', 200);
-      expect(mockTrackDownload).toHaveBeenCalledWith('free', 'cosmos-hub-20250130.tar.lz4');
+      expect(mockTrackDownload).toHaveBeenCalledWith('ultra', 'cosmos-hub-20250130.tar.lz4');
+      expect(mockTrackSnapshotDownloadUrlRequest).toHaveBeenCalledWith(
+        'cosmos-hub',
+        expect.any(String),
+        'ultra',
+        expect.any(String),
+        'success'
+      );
       expect(mockLogDownload).toHaveBeenCalled();
       expect(mockLogDownloadDb).toHaveBeenCalled();
     });
@@ -257,6 +309,13 @@ describe('/api/v1/chains/[chainId]/download', () => {
       expect(response.status).toBe(400);
       expect(data.success).toBe(false);
       expect(data.error).toContain('Invalid request');
+      expect(mockRecordDownloadEvent).toHaveBeenCalledWith(expect.objectContaining({
+        eventType: 'url_failed',
+        result: 'invalid',
+        chainId: 'cosmos-hub',
+        snapshotId: 'unknown',
+        httpStatus: 400,
+      }));
     });
 
     it('should extract client IP from headers correctly', async () => {
@@ -289,7 +348,7 @@ describe('/api/v1/chains/[chainId]/download', () => {
 
       expect(mockCheckDownloadAllowed).toHaveBeenCalledWith(
         '192.168.1.1',
-        'free',
+        'ultra',
         expect.any(Number)
       );
     });
