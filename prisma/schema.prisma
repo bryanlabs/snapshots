@@ -6,7 +6,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -69,12 +69,12 @@ model User {
   emailVerified     DateTime? @map("email_verified")
   walletAddress     String?   @unique @map("wallet_address")
   passwordHash      String?   @map("password_hash")
-  
+
   // User properties
   displayName       String?   @map("display_name")
   avatarUrl         String?   @map("avatar_url")
   role              String    @default("user") // "user" or "admin"
-  
+
   // Individual tier (can be overridden by team membership)
   personalTierId    String?   @map("personal_tier_id")
   
@@ -97,6 +97,7 @@ model User {
   sessions          Session[]
   teamMemberships   TeamMember[]
   downloads         Download[]
+  downloadEvents    DownloadEvent[]
   snapshotRequests  SnapshotRequest[]
   creditTransactions CreditTransaction[]
   usageRecords      UsageRecord[]
@@ -108,6 +109,22 @@ model User {
   @@index([walletAddress])
   @@index([personalTierId])
   @@map("users")
+}
+
+model AdminAuditLog {
+  id            String   @id @default(cuid())
+  adminUserId   String?  @map("admin_user_id")
+  targetUserId  String?  @map("target_user_id")
+  action        String
+  before        Json?
+  after         Json?
+  reason        String?
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  @@index([adminUserId, createdAt])
+  @@index([targetUserId, createdAt])
+  @@index([action, createdAt])
+  @@map("admin_audit_logs")
 }
 
 // ========== TEAMS ==========
@@ -315,12 +332,25 @@ model SnapshotAccess {
 model SnapshotRequest {
   id                String    @id @default(cuid())
   userId            String    @map("user_id")
+  processorRequestId String?  @unique @map("processor_request_id")
   
   // Request details - what kind of snapshot user wants
   chainId           String    @map("chain_id")
   blockHeight       BigInt    @map("block_height")
   pruningMode       String    @map("pruning_mode")
   compressionType   String    @map("compression_type")
+  databaseBackend   String    @default("goleveldb") @map("database_backend")
+  requestNote       String?   @map("request_note")
+
+  // Visibility and community publication.
+  // private: visible only to owner/admin through the app signer
+  // public: visible to the community after the artifact is available
+  visibility        String    @default("private")
+  publishStatus     String    @default("private") @map("publish_status") // private, pending_review, published, rejected
+  isPinned          Boolean   @default(false) @map("is_pinned")
+  isFeatured        Boolean   @default(false) @map("is_featured")
+  deletedAt         DateTime? @map("deleted_at")
+  adminNote         String?   @map("admin_note")
   
   // Scheduling - supports recurring snapshots
   // "Snapshot every Sunday at block X"
@@ -333,9 +363,21 @@ model SnapshotRequest {
   status            String    @default("pending") // pending, processing, completed, failed
   priority          Int       @default(0) // higher = more priority
   errorMessage      String?   @map("error_message")
+  progressPhase     String?   @map("progress_phase")
+  progressMessage   String?   @map("progress_message")
+  progressPercent   Int?      @map("progress_percent")
+  progressEtaSeconds Int?     @map("progress_eta_seconds")
+  progressUpdatedAt DateTime? @map("progress_updated_at")
   
   // Result tracking
   resultSnapshotId  String?   @map("result_snapshot_id")
+  resultStorageChainId String? @map("result_storage_chain_id")
+  resultFileName    String?   @map("result_file_name")
+  resultFileSizeBytes BigInt? @map("result_file_size_bytes")
+  resultHeight      BigInt?   @map("result_height")
+  resultMetadata    Json?     @map("result_metadata")
+  verifiedAt        DateTime? @map("verified_at")
+  restoreVerifiedAt DateTime? @map("restore_verified_at")
   
   // Billing
   creditsCost       Int       @default(0) @map("credits_cost")
@@ -353,6 +395,8 @@ model SnapshotRequest {
   user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   
   @@index([userId, status])
+  @@index([chainId, blockHeight, compressionType])
+  @@index([visibility, publishStatus])
   @@index([status, priority, createdAt])
   @@index([nextRunAt])
   @@map("snapshot_requests")
@@ -405,6 +449,61 @@ model Download {
   @@index([downloadToken])
   @@index([completedAt]) // for analytics queries
   @@map("downloads")
+}
+
+// Append-only audit stream for signed URL issuance and nginx transfer callbacks.
+// Unlike Download, this does not require the artifact to exist in the legacy
+// snapshots registry because public artifacts are catalog-discovered from nginx.
+model DownloadEvent {
+  id                  String    @id @default(cuid())
+
+  // Event identity
+  eventType           String    @map("event_type") // url_issued, url_denied, url_failed, transfer_completed, transfer_failed
+  result              String    @default("unknown")
+
+  // Snapshot identity from the public/custom catalog
+  chainId             String    @map("chain_id")
+  storageChainId      String?   @map("storage_chain_id")
+  snapshotId          String    @map("snapshot_id")
+  fileName            String?   @map("file_name")
+  databaseBackend     String?   @map("database_backend")
+  visibility          String?
+  snapshotHeight      BigInt?   @map("snapshot_height")
+  fileSizeBytes       BigInt?   @map("file_size_bytes")
+
+  // User/access context
+  userId              String?   @map("user_id")
+  tier                String?
+
+  // Request/client context
+  ipAddress           String?   @map("ip_address")
+  userAgent           String?   @map("user_agent")
+  referer             String?
+  requestPath         String?   @map("request_path")
+  requestMethod       String?   @map("request_method")
+  rangeHeader         String?   @map("range_header")
+
+  // Signed URL / transfer result details
+  httpStatus          Int?      @map("http_status")
+  responseTimeMs      Int?      @map("response_time_ms")
+  bytesTransferred    BigInt?   @map("bytes_transferred")
+  transferStatus      String?   @map("transfer_status")
+  downloadTokenHash   String?   @map("download_token_hash")
+  signedUrlExpiresAt  DateTime? @map("signed_url_expires_at")
+  startedAt           DateTime? @map("started_at")
+  completedAt         DateTime? @map("completed_at")
+  metadata            Json?
+
+  createdAt           DateTime  @default(now()) @map("created_at")
+
+  user                User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@index([chainId, createdAt])
+  @@index([snapshotId, createdAt])
+  @@index([userId, createdAt])
+  @@index([eventType, result, createdAt])
+  @@map("download_events")
 }
 
 // ========== USAGE & BILLING ==========
@@ -557,9 +656,16 @@ model SystemConfig {
   
   // Default tier for new users
   defaultTierId     String    @default("free") @map("default_tier_id")
-  
+
+  // Custom snapshot retention/quota policy (admin-editable, protects shared storage)
+  customSnapshotRetentionHours    Int @default(24) @map("custom_snapshot_retention_hours")
+  customSnapshotMaxPerUserFree    Int @default(0)  @map("custom_snapshot_max_per_user_free")
+  customSnapshotMaxPerUserPremium Int @default(1)  @map("custom_snapshot_max_per_user_premium")
+  customSnapshotMaxPerUserUltra   Int @default(3)  @map("custom_snapshot_max_per_user_ultra")
+  customSnapshotGlobalCapGb       Int @default(100) @map("custom_snapshot_global_cap_gb")
+
   updatedAt         DateTime  @updatedAt @map("updated_at")
-  
+
   @@map("system_config")
 }
 

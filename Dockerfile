@@ -29,8 +29,8 @@ LABEL org.opencontainers.image.source=https://github.com/bryanlabs/snapshots
 
 WORKDIR /app
 
-# Install SQLite for database initialization
-RUN apk add --no-cache sqlite
+# Runtime compatibility for native modules
+RUN apk add --no-cache libc6-compat
 
 # Add non-root user
 RUN addgroup -g 1001 -S nodejs
@@ -40,10 +40,7 @@ RUN adduser -S nextjs -u 1001
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
-COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
-COPY --from=builder /app/node_modules/.bin ./node_modules/.bin
+COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/scripts ./scripts
 

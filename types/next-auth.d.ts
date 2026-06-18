@@ -31,12 +31,12 @@ declare module "next-auth" {
     email?: string | null;
     name?: string | null;
     image?: string | null;
-    role: string;
-    tier: string;
+    role?: string;
+    tier?: string;
     walletAddress?: string;
     
     // Subscription fields
     subscriptionStatus?: string;
-    subscriptionExpiresAt?: Date;
+    subscriptionExpiresAt?: Date | null;
   }
 }

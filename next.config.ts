@@ -1,7 +1,9 @@
 import type { NextConfig } from "next";
 import { withSentryConfig } from "@sentry/nextjs";
+import bundleAnalyzer from "@next/bundle-analyzer";
+import webpack from "webpack";
 
-const withBundleAnalyzer = require('@next/bundle-analyzer')({
+const withBundleAnalyzer = bundleAnalyzer({
   enabled: process.env.ANALYZE === 'true',
 });
 
@@ -9,11 +11,12 @@ const nextConfig: NextConfig = {
   output: "standalone",
   poweredByHeader: false,
   
-  // Build configuration
   typescript: {
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: false,
   },
   eslint: {
+    // The repo still contains stale product experiments; use npm run lint for
+    // the active snapshot UI/API gate until those areas are quarantined.
     ignoreDuringBuilds: true,
   },
   
@@ -48,8 +51,6 @@ const nextConfig: NextConfig = {
 
   // Bundle optimization
   webpack: (config, { dev, isServer }) => {
-    const webpack = require('webpack');
-    
     // Handle missing optional dependencies
     config.resolve.fallback = {
       ...config.resolve.fallback,
@@ -157,6 +158,19 @@ const nextConfig: NextConfig = {
           {
             key: "Content-Type",
             value: "application/json; charset=utf-8",
+          },
+        ],
+      },
+      {
+        source: "/api/metrics",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "no-store",
+          },
+          {
+            key: "Content-Type",
+            value: "text/plain; version=0.0.4; charset=utf-8",
           },
         ],
       },
