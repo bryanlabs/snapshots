@@ -70,9 +70,9 @@ describe('Nginx Service Architecture', () => {
     it('should list blockchain chains', async () => {
       const chains = await mockService.listObjects('');
       
-      expect(chains).toHaveLength(8);
+      expect(chains).toHaveLength(6);
       expect(chains[0]).toMatchObject({
-        name: expect.stringMatching(/^\w+-\d+\/$/),
+        name: expect.stringMatching(/^[a-z0-9-]+\/$/),
         type: 'directory',
         size: 0
       });
@@ -83,7 +83,7 @@ describe('Nginx Service Architecture', () => {
       
       expect(snapshots.length).toBeGreaterThan(0);
       expect(snapshots[0]).toMatchObject({
-        name: expect.stringMatching(/cosmoshub-4-\d{8}-\d{6}\.tar\.zst$/),
+        name: expect.stringMatching(/cosmoshub-4-\d+-\d{8}-\d{6}\.tar\.zst$/),
         type: 'file',
         size: expect.any(Number)
       });
@@ -116,15 +116,15 @@ describe('Nginx Service Architecture', () => {
     });
 
     it('should provide realistic snapshot data', async () => {
-      const snapshots = mockService.getMockSnapshots('thorchain-1');
+      const snapshots = mockService.getMockSnapshots('cosmoshub-4');
       
-      // Should have recent snapshots
-      expect(snapshots.length).toBeGreaterThan(10);
+      // Should match the current public retention shape: two archives plus two sidecars.
+      expect(snapshots.length).toBe(4);
       
-      // Should have realistic sizes (thorchain is ~19GB)
+      // Should have realistic sizes for current Cosmos Hub LevelDB artifacts.
       const mainSnapshot = snapshots.find(s => s.name.endsWith('.tar.zst'));
-      expect(mainSnapshot?.size).toBeGreaterThan(15_000_000_000); // > 15GB
-      expect(mainSnapshot?.size).toBeLessThan(25_000_000_000); // < 25GB
+      expect(mainSnapshot?.size).toBeGreaterThan(100_000_000_000);
+      expect(mainSnapshot?.size).toBeLessThan(120_000_000_000);
     });
   });
 

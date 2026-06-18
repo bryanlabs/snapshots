@@ -3,6 +3,7 @@
  * Provides centralized, type-safe tier validation following mag-7 engineering standards
  */
 
+import { cache } from 'react';
 import type { Session } from 'next-auth';
 
 /**
@@ -10,6 +11,7 @@ import type { Session } from 'next-auth';
  */
 export type TierType = 'free' | 'premium' | 'ultra' | null | undefined;
 export type PremiumTier = 'premium' | 'ultra';
+export type BillingMode = 'enabled' | 'full-access-preview';
 
 /**
  * Comprehensive capability matrix for each tier
@@ -35,6 +37,23 @@ export interface TierCapabilities {
  * Memoization cache for tier capabilities
  */
 const capabilityCache = new Map<string, TierCapabilities>();
+
+function parseBooleanFlag(value?: string | null): boolean {
+  if (!value) return false;
+  return ['1', 'true', 'yes', 'on', 'enabled'].includes(value.toLowerCase().trim());
+}
+
+/**
+ * Billing is intentionally opt-in. Until a real payment gateway is enabled,
+ * users keep their stored account tier but receive ultra-equivalent access.
+ */
+export function isBillingEnabled(): boolean {
+  return parseBooleanFlag(process.env.BILLING_ENABLED ?? process.env.NEXT_PUBLIC_BILLING_ENABLED);
+}
+
+export function getBillingMode(): BillingMode {
+  return isBillingEnabled() ? 'enabled' : 'full-access-preview';
+}
 
 /**
  * Normalize legacy tier names to standard names
@@ -141,6 +160,18 @@ export function getTierCapabilities(tier?: string | null): TierCapabilities {
   return capabilities;
 }
 
+export function getEffectiveAccessTier(tier?: string | null): NonNullable<TierType> {
+  if (!isBillingEnabled()) {
+    return 'ultra';
+  }
+
+  return normalizeTierName(tier) || 'free';
+}
+
+export function getEffectiveTierCapabilities(tier?: string | null): TierCapabilities {
+  return getTierCapabilities(getEffectiveAccessTier(tier));
+}
+
 /**
  * Type guard to check if a tier has premium features
  */
@@ -193,17 +224,10 @@ export function validateSessionTierAccess(
 export const getServerTierCapabilities = (() => {
   // Don't use cache on client side
   if (typeof window !== 'undefined') {
-    return getTierCapabilities;
+    return getEffectiveTierCapabilities;
   }
-  
-  try {
-    // Try to import React.cache for Next.js 15
-    const { cache } = require('react');
-    return cache((tier?: string | null) => getTierCapabilities(tier));
-  } catch {
-    // Fallback for React 18 or when cache is not available
-    return getTierCapabilities;
-  }
+
+  return cache((tier?: string | null) => getEffectiveTierCapabilities(tier));
 })();
 
 /**
@@ -262,6 +286,49 @@ export function getTierDownloadExpiry(tier?: string | null): number {
   return capabilities.downloadExpiryHours;
 }
 
+export function getSnapshotAccessSummary(tier?: string | null) {
+  const normalizedTier = normalizeTierName(tier) || 'free';
+
+  if (normalizedTier === 'ultra') {
+    return {
+      description: 'Ultra access with the freshest snapshots and fastest downloads',
+      frequency: '6-hourly',
+      hours: [0, 6, 12, 18],
+    };
+  }
+
+  if (normalizedTier === 'premium') {
+    return {
+      description: 'Premium access with twice-daily snapshots',
+      frequency: 'twice-daily',
+      hours: [0, 12],
+    };
+  }
+
+  return {
+    description: 'Free public access with daily snapshots',
+    frequency: 'daily',
+    hours: [0],
+  };
+}
+
+export function getNextSnapshotTime(tier?: string | null): Date {
+  const now = new Date();
+  const { hours } = getSnapshotAccessSummary(tier);
+  const currentHour = now.getUTCHours();
+  const nextHour = hours.find((hour) => hour > currentHour);
+  const next = new Date(now);
+
+  if (nextHour === undefined) {
+    next.setUTCDate(next.getUTCDate() + 1);
+    next.setUTCHours(hours[0], 0, 0, 0);
+    return next;
+  }
+
+  next.setUTCHours(nextHour, 0, 0, 0);
+  return next;
+}
+
 /**
  * Legacy compatibility functions
  * @deprecated Use isPremiumTier() instead
@@ -287,7 +354,7 @@ export function isFreeUser(tier?: string | null): boolean {
 /**
  * Check if a user can access a specific snapshot based on their tier
  */
-export function canAccessSnapshot(snapshot: any, tier?: string | null): boolean {
+export function canAccessSnapshot(_snapshot: unknown, _tier?: string | null): boolean {
   // For now, all snapshots are accessible to all tiers
   // This can be modified later to restrict certain snapshots to premium users
   return true;

@@ -47,8 +47,8 @@ class CircuitBreaker {
   }
 
   private shouldAttemptReset(): boolean {
-    return this.lastFailureTime && 
-           (Date.now() - this.lastFailureTime.getTime()) > this.timeout;
+    return Boolean(this.lastFailureTime) &&
+           (Date.now() - this.lastFailureTime!.getTime()) > this.timeout;
   }
 
   private onSuccess(): void {
@@ -142,7 +142,7 @@ export class ProductionNginxService implements NginxService {
 
   async generateSecureLink(
     path: string,
-    tier: 'free' | 'premium' | 'unlimited',
+    tier: 'free' | 'premium' | 'ultra' | 'unlimited',
     expiryHours: number
   ): Promise<string> {
     const secret = process.env.SECURE_LINK_SECRET;
@@ -253,11 +253,11 @@ export class ProductionNginxService implements NginxService {
   /**
    * Normalize nginx response objects
    */
-  private normalizeObjects(data: any[]): NginxObject[] {
+  private normalizeObjects(data: Array<{ name: string; size?: number; mtime?: string; type?: string }>): NginxObject[] {
     return data.map(item => ({
       name: item.name,
       size: item.size || 0,
-      mtime: item.mtime,
+      mtime: item.mtime || '',
       type: item.type === 'directory' ? 'directory' : 'file'
     }));
   }

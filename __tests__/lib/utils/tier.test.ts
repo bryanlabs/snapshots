@@ -13,6 +13,9 @@ import {
   getTierBandwidth,
   getTierRateLimit,
   getTierDownloadExpiry,
+  getEffectiveAccessTier,
+  getEffectiveTierCapabilities,
+  getBillingMode,
   clearCapabilityCache,
   hasPremiumFeatures,
   hasUltraFeatures,
@@ -22,6 +25,8 @@ import {
 describe('Tier Utility', () => {
   beforeEach(() => {
     clearCapabilityCache();
+    delete process.env.BILLING_ENABLED;
+    delete process.env.NEXT_PUBLIC_BILLING_ENABLED;
   });
 
   describe('normalizeTierName', () => {
@@ -240,6 +245,26 @@ describe('Tier Utility', () => {
       expect(getTierDownloadExpiry('unlimited')).toBe(48);
       expect(getTierDownloadExpiry('premium')).toBe(24);
       expect(getTierDownloadExpiry('free')).toBe(12);
+    });
+  });
+
+  describe('service access mode', () => {
+    it('defaults to full-access preview when billing is not enabled', () => {
+      expect(getBillingMode()).toBe('full-access-preview');
+      expect(getEffectiveAccessTier('free')).toBe('ultra');
+      expect(getEffectiveAccessTier(undefined)).toBe('ultra');
+      expect(getEffectiveTierCapabilities('free').isUltra).toBe(true);
+      expect(getEffectiveTierCapabilities('free').canRequestCustomSnapshots).toBe(true);
+    });
+
+    it('preserves real account tier when billing is enabled', () => {
+      process.env.BILLING_ENABLED = 'true';
+
+      expect(getBillingMode()).toBe('enabled');
+      expect(getEffectiveAccessTier('free')).toBe('free');
+      expect(getEffectiveAccessTier('premium')).toBe('premium');
+      expect(getEffectiveAccessTier('ultra')).toBe('ultra');
+      expect(getEffectiveTierCapabilities('free').isUltra).toBe(false);
     });
   });
 

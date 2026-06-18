@@ -1,5 +1,6 @@
 import { Snapshot } from '@/lib/types';
 import { SnapshotListClient } from './SnapshotListClient';
+import { getEffectiveAccessTier } from '@/lib/utils/tier';
 
 interface SnapshotListServerProps {
   chainId: string;
@@ -36,7 +37,7 @@ export async function SnapshotListServer({ chainId, chainName }: SnapshotListSer
     return (
       <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-6 text-center">
         <p className="text-yellow-800 dark:text-yellow-200">
-          We couldn't find snapshots for {chainName}. The chain might not be available or there could be a temporary issue.
+          We could not find snapshots for {chainName}. The chain might not be available or there could be a temporary issue.
         </p>
       </div>
     );
@@ -46,5 +47,6 @@ export async function SnapshotListServer({ chainId, chainName }: SnapshotListSer
     chainId={chainId} 
     chainName={chainName} 
     initialSnapshots={snapshots} 
+    effectiveAccessTier={getEffectiveAccessTier()}
   />;
 }

@@ -2,12 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { ApiResponse } from '@/lib/types';
 import { checkDownloadAllowed } from '@/lib/download/tracker';
 import { auth } from '@/auth';
+import { getEffectiveAccessTier, isPremiumTier } from '@/lib/utils/tier';
 
 export async function GET(request: NextRequest) {
   try {
     // Get user session from NextAuth
     const session = await auth();
-    const tier = session?.user?.tier || 'free';
+    const tier = getEffectiveAccessTier(session?.user?.tier || 'free');
     
     // Get client IP
     const clientIp = request.headers.get('x-forwarded-for') || 
@@ -17,7 +18,7 @@ export async function GET(request: NextRequest) {
     
     // Check download status
     const DAILY_LIMIT = parseInt(process.env.DAILY_DOWNLOAD_LIMIT || '5');
-    const status = await checkDownloadAllowed(clientIp, tier as 'free' | 'premium' | 'unlimited', DAILY_LIMIT);
+    const status = await checkDownloadAllowed(clientIp, tier as 'free' | 'premium' | 'ultra' | 'unlimited', DAILY_LIMIT);
     
     return NextResponse.json<ApiResponse<{
       allowed: boolean;
@@ -30,7 +31,7 @@ export async function GET(request: NextRequest) {
       data: {
         allowed: status.allowed,
         remaining: status.remaining,
-        limit: (tier === 'premium' || tier === 'unlimited') ? -1 : DAILY_LIMIT,
+        limit: isPremiumTier(tier) ? -1 : DAILY_LIMIT,
         resetTime: status.resetTime.toISOString(),
         tier,
       },

@@ -31,9 +31,9 @@ export interface ChainInfo {
 }
 
 async function listObjectsForStorageChain(storageChainId: string) {
-  const isDevelopment = process.env.NODE_ENV === 'development';
+  const useMockNginx = process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test';
 
-  if (isDevelopment) {
+  if (useMockNginx) {
     const nginxClient = getNginxClient();
     return nginxClient.listObjects(`/snapshots/${storageChainId}/`);
   }
@@ -41,17 +41,40 @@ async function listObjectsForStorageChain(storageChainId: string) {
   return listObjects(storageChainId);
 }
 
+function isInternalStorageDirectory(storageChainId: string) {
+  return storageChainId.startsWith("_") || storageChainId.startsWith(".");
+}
+
 async function listSnapshotsForStorageChain(storageChainId: string): Promise<Snapshot[]> {
+  return listSnapshotsForStoragePrefix(storageChainId);
+}
+
+export async function listSnapshotsForStoragePrefix(
+  storagePrefix: string,
+  options?: {
+    chainId?: string;
+    storageChainId?: string;
+    databaseBackend?: "goleveldb" | "pebbledb";
+    databaseLabel?: string;
+  }
+): Promise<Snapshot[]> {
   let objects;
 
   try {
-    objects = await listObjectsForStorageChain(storageChainId);
+    objects = await listObjectsForStorageChain(storagePrefix);
   } catch (error) {
-    console.error(`Error listing snapshots for ${storageChainId}:`, error);
+    console.error(`Error listing snapshots for ${storagePrefix}:`, error);
     return [];
   }
 
-  const variant = getSnapshotStorageVariant(storageChainId);
+  const variant = options?.chainId
+    ? {
+        storageChainId: options.storageChainId || storagePrefix,
+        chainId: options.chainId,
+        databaseBackend: options.databaseBackend || "goleveldb",
+        databaseLabel: options.databaseLabel || "LevelDB",
+      }
+    : getSnapshotStorageVariant(storagePrefix);
   const snapshots: Snapshot[] = [];
 
   for (const obj of objects) {
@@ -69,7 +92,7 @@ async function listSnapshotsForStorageChain(storageChainId: string): Promise<Sna
     const snapshot: Snapshot = {
       filename: obj.name,
       chainId: variant.chainId,
-      storageChainId,
+      storageChainId: variant.storageChainId,
       size: obj.size,
       lastModified: new Date(obj.mtime),
       compressionType,
@@ -93,9 +116,9 @@ async function listSnapshotsForStorageChain(storageChainId: string): Promise<Sna
  * List all available chains
  */
 export async function listChains(): Promise<ChainInfo[]> {
-  const isDevelopment = process.env.NODE_ENV === 'development';
+  const useMockNginx = process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test';
   
-  if (isDevelopment) {
+  if (useMockNginx) {
     console.log('Fetching chains from nginx...');
     // Use development nginx client with fallback
     try {
@@ -106,6 +129,9 @@ export async function listChains(): Promise<ChainInfo[]> {
       for (const obj of objects) {
         if (obj.type === 'directory') {
           const storageChainId = obj.name.replace(/\/$/, '');
+          if (isInternalStorageDirectory(storageChainId)) {
+            continue;
+          }
           const chainId = getCanonicalChainId(storageChainId);
           const snapshots = await listSnapshotsForStorageChain(storageChainId);
           const existing = chainsById.get(chainId) || {
@@ -141,6 +167,9 @@ export async function listChains(): Promise<ChainInfo[]> {
   for (const obj of objects) {
     if (obj.type === 'directory') {
       const storageChainId = obj.name.replace(/\/$/, '');
+      if (isInternalStorageDirectory(storageChainId)) {
+        continue;
+      }
       const chainId = getCanonicalChainId(storageChainId);
       const snapshots = await listSnapshotsForStorageChain(storageChainId);
       const existing = chainsById.get(chainId) || {
@@ -224,14 +253,14 @@ export async function getLatestSnapshot(chainId: string): Promise<Snapshot | nul
 export async function generateDownloadUrl(
   chainId: string,
   filename: string,
-  tier: 'free' | 'premium' | 'unlimited' = 'free',
+  tier: 'free' | 'premium' | 'ultra' | 'unlimited' = 'free',
   userId?: string
 ): Promise<string> {
   // Path should be relative to /snapshots
   const path = `/${chainId}/${filename}`;
   
-  // Use 24 hours for premium/unlimited, 12 hours for free
-  const expiryHours = (tier === 'premium' || tier === 'unlimited') ? 24 : 12;
+  // Use longer-lived links for paid tiers, 12 hours for free.
+  const expiryHours = (tier === 'premium' || tier === 'ultra' || tier === 'unlimited') ? 24 : 12;
   
   return generateSecureLink(path, tier, expiryHours);
 }

@@ -60,6 +60,7 @@ describe('DownloadButton', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    process.env.NEXT_PUBLIC_BILLING_ENABLED = 'true';
     
     // Setup mocks
     mockUseAuth = useAuth as jest.Mock;
@@ -102,6 +103,7 @@ describe('DownloadButton', () => {
 
   afterEach(() => {
     jest.restoreAllMocks();
+    delete process.env.NEXT_PUBLIC_BILLING_ENABLED;
   });
 
   it('should render download button', () => {
@@ -192,6 +194,34 @@ describe('DownloadButton', () => {
     expect(screen.queryByTestId('download-modal')).not.toBeInTheDocument();
     
     // Should call the download API directly
+    await waitFor(() => {
+      expect(mockFetch).toHaveBeenCalledWith(
+        '/api/v1/chains/cosmos-hub/download',
+        expect.objectContaining({
+          method: 'POST',
+        })
+      );
+    });
+  });
+
+  it('should give free users instant download while billing is disabled', async () => {
+    process.env.NEXT_PUBLIC_BILLING_ENABLED = 'false';
+    mockUseAuth.mockReturnValue({
+      user: { email: 'free@example.com', tier: 'free' },
+    });
+
+    render(
+      <DownloadButton
+        snapshot={mockSnapshot}
+        chainName="Cosmos Hub"
+      />
+    );
+
+    const button = screen.getByRole('button', { name: /download now/i });
+    fireEvent.click(button);
+
+    expect(screen.queryByTestId('download-modal')).not.toBeInTheDocument();
+
     await waitFor(() => {
       expect(mockFetch).toHaveBeenCalledWith(
         '/api/v1/chains/cosmos-hub/download',
@@ -365,7 +395,7 @@ describe('DownloadButton', () => {
     // Wait for API call and URL modal
     await waitFor(() => {
       expect(screen.getByText('Download Ready')).toBeInTheDocument();
-      expect(screen.getByText('Copy URL')).toBeInTheDocument();
+      expect(screen.getAllByText('Signed URL').length).toBeGreaterThan(0);
     });
   });
 });

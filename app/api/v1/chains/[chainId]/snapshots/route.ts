@@ -1,11 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ApiResponse, Snapshot } from '@/lib/types';
-import { listSnapshots } from '@/lib/nginx/operations';
-import { extractHeightFromFilename } from '@/lib/config/supported-formats';
-import { config } from '@/lib/config';
 import { getUserSession, getGuestUserTier } from '@/lib/auth/user-session';
-import { canAccessSnapshot } from '@/lib/utils/tier';
 import { getCanonicalChainId } from '@/lib/config/chains';
+import { buildSnapshotCatalog } from '@/lib/snapshots/custom-catalog';
 
 export async function GET(
   request: NextRequest,
@@ -19,54 +16,18 @@ export async function GET(
     const userSession = await getUserSession();
     const userTier = userSession.user?.tier || getGuestUserTier();
     
-    // Fetch real snapshots from nginx
     console.log(`Fetching snapshots for chain: ${canonicalChainId}`);
-    const nginxSnapshots = await listSnapshots(canonicalChainId);
-    console.log(`Found ${nginxSnapshots.length} snapshots from nginx`);
-    
-    // Transform nginx snapshots to match our Snapshot type
-    const allSnapshots = nginxSnapshots
-      .map((s, index) => {
-        // Extract height from filename (e.g., noble-1-0.tar.zst -> 0)
-        const height = extractHeightFromFilename(s.filename) || s.height || 0;
-        
-        return {
-          id: `${canonicalChainId}-snapshot-${index}`,
-          chainId: canonicalChainId,
-          storageChainId: s.storageChainId,
-          databaseBackend: s.databaseBackend,
-          databaseLabel: s.databaseLabel,
-          height: height,
-          size: s.size,
-          fileName: s.filename,
-          createdAt: s.lastModified.toISOString(),
-          updatedAt: s.lastModified.toISOString(),
-          type: 'pruned' as const, // Default to pruned, could be determined from metadata
-          compressionType: s.compressionType || 'zst' as const,
-        };
-      })
-      .sort((a, b) => {
-        // Sort by createdAt (newest first)
-        const dateA = new Date(a.createdAt).getTime();
-        const dateB = new Date(b.createdAt).getTime();
-        return dateB - dateA;
-      });
-    
-    // Filter snapshots based on user tier access
-    const accessibleSnapshots = allSnapshots.filter(snapshot => 
-      canAccessSnapshot(snapshot, userTier)
-    );
-    
-    // Add access metadata to snapshots for UI
-    const snapshotsWithAccessInfo = allSnapshots.map(snapshot => ({
-      ...snapshot,
-      isAccessible: canAccessSnapshot(snapshot, userTier),
-      userTier: userTier,
-    }));
+    const snapshots = await buildSnapshotCatalog(canonicalChainId, userSession.user);
+    console.log(`Found ${snapshots.length} visible snapshots for ${canonicalChainId}`);
     
     return NextResponse.json<ApiResponse<Snapshot[]>>({
       success: true,
-      data: snapshotsWithAccessInfo,
+      data: snapshots.map((snapshot) => ({
+        ...snapshot,
+        createdAt: new Date(snapshot.createdAt),
+        updatedAt: new Date(snapshot.updatedAt),
+        userTier,
+      })),
     });
   } catch (error) {
     return NextResponse.json<ApiResponse>(

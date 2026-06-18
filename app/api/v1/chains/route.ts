@@ -6,6 +6,8 @@ import { listChains } from '@/lib/nginx/operations';
 import { config } from '@/lib/config';
 import { getChainConfig } from '@/lib/config/chains';
 
+type ChainCompressionType = NonNullable<Chain['latestSnapshot']>['compressionType'];
+
 export async function GET(request: NextRequest) {
   const endTimer = collectResponseTime('GET', '/api/v1/chains');
   const startTime = Date.now();
@@ -32,7 +34,7 @@ export async function GET(request: NextRequest) {
         latestSnapshot: chainInfo.latestSnapshot ? {
           size: chainInfo.latestSnapshot.size,
           lastModified: chainInfo.latestSnapshot.lastModified.toISOString(),
-          compressionType: chainInfo.latestSnapshot.compressionType || 'zst',
+          compressionType: (chainInfo.latestSnapshot.compressionType || 'zst') as ChainCompressionType,
         } : undefined,
       };
     });

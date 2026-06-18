@@ -14,7 +14,7 @@ export interface NginxSnapshot {
  */
 export function generateSecureLink(
   path: string,
-  tier: 'free' | 'premium' | 'unlimited' = 'free',
+  tier: 'free' | 'premium' | 'ultra' | 'unlimited' = 'free',
   expiryHours: number = 12
 ): string {
   const secret = process.env.SECURE_LINK_SECRET;
@@ -42,7 +42,11 @@ export async function listObjects(prefix: string): Promise<NginxSnapshot[]> {
   const useSSL = process.env.NGINX_USE_SSL === 'true';
   
   const protocol = useSSL ? 'https' : 'http';
-  const url = `${protocol}://${endpoint}:${port}/snapshots/${prefix}/`;
+  const normalizedPrefix = prefix.replace(/^\/+|\/+$/g, '');
+  const listBase = normalizedPrefix.startsWith('_custom/')
+    ? '/internal/snapshots-list/'
+    : '/snapshots/';
+  const url = `${protocol}://${endpoint}:${port}${listBase}${normalizedPrefix}/`;
   
   try {
     const response = await fetch(url, {
@@ -61,7 +65,7 @@ export async function listObjects(prefix: string): Promise<NginxSnapshot[]> {
     const data = await response.json();
     
     // nginx autoindex returns array of objects with name, type, mtime, size
-    return data.map((item: any) => ({
+    return data.map((item: { name: string; size?: number; mtime?: string; type?: string }) => ({
       name: item.name,
       size: item.size || 0,
       mtime: item.mtime,

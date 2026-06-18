@@ -33,15 +33,13 @@ export function QuickActionsMenu({ chain, onDownload }: QuickActionsMenuProps) {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const handleCopyWgetCommand = async () => {
+  const handleCopyApiCommand = async () => {
     if (!chain.latestSnapshot) return;
-    
-    // Construct wget command
-    const downloadUrl = `https://snapshots.bryanlabs.net/api/v1/chains/${chain.id}/download`;
-    const wgetCommand = `wget -O ${chain.id}-snapshot.tar.lz4 "${downloadUrl}"`;
-    
+
+    const command = `curl -fsS "https://snapshots.bryanlabs.net/api/v1/chains/${chain.id}/snapshots/latest?include_previous=true" | jq .`;
+
     try {
-      await copyToClipboard(wgetCommand);
+      await copyToClipboard(command);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
       setIsOpen(false);
@@ -102,7 +100,7 @@ export function QuickActionsMenu({ chain, onDownload }: QuickActionsMenuProps) {
           >
             <div className="py-1">
               <button
-                onClick={handleCopyWgetCommand}
+                onClick={handleCopyApiCommand}
                 disabled={!chain.latestSnapshot}
                 className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-between group"
               >
@@ -110,7 +108,7 @@ export function QuickActionsMenu({ chain, onDownload }: QuickActionsMenuProps) {
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                   </svg>
-                  Copy wget command
+                  Copy API command
                 </span>
                 {copied && (
                   <span className="text-xs text-green-600 dark:text-green-400">Copied!</span>

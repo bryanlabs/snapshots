@@ -167,6 +167,30 @@ export const SNAPSHOT_STORAGE_VARIANTS: Record<string, SnapshotStorageVariant> =
     databaseBackend: 'pebbledb',
     databaseLabel: 'PebbleDB',
   },
+  'noble-1': {
+    storageChainId: 'noble-1',
+    chainId: 'noble-1',
+    databaseBackend: 'goleveldb',
+    databaseLabel: 'LevelDB',
+  },
+  'noble-1-pebble': {
+    storageChainId: 'noble-1-pebble',
+    chainId: 'noble-1',
+    databaseBackend: 'pebbledb',
+    databaseLabel: 'PebbleDB',
+  },
+  'osmosis-1': {
+    storageChainId: 'osmosis-1',
+    chainId: 'osmosis-1',
+    databaseBackend: 'goleveldb',
+    databaseLabel: 'LevelDB',
+  },
+  'osmosis-1-pebble': {
+    storageChainId: 'osmosis-1-pebble',
+    chainId: 'osmosis-1',
+    databaseBackend: 'pebbledb',
+    databaseLabel: 'PebbleDB',
+  },
 };
 
 export function getSnapshotStorageVariant(storageChainId: string): SnapshotStorageVariant {

@@ -16,14 +16,12 @@ import {
  * File sizes and timestamps reflect real-world scenarios
  */
 const MOCK_CHAINS = [
-  'agoric-3',
-  'columbus-5', 
   'cosmoshub-4',
-  'kaiyo-1',
+  'cosmoshub-4-pebble',
   'noble-1',
-  'osmosis-1', 
-  'phoenix-1',
-  'thorchain-1'
+  'noble-1-pebble',
+  'osmosis-1',
+  'osmosis-1-pebble'
 ];
 
 /**
@@ -36,50 +34,40 @@ function generateMockSnapshots(chainId: string): NginxObject[] {
   
   // Chain-specific configurations (based on real data)
   const chainConfigs = {
-    'noble-1': { baseSize: 1_600_000_000, variance: 0.1, frequency: 24 }, // ~1.6GB, daily
-    'thorchain-1': { baseSize: 19_600_000_000, variance: 0.15, frequency: 12 }, // ~19.6GB, twice daily
-    'cosmoshub-4': { baseSize: 8_500_000_000, variance: 0.2, frequency: 24 }, // ~8.5GB, daily
-    'osmosis-1': { baseSize: 25_000_000_000, variance: 0.12, frequency: 12 }, // ~25GB, twice daily
-    'agoric-3': { baseSize: 3_200_000_000, variance: 0.08, frequency: 24 }, // ~3.2GB, daily
-    'phoenix-1': { baseSize: 6_800_000_000, variance: 0.18, frequency: 24 }, // ~6.8GB, daily
-    'kaiyo-1': { baseSize: 4_500_000_000, variance: 0.15, frequency: 24 }, // ~4.5GB, daily
-    'columbus-5': { baseSize: 12_000_000_000, variance: 0.25, frequency: 24 }, // ~12GB, daily
+    'cosmoshub-4': { baseSize: 112_000_000_000, variance: 0.02, baseHeight: 31_560_000, heightStep: 1250 },
+    'cosmoshub-4-pebble': { baseSize: 69_000_000_000, variance: 0.02, baseHeight: 31_560_000, heightStep: 1250 },
+    'noble-1': { baseSize: 1_350_000_000, variance: 0.05, baseHeight: 52_760_000, heightStep: 2600 },
+    'noble-1-pebble': { baseSize: 900_000_000, variance: 0.05, baseHeight: 52_760_000, heightStep: 2600 },
+    'osmosis-1': { baseSize: 56_000_000_000, variance: 0.04, baseHeight: 64_020_000, heightStep: 3300 },
+    'osmosis-1-pebble': { baseSize: 22_000_000_000, variance: 0.04, baseHeight: 64_020_000, heightStep: 3300 },
   };
 
   const config = chainConfigs[chainId as keyof typeof chainConfigs] || 
-    { baseSize: 5_000_000_000, variance: 0.2, frequency: 24 };
+    { baseSize: 5_000_000_000, variance: 0.2, baseHeight: 10_000_000, heightStep: 1000 };
 
-  // Generate last 7 days of snapshots
-  for (let i = 0; i < 7; i++) {
-    const snapshotDate = new Date(now.getTime() - (i * 24 * 60 * 60 * 1000));
+  // Match the production retention shape: two artifacts per storage variant.
+  for (let i = 0; i < 2; i++) {
+    const snapshotTime = new Date(now.getTime() - (i * 6 * 60 * 60 * 1000));
+    const sizeVariation = 1 + (Math.random() - 0.5) * config.variance;
+    const size = Math.floor(config.baseSize * sizeVariation);
+    const height = config.baseHeight - (i * config.heightStep);
+    const date = snapshotTime.toISOString().slice(0, 10).replace(/-/g, '');
+    const time = snapshotTime.toISOString().slice(11, 19).replace(/:/g, '');
+    const filename = `${chainId}-${height}-${date}-${time}.tar.zst`;
     
-    // Some chains have multiple snapshots per day
-    const snapshotsPerDay = 24 / config.frequency;
-    for (let j = 0; j < snapshotsPerDay; j++) {
-      const snapshotTime = new Date(snapshotDate.getTime() - (j * config.frequency * 60 * 60 * 1000));
-      
-      // Add some randomness to sizes (growth/shrinkage)
-      const sizeVariation = 1 + (Math.random() - 0.5) * config.variance;
-      const size = Math.floor(config.baseSize * sizeVariation);
-      
-      const timestamp = snapshotTime.toISOString().replace(/[:-]/g, '').replace(/\.[0-9]{3}Z/, '');
-      const filename = `${chainId}-${timestamp.substring(0, 8)}-${timestamp.substring(9, 15)}.tar.zst`;
-      
-      snapshots.push({
-        name: filename,
-        size,
-        mtime: snapshotTime.toUTCString(),
-        type: 'file'
-      });
-      
-      // Add corresponding SHA256 file
-      snapshots.push({
-        name: `${filename}.sha256`,
-        size: 96 + Math.floor(Math.random() * 10), // SHA256 files are ~100 bytes
-        mtime: snapshotTime.toUTCString(),
-        type: 'file'
-      });
-    }
+    snapshots.push({
+      name: filename,
+      size,
+      mtime: snapshotTime.toUTCString(),
+      type: 'file'
+    });
+    
+    snapshots.push({
+      name: `${filename}.sha256`,
+      size: 96 + Math.floor(Math.random() * 10),
+      mtime: snapshotTime.toUTCString(),
+      type: 'file'
+    });
   }
   
   // Sort by modification time (newest first)
@@ -170,7 +158,7 @@ export class MockNginxService implements NginxService {
 
   async generateSecureLink(
     path: string,
-    tier: 'free' | 'premium' | 'unlimited',
+    tier: 'free' | 'premium' | 'ultra' | 'unlimited',
     expiryHours: number
   ): Promise<string> {
     // Simulate the same secure link generation as production

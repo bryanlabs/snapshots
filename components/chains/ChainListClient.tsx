@@ -70,7 +70,7 @@ export function ChainListClient({ initialChains }: ChainListClientProps) {
   }, [searchTerm]);
 
   const filteredAndSortedChains = useMemo(() => {
-    let chains = initialChains.filter(chain => {
+    const chains = initialChains.filter(chain => {
       // Search filter
       const matchesSearch = searchTerm === '' || 
         chain.name.toLowerCase().includes(searchTerm.toLowerCase()) ||

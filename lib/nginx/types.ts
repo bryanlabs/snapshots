@@ -51,7 +51,7 @@ export interface NginxService {
    * @param tier - User tier for access control
    * @param expiryHours - URL expiry time
    */
-  generateSecureLink(path: string, tier: 'free' | 'premium' | 'unlimited', expiryHours: number): Promise<string>;
+  generateSecureLink(path: string, tier: 'free' | 'premium' | 'ultra' | 'unlimited', expiryHours: number): Promise<string>;
   
   /**
    * Health check - verify service is available

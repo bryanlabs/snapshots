@@ -3,16 +3,18 @@
  * Call this once at application startup (e.g., in layout.tsx or middleware)
  */
 
-import { initializeServiceRegistry, createDefaultConfig } from './service-registry';
+import {
+  initializeServiceRegistry,
+  createDefaultConfig,
+  isServiceRegistryInitialized,
+  type ServiceType,
+} from './service-registry';
 
 /**
  * Initialize nginx services with environment-based configuration
  * This replaces the old environment branching approach
  */
 export function initializeNginxServices(): void {
-  // Import here to avoid circular dependencies
-  const { isServiceRegistryInitialized } = require('./service-registry');
-  
   // Check if already initialized
   if (isServiceRegistryInitialized()) {
     return;
@@ -22,7 +24,7 @@ export function initializeNginxServices(): void {
   
   // Allow environment overrides for testing/debugging
   if (process.env.NGINX_SERVICE_TYPE) {
-    config.serviceType = process.env.NGINX_SERVICE_TYPE as any;
+    config.serviceType = process.env.NGINX_SERVICE_TYPE as ServiceType;
   }
   
   console.log(`[Bootstrap] Initializing nginx services with type: ${config.serviceType}`);

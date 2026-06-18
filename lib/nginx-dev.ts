@@ -1,141 +1,118 @@
 // Development-friendly nginx client with mock fallback
 import { listObjects, objectExists } from './nginx/client';
 
-// Mock nginx responses for development - based on real nginx structure
-const mockChains = ['agoric-3', 'columbus-5', 'cosmoshub-4', 'kaiyo-1', 'noble-1', 'osmosis-1', 'phoenix-1', 'thorchain-1'];
+// Mock nginx responses for development. Keep this aligned with the current
+// public service shape: three chains, each with LevelDB and PebbleDB storage.
+const mockChains = [
+  'cosmoshub-4',
+  'cosmoshub-4-pebble',
+  'noble-1',
+  'noble-1-pebble',
+  'osmosis-1',
+  'osmosis-1-pebble',
+];
 
-// Realistic mock snapshots based on actual nginx structure
-const mockSnapshots = {
-  'noble-1': [
+type MockSnapshotConfig = {
+  size: number;
+  height: number;
+  mtime: string;
+};
+
+function archive(storageChainId: string, config: MockSnapshotConfig) {
+  const date = new Date(config.mtime);
+  const yyyymmdd = date.toISOString().slice(0, 10).replace(/-/g, '');
+  const hhmmss = date.toISOString().slice(11, 19).replace(/:/g, '');
+  const name = `${storageChainId}-${config.height}-${yyyymmdd}-${hhmmss}.tar.zst`;
+
+  return [
     {
-      name: 'noble-1-20250730-022059.tar.zst',
-      size: 1620600176, // ~1.6GB like real data
-      mtime: 'Wed, 30 Jul 2025 02:21:33 GMT',
+      name,
+      size: config.size,
+      mtime: config.mtime,
       type: 'file'
     },
     {
-      name: 'noble-1-20250730-022059.tar.zst.sha256',
-      size: 98,
-      mtime: 'Wed, 30 Jul 2025 02:21:33 GMT',
-      type: 'file'
-    },
-    {
-      name: 'noble-1-20250729-020000.tar.zst',
-      size: 1598234567,
-      mtime: 'Tue, 29 Jul 2025 02:15:45 GMT',
-      type: 'file'
-    }
-  ],
-  'thorchain-1': [
-    {
-      name: 'thorchain-1-20250731-175137.tar.zst',
-      size: 19639317657, // ~19.6GB like real data
-      mtime: 'Thu, 31 Jul 2025 17:59:55 GMT',
-      type: 'file'
-    },
-    {
-      name: 'thorchain-1-20250731-175137.tar.zst.sha256',
-      size: 102,
-      mtime: 'Thu, 31 Jul 2025 17:59:55 GMT',
-      type: 'file'
-    },
-    {
-      name: 'thorchain-1-20250731-162909.tar.zst',
-      size: 19571995067, // ~19.5GB 
-      mtime: 'Thu, 31 Jul 2025 16:38:02 GMT',
-      type: 'file'
-    },
-    {
-      name: 'thorchain-1-20250731-162909.tar.zst.sha256',
-      size: 102,
-      mtime: 'Thu, 31 Jul 2025 16:38:02 GMT',
-      type: 'file'
-    }
-  ],
-  'cosmoshub-4': [
-    {
-      name: 'cosmoshub-4-20250730-180000.tar.zst',
-      size: 8500000000, // ~8.5GB estimate
-      mtime: 'Wed, 30 Jul 2025 18:15:22 GMT',
-      type: 'file'
-    },
-    {
-      name: 'cosmoshub-4-20250730-180000.tar.zst.sha256',
+      name: `${name}.sha256`,
       size: 96,
-      mtime: 'Wed, 30 Jul 2025 18:15:22 GMT',
+      mtime: config.mtime,
       type: 'file'
     }
+  ];
+}
+
+const mockSnapshots = {
+  'cosmoshub-4': [
+    ...archive('cosmoshub-4', {
+      size: 112_000_000_000,
+      height: 31_561_611,
+      mtime: 'Sun, 14 Jun 2026 14:17:29 GMT',
+    }),
+    ...archive('cosmoshub-4', {
+      size: 111_500_000_000,
+      height: 31_560_352,
+      mtime: 'Sun, 14 Jun 2026 10:17:25 GMT',
+    }),
+  ],
+  'cosmoshub-4-pebble': [
+    ...archive('cosmoshub-4-pebble', {
+      size: 69_600_000_000,
+      height: 31_561_000,
+      mtime: 'Sun, 14 Jun 2026 12:10:04 GMT',
+    }),
+    ...archive('cosmoshub-4-pebble', {
+      size: 69_200_000_000,
+      height: 31_559_800,
+      mtime: 'Sun, 14 Jun 2026 08:09:24 GMT',
+    }),
+  ],
+  'noble-1': [
+    ...archive('noble-1', {
+      size: 1_324_829_151,
+      height: 52_725_869,
+      mtime: 'Sun, 14 Jun 2026 13:41:52 GMT',
+    }),
+    ...archive('noble-1', {
+      size: 1_123_240_921,
+      height: 52_723_300,
+      mtime: 'Sun, 14 Jun 2026 07:41:29 GMT',
+    }),
+  ],
+  'noble-1-pebble': [
+    ...archive('noble-1-pebble', {
+      size: 890_881_178,
+      height: 52_725_529,
+      mtime: 'Sun, 14 Jun 2026 10:33:47 GMT',
+    }),
+    ...archive('noble-1-pebble', {
+      size: 887_432_937,
+      height: 52_725_181,
+      mtime: 'Sun, 14 Jun 2026 04:25:37 GMT',
+    }),
   ],
   'osmosis-1': [
-    {
-      name: 'osmosis-1-20250730-190000.tar.zst',
-      size: 25000000000, // ~25GB estimate for Osmosis
-      mtime: 'Wed, 30 Jul 2025 19:45:33 GMT',
-      type: 'file'
-    },
-    {
-      name: 'osmosis-1-20250730-190000.tar.zst.sha256',
-      size: 95,
-      mtime: 'Wed, 30 Jul 2025 19:45:33 GMT',
-      type: 'file'
-    }
+    ...archive('osmosis-1', {
+      size: 56_799_059_175,
+      height: 64_010_506,
+      mtime: 'Sun, 14 Jun 2026 09:15:40 GMT',
+    }),
+    ...archive('osmosis-1', {
+      size: 54_788_337_057,
+      height: 64_007_135,
+      mtime: 'Sun, 14 Jun 2026 03:06:07 GMT',
+    }),
   ],
-  'agoric-3': [
-    {
-      name: 'agoric-3-20250730-160000.tar.zst',
-      size: 3200000000, // ~3.2GB estimate
-      mtime: 'Wed, 30 Jul 2025 16:30:15 GMT',
-      type: 'file'
-    },
-    {
-      name: 'agoric-3-20250730-160000.tar.zst.sha256',
-      size: 94,
-      mtime: 'Wed, 30 Jul 2025 16:30:15 GMT',
-      type: 'file'
-    }
+  'osmosis-1-pebble': [
+    ...archive('osmosis-1-pebble', {
+      size: 22_554_906_602,
+      height: 64_023_587,
+      mtime: 'Sun, 14 Jun 2026 11:21:28 GMT',
+    }),
+    ...archive('osmosis-1-pebble', {
+      size: 22_100_000_000,
+      height: 64_020_100,
+      mtime: 'Sun, 14 Jun 2026 05:21:28 GMT',
+    }),
   ],
-  'phoenix-1': [
-    {
-      name: 'phoenix-1-20250730-140000.tar.zst',
-      size: 6800000000, // ~6.8GB estimate
-      mtime: 'Wed, 30 Jul 2025 14:25:44 GMT',
-      type: 'file'
-    },
-    {
-      name: 'phoenix-1-20250730-140000.tar.zst.sha256',
-      size: 97,
-      mtime: 'Wed, 30 Jul 2025 14:25:44 GMT',
-      type: 'file'
-    }
-  ],
-  'kaiyo-1': [
-    {
-      name: 'kaiyo-1-20250730-120000.tar.zst',
-      size: 4500000000, // ~4.5GB estimate
-      mtime: 'Wed, 30 Jul 2025 12:18:21 GMT',
-      type: 'file'
-    },
-    {
-      name: 'kaiyo-1-20250730-120000.tar.zst.sha256',
-      size: 93,
-      mtime: 'Wed, 30 Jul 2025 12:18:21 GMT',
-      type: 'file'
-    }
-  ],
-  'columbus-5': [
-    {
-      name: 'columbus-5-20250730-110000.tar.zst',
-      size: 12000000000, // ~12GB estimate
-      mtime: 'Wed, 30 Jul 2025 11:45:18 GMT',
-      type: 'file'
-    },
-    {
-      name: 'columbus-5-20250730-110000.tar.zst.sha256',
-      size: 99,
-      mtime: 'Wed, 30 Jul 2025 11:45:18 GMT',
-      type: 'file'
-    }
-  ]
 };
 
 class MockNginxClient {

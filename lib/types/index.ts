@@ -9,7 +9,7 @@ export interface Chain {
   snapshotCount?: number;
   latestSnapshot?: {
     size: number;
-    lastModified: Date;
+    lastModified: Date | string;
     compressionType: 'lz4' | 'zst' | 'gz' | 'bz2' | 'xz' | 'none';
   };
 }
@@ -33,6 +33,20 @@ export interface Snapshot {
   hourGenerated?: number; // UTC hour when snapshot was generated (0, 6, 12, 18)
   minimumTier?: 'free' | 'premium' | 'ultra'; // Minimum tier required to access
   isRestricted?: boolean; // Whether this snapshot has tier restrictions
+  // Custom/community snapshot metadata
+  isCustom?: boolean;
+  customSnapshotRequestId?: string;
+  customVisibility?: 'private' | 'public';
+  customPublishStatus?: 'private' | 'pending_review' | 'published' | 'rejected';
+  requestedByUserId?: string;
+  isOwner?: boolean;
+  isCommunity?: boolean;
+  isPinned?: boolean;
+  isFeatured?: boolean;
+  requestNote?: string;
+  adminNote?: string;
+  restoreVerifiedAt?: string;
+  isRestoreVerified?: boolean;
   // Runtime access control (added by API)
   isAccessible?: boolean; // Whether current user can access this snapshot
   userTier?: string; // Current user's tier (for UI display)
@@ -43,7 +57,7 @@ export interface User {
   email: string;
   name?: string;
   role: 'admin' | 'user';
-  tier?: 'free' | 'premium' | 'ultra';
+  tier?: 'free' | 'premium' | 'ultra' | 'unlimited';
 }
 
 export interface LoginRequest {
@@ -51,7 +65,7 @@ export interface LoginRequest {
   password: string;
 }
 
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   success: boolean;
   data?: T;
   error?: string;
@@ -68,6 +82,8 @@ export interface HealthCheckResponse {
   timestamp: string;
   services: {
     database: boolean;
-    minio: boolean;
+    storage: boolean;
+    /** @deprecated compatibility alias for `storage`; the backend is nginx, not MinIO. */
+    minio?: boolean;
   };
 }

@@ -77,7 +77,7 @@ export function ChainListRealtime({ initialChains, pollInterval = 60000 }: Chain
   }, [searchTerm, refetch]);
 
   const filteredAndSortedChains = useMemo(() => {
-    let filteredChains = chains.filter(chain => {
+    const filteredChains = chains.filter(chain => {
       // Search filter
       const matchesSearch = searchTerm === '' || 
         chain.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
