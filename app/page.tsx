@@ -58,12 +58,6 @@ export default async function Home() {
               >
                 Browse Snapshots
               </Link>
-              <Link
-                href="/api-docs"
-                className="bg-transparent border-2 border-white text-white hover:bg-white hover:text-purple-600 px-8 py-3 rounded-lg font-semibold text-lg transition-all duration-300"
-              >
-                API and CLI
-              </Link>
               {!user && (
                 <Link
                   href="/auth/signin"

@@ -7,6 +7,7 @@ import { usePathname } from 'next/navigation';
 import { ThemeToggle } from './ThemeToggle';
 import { UserDropdown } from './UserDropdown';
 import { useSession, signOut } from 'next-auth/react';
+import { Code2, Database, Server } from 'lucide-react';
 
 export function Header() {
   const sessionData = useSession();
@@ -53,12 +54,27 @@ export function Header() {
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-6">
+          <nav className="hidden md:flex items-center space-x-3">
             <Link
-              href="/api-docs"
-              className="text-foreground hover:text-primary transition-colors font-medium"
+              href="/chains"
+              className="inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted hover:text-primary"
             >
+              <Server className="h-4 w-4" />
+              Chains
+            </Link>
+            <Link
+              href="/api-docs#api-explorer"
+              className="inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted hover:text-primary"
+            >
+              <Database className="h-4 w-4" />
               API
+            </Link>
+            <Link
+              href="/api-docs#cli-examples"
+              className="inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted hover:text-primary"
+            >
+              <Code2 className="h-4 w-4" />
+              CLI
             </Link>
             <ThemeToggle />
             {session ? (
@@ -93,11 +109,28 @@ export function Header() {
           <div className="md:hidden py-4 border-t border-border">
             <nav className="flex flex-col space-y-4">
               <Link
-                href="/api-docs"
-                className="text-foreground hover:text-primary transition-colors font-medium"
+                href="/chains"
+                className="inline-flex items-center gap-2 text-foreground hover:text-primary transition-colors font-medium"
                 onClick={() => setIsMenuOpen(false)}
               >
+                <Server className="h-4 w-4" />
+                Chains
+              </Link>
+              <Link
+                href="/api-docs#api-explorer"
+                className="inline-flex items-center gap-2 text-foreground hover:text-primary transition-colors font-medium"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                <Database className="h-4 w-4" />
                 API
+              </Link>
+              <Link
+                href="/api-docs#cli-examples"
+                className="inline-flex items-center gap-2 text-foreground hover:text-primary transition-colors font-medium"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                <Code2 className="h-4 w-4" />
+                CLI
               </Link>
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">Theme</span>

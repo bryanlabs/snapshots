@@ -11,6 +11,7 @@ import {
   UserIcon,
   ArrowDownTrayIcon,
   CodeBracketIcon,
+  CommandLineIcon,
 } from '@heroicons/react/24/outline';
 
 export function MobileMenu() {
@@ -49,9 +50,14 @@ export function MobileMenu() {
       label: 'Chains',
     },
     {
-      href: '/api-docs',
+      href: '/api-docs#api-explorer',
       icon: CodeBracketIcon,
       label: 'API',
+    },
+    {
+      href: '/api-docs#cli-examples',
+      icon: CommandLineIcon,
+      label: 'CLI',
     },
     {
       href: '/my-downloads',

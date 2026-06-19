@@ -1,20 +1,21 @@
-import type { Metadata } from "next";
-import Link from "next/link";
-import { headers } from "next/headers";
-import { Code2, Download, ExternalLink, Globe, Terminal } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { listChains } from "@/lib/nginx/operations";
-import { getChainConfig } from "@/lib/config/chains";
+import type { Metadata } from 'next';
+import Link from 'next/link';
+import { headers } from 'next/headers';
+import { Code2, Database, ExternalLink, Terminal } from 'lucide-react';
+import { ApiExplorer } from '@/components/api/ApiExplorer';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { listChains } from '@/lib/nginx/operations';
+import { getChainConfig } from '@/lib/config/chains';
 
 export const metadata: Metadata = {
-  title: "API and CLI Access",
-  description: "API endpoints and CLI examples for BryanLabs blockchain snapshots.",
+  title: 'Snapshots API',
+  description: 'Interactive API explorer and CLI examples for BryanLabs blockchain snapshots.',
 };
 
 function CodeBlock({ children }: { children: string }) {
   return (
-    <pre className="overflow-x-auto rounded-lg border border-gray-700 bg-gray-950 p-4 text-xs text-gray-200">
+    <pre className="overflow-x-auto rounded-md border border-slate-700 bg-slate-950 p-4 text-sm leading-6 text-slate-100">
       <code>{children}</code>
     </pre>
   );
@@ -22,14 +23,14 @@ function CodeBlock({ children }: { children: string }) {
 
 async function getOrigin() {
   const headerList = await headers();
-  const host = headerList.get("x-forwarded-host") || headerList.get("host");
-  const protocol = headerList.get("x-forwarded-proto") || "https";
+  const host = headerList.get('x-forwarded-host') || headerList.get('host');
+  const protocol = headerList.get('x-forwarded-proto') || 'https';
 
   if (host) {
     return `${protocol}://${host}`;
   }
 
-  return process.env.NEXT_PUBLIC_APP_URL || "https://snapshots.bryanlabs.net";
+  return process.env.NEXT_PUBLIC_APP_URL || 'https://snapshots.bryanlabs.net';
 }
 
 export default async function ApiPage() {
@@ -43,135 +44,125 @@ export default async function ApiPage() {
     }))
     .sort((a, b) => a.name.localeCompare(b.name));
 
-  const exampleChainId = chains[0]?.chainId || "{chainId}";
+  const exampleChainId = chains[0]?.chainId || 'cosmoshub-4';
   const latestEndpoint = `${origin}/api/v1/chains/${exampleChainId}/snapshots/latest`;
   const downloadScript = [
     `CHAIN="${exampleChainId}"`,
     `API="${origin}/api/v1/chains/$CHAIN/snapshots/latest?database=pebbledb&include_previous=true"`,
     'URL="$(curl -fsS "$API" | jq -r \'.data.url\')"',
     'aria2c -c -x 8 -s 8 -k 1M --file-allocation=none "$URL"',
-  ].join("\n");
+  ].join('\n');
 
   return (
-    <div className="min-h-screen">
-      <section className="border-b border-gray-800 bg-gray-950 py-10 text-white">
-        <div className="container mx-auto px-4">
-          <div className="max-w-3xl">
-            <div className="mb-4 flex items-center gap-2 text-sm text-blue-300">
-              <Terminal className="h-4 w-4" />
-              API and CLI access
+    <div className="min-h-screen bg-slate-950 text-slate-100">
+      <section className="hero-gradient border-b border-slate-800 py-10">
+        <div className="container mx-auto px-4 hero-content">
+          <div className="max-w-4xl">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-blue-400/60 bg-blue-500/10 px-3 py-1 text-sm text-blue-200">
+              <Database className="h-4 w-4" />
+              Blockchain Snapshots API
             </div>
-            <h1 className="text-4xl font-bold">Use snapshots from scripts</h1>
-            <p className="mt-4 text-lg text-gray-300">
-              Generate signed latest-snapshot URLs, choose LevelDB or PebbleDB, and fetch artifacts with resumable command-line clients.
+            <h1 className="text-4xl font-bold tracking-normal md:text-5xl">Interactive snapshot API explorer</h1>
+            <p className="mt-4 max-w-3xl text-lg text-slate-300">
+              Try public JSON endpoints, inspect responses, and copy curl or jq examples for restore automation.
             </p>
           </div>
         </div>
       </section>
 
       <main className="container mx-auto space-y-8 px-4 py-10">
-        <div className="grid gap-6 lg:grid-cols-3">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Globe className="h-5 w-5 text-blue-500" />
-                Live Chains
-              </CardTitle>
-              <CardDescription>Detected from the current public catalog</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {chains.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No chains are currently listed.</p>
-              ) : (
-                <div className="space-y-2">
-                  {chains.map((chain) => (
-                    <Link
-                      key={chain.chainId}
-                      href={`/chains/${chain.chainId}`}
-                      className="flex items-center justify-between gap-3 rounded-md border p-3 transition-colors hover:bg-muted/50"
-                    >
-                      <div>
-                        <div className="text-sm font-medium">{chain.name}</div>
-                        <div className="font-mono text-xs text-muted-foreground">{chain.chainId}</div>
-                      </div>
-                      <Badge variant="outline">{chain.snapshotCount}</Badge>
-                    </Link>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+        <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
+          <aside className="space-y-6">
+            <Card className="border-slate-700 bg-slate-900 text-slate-100">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Code2 className="h-5 w-5 text-blue-400" />
+                  Live Chains
+                </CardTitle>
+                <CardDescription className="text-slate-400">Detected from the current public catalog.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {chains.length === 0 ? (
+                  <p className="text-sm text-slate-400">No chains are currently listed.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {chains.map((chain) => (
+                      <Link
+                        key={chain.chainId}
+                        href={`/chains/${chain.chainId}`}
+                        className="flex items-center justify-between gap-3 rounded-md border border-slate-700 p-3 transition-colors hover:border-blue-400 hover:bg-slate-800"
+                      >
+                        <div>
+                          <div className="text-sm font-medium">{chain.name}</div>
+                          <div className="font-mono text-xs text-slate-400">{chain.chainId}</div>
+                        </div>
+                        <Badge variant="outline" className="border-slate-600 text-slate-200">{chain.snapshotCount}</Badge>
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
 
-          <Card className="lg:col-span-2">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Code2 className="h-5 w-5 text-blue-500" />
-                Latest Snapshot Endpoint
-              </CardTitle>
-              <CardDescription>
-                Returns a short-lived signed URL plus ready-to-run download commands.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <CodeBlock>{`GET ${origin}/api/v1/chains/{chainId}/snapshots/latest`}</CodeBlock>
-              <div className="grid gap-3 md:grid-cols-3">
-                <div className="rounded-md border p-3 text-sm">
-                  <div className="font-medium">database</div>
-                  <div className="mt-1 text-muted-foreground">leveldb, goleveldb, pebble, pebbledb, or any</div>
-                </div>
-                <div className="rounded-md border p-3 text-sm">
-                  <div className="font-medium">include_previous</div>
-                  <div className="mt-1 text-muted-foreground">true returns backup candidates</div>
-                </div>
-                <div className="rounded-md border p-3 text-sm">
-                  <div className="font-medium">auth</div>
-                  <div className="mt-1 text-muted-foreground">optional browser session; anonymous works for public artifacts</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+            <Card className="border-slate-700 bg-slate-900 text-slate-100">
+              <CardHeader>
+                <CardTitle>Base URL</CardTitle>
+                <CardDescription className="text-slate-400">Use the same host in browser tests and CLI calls.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <CodeBlock>{origin}</CodeBlock>
+              </CardContent>
+            </Card>
+          </aside>
+
+          <ApiExplorer origin={origin} defaultChainId={exampleChainId} />
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Terminal className="h-5 w-5 text-blue-500" />
-              CLI Examples
-            </CardTitle>
-            <CardDescription>Use the current catalog chain ids shown above.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
+        <section id="cli-examples" className="rounded-md border border-slate-700 bg-slate-900 p-6">
+          <div className="mb-6 flex items-center gap-3">
+            <Terminal className="h-5 w-5 text-blue-400" />
+            <div>
+              <h2 className="text-xl font-bold">curl and jq examples</h2>
+              <p className="text-sm text-slate-400">Use the current catalog chain ids shown above.</p>
+            </div>
+          </div>
+
+          <div className="space-y-6">
             <div className="space-y-2">
-              <h2 className="text-sm font-semibold">Inspect the latest snapshot</h2>
-              <CodeBlock>{`curl -fsS "${latestEndpoint}" | jq .`}</CodeBlock>
+              <h3 className="text-sm font-semibold">Inspect the latest snapshot</h3>
+              <CodeBlock>{`curl -fsS '${latestEndpoint}' | jq .`}</CodeBlock>
             </div>
 
             <div className="space-y-2">
-              <h2 className="text-sm font-semibold">Prefer PebbleDB and include fallback artifacts</h2>
-              <CodeBlock>{`curl -fsS "${latestEndpoint}?database=pebbledb&include_previous=true" | jq .`}</CodeBlock>
+              <h3 className="text-sm font-semibold">Prefer PebbleDB and include fallback artifacts</h3>
+              <CodeBlock>{`curl -fsS '${latestEndpoint}?database=pebbledb&include_previous=true' | jq '.data | {height, database_backend, expires_at, previous: (.previous | length)}'`}</CodeBlock>
             </div>
 
             <div className="space-y-2">
-              <h2 className="text-sm font-semibold">Download with aria2c resume support</h2>
+              <h3 className="text-sm font-semibold">Download with aria2c resume support</h3>
               <CodeBlock>{downloadScript}</CodeBlock>
             </div>
 
             <div className="space-y-2">
-              <h2 className="text-sm font-semibold">List all snapshots for a chain</h2>
-              <CodeBlock>{`curl -fsS "${origin}/api/v1/chains/${exampleChainId}/snapshots" | jq '.data[] | {height, databaseBackend, size, fileName}'`}</CodeBlock>
+              <h3 className="text-sm font-semibold">List all scheduled artifacts for a chain</h3>
+              <CodeBlock>{`curl -fsS '${origin}/api/v1/chains/${exampleChainId}/snapshots' \\
+  | jq '.data[] | select(.isCustom != true) | {height, databaseBackend, size, fileName}'`}</CodeBlock>
             </div>
-          </CardContent>
-        </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Download className="h-5 w-5 text-blue-500" />
-              Response Contract
-            </CardTitle>
-            <CardDescription>The latest endpoint returns enough information to download without parsing filenames.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <h3 className="text-sm font-semibold">Group artifacts by database backend</h3>
+              <CodeBlock>{`curl -fsS '${origin}/api/v1/chains/${exampleChainId}/snapshots' \\
+  | jq '.data | group_by(.databaseBackend) | map({db: .[0].databaseBackend, count: length, heights: map(.height)})'`}</CodeBlock>
+            </div>
+          </div>
+        </section>
+
+        <section className="rounded-md border border-slate-700 bg-slate-900 p-6">
+          <h2 className="text-xl font-bold">Response contract</h2>
+          <p className="mt-2 max-w-3xl text-sm text-slate-400">
+            The latest endpoint returns a short-lived signed URL plus ready-to-run download commands. Refresh the URL before each long automation run.
+          </p>
+          <div className="mt-4">
             <CodeBlock>{`{
   "success": true,
   "data": {
@@ -179,7 +170,7 @@ export default async function ApiPage() {
     "height": 123456,
     "size": 123456789,
     "url": "https://snaps.bryanlabs.net/secure/...",
-    "expires_at": "2026-06-14T18:00:00.000Z",
+    "expires_at": "2026-06-19T18:00:00.000Z",
     "database_backend": "pebbledb",
     "latest": {
       "file_name": "${exampleChainId}-123456-YYYYMMDD-HHMMSS.tar.zst",
@@ -191,15 +182,12 @@ export default async function ApiPage() {
     "previous": []
   }
 }`}</CodeBlock>
-            <p className="text-sm text-muted-foreground">
-              Signed URLs expire. For long automation runs, ask the API for a fresh URL before starting each download.
-            </p>
-            <Link href="/dashboard" className="inline-flex items-center gap-2 text-sm font-medium text-blue-500 hover:text-blue-400">
-              Open dashboard
-              <ExternalLink className="h-4 w-4" />
-            </Link>
-          </CardContent>
-        </Card>
+          </div>
+          <Link href="/chains" className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-blue-400 hover:text-blue-300">
+            Browse chain catalog
+            <ExternalLink className="h-4 w-4" />
+          </Link>
+        </section>
       </main>
     </div>
   );
