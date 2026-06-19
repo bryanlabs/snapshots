@@ -111,9 +111,9 @@ export function BandwidthVisualization() {
               🕰️ Typical Download Size
             </div>
             <div className="text-slate-300 text-sm">
-              <strong>Cosmos Hub snapshot:</strong> ~40GB compressed<br />
-              <strong>Osmosis snapshot:</strong> ~25GB compressed<br />
-              <strong>Juno snapshot:</strong> ~15GB compressed
+              <strong>Cosmos Hub LevelDB:</strong> ~110GB compressed<br />
+              <strong>Cosmos Hub PebbleDB:</strong> ~70GB compressed<br />
+              <strong>Provider testnet:</strong> ~1-2GB compressed
             </div>
           </div>
           

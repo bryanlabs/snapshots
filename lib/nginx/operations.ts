@@ -9,6 +9,8 @@ import {
   getCanonicalChainId,
   getSnapshotStorageVariant,
   getStorageChainIdsForChain,
+  isSnapshotChainConfigured,
+  isSnapshotStorageConfigured,
 } from '../config/chains';
 
 export interface Snapshot {
@@ -46,6 +48,10 @@ function isInternalStorageDirectory(storageChainId: string) {
 }
 
 async function listSnapshotsForStorageChain(storageChainId: string): Promise<Snapshot[]> {
+  if (!isSnapshotStorageConfigured(storageChainId)) {
+    return [];
+  }
+
   return listSnapshotsForStoragePrefix(storageChainId);
 }
 
@@ -132,6 +138,9 @@ export async function listChains(): Promise<ChainInfo[]> {
           if (isInternalStorageDirectory(storageChainId)) {
             continue;
           }
+          if (!isSnapshotStorageConfigured(storageChainId)) {
+            continue;
+          }
           const chainId = getCanonicalChainId(storageChainId);
           const snapshots = await listSnapshotsForStorageChain(storageChainId);
           const existing = chainsById.get(chainId) || {
@@ -170,6 +179,9 @@ export async function listChains(): Promise<ChainInfo[]> {
       if (isInternalStorageDirectory(storageChainId)) {
         continue;
       }
+      if (!isSnapshotStorageConfigured(storageChainId)) {
+        continue;
+      }
       const chainId = getCanonicalChainId(storageChainId);
       const snapshots = await listSnapshotsForStorageChain(storageChainId);
       const existing = chainsById.get(chainId) || {
@@ -197,6 +209,10 @@ export async function listChains(): Promise<ChainInfo[]> {
  */
 export async function listSnapshots(chainId: string): Promise<Snapshot[]> {
   const canonicalChainId = getCanonicalChainId(chainId);
+  if (!isSnapshotChainConfigured(canonicalChainId)) {
+    return [];
+  }
+
   const storageChainIds = getStorageChainIdsForChain(canonicalChainId);
   const snapshotGroups = await Promise.all(storageChainIds.map(listSnapshotsForStorageChain));
   const snapshots = snapshotGroups.flat();

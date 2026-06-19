@@ -6,12 +6,12 @@ export const mockChains = {
     description: 'The Cosmos Hub is the first of thousands of interconnected blockchains.',
     logoUrl: '/chains/cosmos.png',
   },
-  'osmosis': {
-    id: 'osmosis',
-    name: 'Osmosis',
-    network: 'osmosis-1',
-    description: 'Osmosis is an advanced AMM protocol for interchain assets.',
-    logoUrl: '/chains/osmosis.png',
+  'provider': {
+    id: 'provider',
+    name: 'Cosmos Hub Testnet',
+    network: 'provider',
+    description: 'The public Cosmos Hub provider testnet.',
+    logoUrl: '/chains/cosmos.png',
   },
   'juno': {
     id: 'juno',
@@ -113,18 +113,18 @@ export const mockSnapshots = {
       isRestricted: false,
     },
   ],
-  'osmosis': [
+  'provider': [
     // Ultra tier: Latest 6-hour snapshot
     {
-      id: 'osmosis-snapshot-1',
-      chainId: 'osmosis',
-      height: 12345678,
-      size: 128849018880,
-      fileName: 'osmosis-1-12345678.tar.lz4',
+      id: 'provider-snapshot-1',
+      chainId: 'provider',
+      height: 17793206,
+      size: 1_277_163_493,
+      fileName: 'provider-17793206-20260618-004926.tar.zst',
       createdAt: createSnapshotDate(0, 18), // Today 18:00 UTC
       updatedAt: createSnapshotDate(0, 18),
       type: 'pruned' as const,
-      compressionType: 'lz4' as const,
+      compressionType: 'zst' as const,
       generationCycle: 'six-hourly' as const,
       hourGenerated: 18,
       minimumTier: 'ultra' as const,
@@ -132,15 +132,15 @@ export const mockSnapshots = {
     },
     // Free tier: Daily snapshot
     {
-      id: 'osmosis-snapshot-2',
-      chainId: 'osmosis',
-      height: 12340000,
-      size: 127312345600,
-      fileName: 'osmosis-1-12340000.tar.lz4',
+      id: 'provider-snapshot-2',
+      chainId: 'provider',
+      height: 17790000,
+      size: 1_250_000_000,
+      fileName: 'provider-17790000-20260617-184926.tar.zst',
       createdAt: createSnapshotDate(0, 12), // Today 12:00 UTC
       updatedAt: createSnapshotDate(0, 12),
       type: 'pruned' as const,
-      compressionType: 'lz4' as const,
+      compressionType: 'zst' as const,
       generationCycle: 'daily' as const,
       hourGenerated: 12,
       minimumTier: 'free' as const,
@@ -148,15 +148,15 @@ export const mockSnapshots = {
     },
     // Ultra tier: Morning snapshot
     {
-      id: 'osmosis-snapshot-3',
-      chainId: 'osmosis',
-      height: 12335000,
-      size: 127000000000,
-      fileName: 'osmosis-1-12335000.tar.lz4',
+      id: 'provider-snapshot-3',
+      chainId: 'provider',
+      height: 17787000,
+      size: 1_230_000_000,
+      fileName: 'provider-17787000-20260617-124926.tar.zst',
       createdAt: createSnapshotDate(0, 6), // Today 06:00 UTC
       updatedAt: createSnapshotDate(0, 6),
       type: 'pruned' as const,
-      compressionType: 'lz4' as const,
+      compressionType: 'zst' as const,
       generationCycle: 'six-hourly' as const,
       hourGenerated: 6,
       minimumTier: 'ultra' as const,

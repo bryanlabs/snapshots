@@ -18,10 +18,8 @@ import {
 const MOCK_CHAINS = [
   'cosmoshub-4',
   'cosmoshub-4-pebble',
-  'noble-1',
-  'noble-1-pebble',
-  'osmosis-1',
-  'osmosis-1-pebble'
+  'provider',
+  'provider-pebble'
 ];
 
 /**
@@ -36,10 +34,8 @@ function generateMockSnapshots(chainId: string): NginxObject[] {
   const chainConfigs = {
     'cosmoshub-4': { baseSize: 112_000_000_000, variance: 0.02, baseHeight: 31_560_000, heightStep: 1250 },
     'cosmoshub-4-pebble': { baseSize: 69_000_000_000, variance: 0.02, baseHeight: 31_560_000, heightStep: 1250 },
-    'noble-1': { baseSize: 1_350_000_000, variance: 0.05, baseHeight: 52_760_000, heightStep: 2600 },
-    'noble-1-pebble': { baseSize: 900_000_000, variance: 0.05, baseHeight: 52_760_000, heightStep: 2600 },
-    'osmosis-1': { baseSize: 56_000_000_000, variance: 0.04, baseHeight: 64_020_000, heightStep: 3300 },
-    'osmosis-1-pebble': { baseSize: 22_000_000_000, variance: 0.04, baseHeight: 64_020_000, heightStep: 3300 },
+    'provider': { baseSize: 1_277_000_000, variance: 0.05, baseHeight: 17_793_000, heightStep: 3000 },
+    'provider-pebble': { baseSize: 900_000_000, variance: 0.05, baseHeight: 17_793_000, heightStep: 3000 },
   };
 
   const config = chainConfigs[chainId as keyof typeof chainConfigs] || 

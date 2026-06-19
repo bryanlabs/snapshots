@@ -19,11 +19,11 @@ export default function NotFound() {
             Available Chains
           </h3>
           <p className="text-sm text-muted-foreground mb-4">
-            We currently support snapshots for these popular Cosmos ecosystem
-            chains:
+            We currently publish snapshots for these Cosmos networks:
           </p>
-          <div className="text-sm text-muted-foreground">
-            • Noble
+          <div className="text-sm text-muted-foreground space-y-1">
+            <div>Cosmos Hub</div>
+            <div>Cosmos Hub Testnet</div>
           </div>
         </div>
 

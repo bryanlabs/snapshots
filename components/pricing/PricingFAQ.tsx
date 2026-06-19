@@ -44,7 +44,7 @@ const faqs = [
       },
       {
         question: 'Which blockchains are supported?',
-        answer: 'All tiers support the same blockchains: Cosmos Hub, Osmosis, Juno, Terra, Noble, Kujira, Thorchain, and more. We add new chains based on community demand and validator adoption.',
+        answer: 'All tiers can access the currently published catalog. Right now that catalog is focused on Cosmos Hub mainnet and the Cosmos Hub provider testnet.',
       },
     ],
   },

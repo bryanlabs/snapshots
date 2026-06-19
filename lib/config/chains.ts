@@ -22,16 +22,6 @@ export interface ChainConfig {
  * Any component needing chain info should import from here
  */
 export const CHAIN_CONFIGS: Record<string, ChainConfig> = {
-  'noble-1': {
-    id: 'noble-1',
-    name: 'Noble',
-    logoUrl: '/chains/noble.png',
-    bannerUrl: '/chains/banners/noble-banner.jpg', // Placeholder for future banner
-    accentColor: '#FFB800',
-    description: 'Native asset issuance chain for the Cosmos ecosystem',
-    website: 'https://nobleassets.xyz',
-    explorer: 'https://www.mintscan.io/noble',
-  },
   'cosmoshub-4': {
     id: 'cosmoshub-4',
     name: 'Cosmos Hub',
@@ -42,15 +32,15 @@ export const CHAIN_CONFIGS: Record<string, ChainConfig> = {
     website: 'https://cosmos.network',
     explorer: 'https://www.mintscan.io/cosmos',
   },
-  'osmosis-1': {
-    id: 'osmosis-1',
-    name: 'Osmosis',
-    logoUrl: '/chains/osmosis.png',
-    bannerUrl: '/chains/banners/osmosis-banner.jpg', // Placeholder for future banner
-    accentColor: '#9945FF',
-    description: 'The largest DEX in the Cosmos ecosystem',
-    website: 'https://osmosis.zone',
-    explorer: 'https://www.mintscan.io/osmosis',
+  'provider': {
+    id: 'provider',
+    name: 'Cosmos Hub Testnet',
+    logoUrl: '/chains/cosmos.png',
+    bannerUrl: '/chains/banners/cosmos-banner.jpg',
+    accentColor: '#5E72E4',
+    description: 'The public Cosmos Hub provider testnet',
+    website: 'https://github.com/cosmos/testnets/tree/master/provider',
+    explorer: 'https://explorer.polypore.xyz/provider/',
   },
   'juno-1': {
     id: 'juno-1',
@@ -167,27 +157,15 @@ export const SNAPSHOT_STORAGE_VARIANTS: Record<string, SnapshotStorageVariant> =
     databaseBackend: 'pebbledb',
     databaseLabel: 'PebbleDB',
   },
-  'noble-1': {
-    storageChainId: 'noble-1',
-    chainId: 'noble-1',
+  'provider': {
+    storageChainId: 'provider',
+    chainId: 'provider',
     databaseBackend: 'goleveldb',
     databaseLabel: 'LevelDB',
   },
-  'noble-1-pebble': {
-    storageChainId: 'noble-1-pebble',
-    chainId: 'noble-1',
-    databaseBackend: 'pebbledb',
-    databaseLabel: 'PebbleDB',
-  },
-  'osmosis-1': {
-    storageChainId: 'osmosis-1',
-    chainId: 'osmosis-1',
-    databaseBackend: 'goleveldb',
-    databaseLabel: 'LevelDB',
-  },
-  'osmosis-1-pebble': {
-    storageChainId: 'osmosis-1-pebble',
-    chainId: 'osmosis-1',
+  'provider-pebble': {
+    storageChainId: 'provider-pebble',
+    chainId: 'provider',
     databaseBackend: 'pebbledb',
     databaseLabel: 'PebbleDB',
   },
@@ -213,6 +191,16 @@ export function getStorageChainIdsForChain(chainId: string): string[] {
     .map((variant) => variant.storageChainId);
 
   return storageChainIds.length > 0 ? storageChainIds : [canonicalChainId];
+}
+
+export function isSnapshotStorageConfigured(storageChainId: string): boolean {
+  return storageChainId in SNAPSHOT_STORAGE_VARIANTS;
+}
+
+export function isSnapshotChainConfigured(chainId: string): boolean {
+  const canonicalChainId = getCanonicalChainId(chainId);
+  return Object.values(SNAPSHOT_STORAGE_VARIANTS)
+    .some((variant) => variant.chainId === canonicalChainId);
 }
 
 /**

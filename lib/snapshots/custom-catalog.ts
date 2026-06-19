@@ -5,7 +5,7 @@ import {
   type Snapshot as NginxSnapshot,
 } from "@/lib/nginx/operations";
 import { extractHeightFromFilename } from "@/lib/config/supported-formats";
-import { getCanonicalChainId } from "@/lib/config/chains";
+import { getCanonicalChainId, isSnapshotChainConfigured } from "@/lib/config/chains";
 import { canAccessSnapshot } from "@/lib/utils/tier";
 import type { Snapshot as ApiSnapshot } from "@/lib/types";
 
@@ -305,6 +305,10 @@ function apiSnapshotFromCustomRequest(request: CustomRequest, user: CatalogUser 
 
 export async function buildSnapshotCatalog(chainId: string, user?: CatalogUser | null): Promise<ApiSnapshot[]> {
   const canonicalChainId = getCanonicalChainId(chainId);
+  if (!isSnapshotChainConfigured(canonicalChainId)) {
+    return [];
+  }
+
   const nginxSnapshots = await listSnapshots(canonicalChainId);
   const customRequests = await syncCustomRequestsForChain(canonicalChainId, nginxSnapshots);
   const includedCustomRequestIds = new Set<string>();

@@ -22,37 +22,20 @@ describe('snapshot storage variants', () => {
     ]);
   });
 
-  it('maps the Noble Pebble storage directory back to the Noble chain', () => {
-    expect(getCanonicalChainId('noble-1-pebble')).toBe('noble-1');
-    expect(getSnapshotStorageVariant('noble-1-pebble')).toMatchObject({
-      storageChainId: 'noble-1-pebble',
-      chainId: 'noble-1',
+  it('maps the Provider Pebble storage directory back to the Provider chain', () => {
+    expect(getCanonicalChainId('provider-pebble')).toBe('provider');
+    expect(getSnapshotStorageVariant('provider-pebble')).toMatchObject({
+      storageChainId: 'provider-pebble',
+      chainId: 'provider',
       databaseBackend: 'pebbledb',
       databaseLabel: 'PebbleDB',
     });
   });
 
-  it('returns both storage directories for Noble snapshots', () => {
-    expect(getStorageChainIdsForChain('noble-1')).toEqual([
-      'noble-1',
-      'noble-1-pebble',
-    ]);
-  });
-
-  it('maps the Osmosis Pebble storage directory back to the Osmosis chain', () => {
-    expect(getCanonicalChainId('osmosis-1-pebble')).toBe('osmosis-1');
-    expect(getSnapshotStorageVariant('osmosis-1-pebble')).toMatchObject({
-      storageChainId: 'osmosis-1-pebble',
-      chainId: 'osmosis-1',
-      databaseBackend: 'pebbledb',
-      databaseLabel: 'PebbleDB',
-    });
-  });
-
-  it('returns both storage directories for Osmosis snapshots', () => {
-    expect(getStorageChainIdsForChain('osmosis-1')).toEqual([
-      'osmosis-1',
-      'osmosis-1-pebble',
+  it('returns both storage directories for Provider snapshots', () => {
+    expect(getStorageChainIdsForChain('provider')).toEqual([
+      'provider',
+      'provider-pebble',
     ]);
   });
 });

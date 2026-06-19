@@ -13,7 +13,7 @@ import { auth } from '@/auth';
 import { checkDownloadAllowed, incrementDailyDownload, logDownload } from '@/lib/download/tracker';
 import { downloadTokenHashFromUrl, recordDownloadEvent } from '@/lib/download/events';
 import { getSnapshotFromCatalog } from '@/lib/snapshots/custom-catalog';
-import { getCanonicalChainId } from '@/lib/config/chains';
+import { getCanonicalChainId, isSnapshotChainConfigured } from '@/lib/config/chains';
 import { getEffectiveAccessTier, getTierDownloadExpiry } from '@/lib/utils/tier';
 
 const downloadRequestSchema = z.object({
@@ -58,6 +58,20 @@ async function handleDownload(
   try {
     const { chainId } = await params;
     canonicalChainId = getCanonicalChainId(chainId);
+    if (!isSnapshotChainConfigured(canonicalChainId)) {
+      const response = NextResponse.json<ApiResponse>(
+        {
+          success: false,
+          error: 'Chain not found',
+          message: `Chain ${canonicalChainId} is not available`,
+        },
+        { status: 404 }
+      );
+
+      endTimer();
+      trackRequest('POST', '/api/v1/chains/[chainId]/download', 404);
+      return response;
+    }
     const body = await request.json();
     requestedSnapshotId = snapshotIdFromBody(body);
     

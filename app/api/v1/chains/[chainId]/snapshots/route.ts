@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ApiResponse, Snapshot } from '@/lib/types';
 import { getUserSession, getGuestUserTier } from '@/lib/auth/user-session';
-import { getCanonicalChainId } from '@/lib/config/chains';
+import { getCanonicalChainId, isSnapshotChainConfigured } from '@/lib/config/chains';
 import { buildSnapshotCatalog } from '@/lib/snapshots/custom-catalog';
 
 export async function GET(
@@ -11,6 +11,16 @@ export async function GET(
   try {
     const { chainId } = await params;
     const canonicalChainId = getCanonicalChainId(chainId);
+    if (!isSnapshotChainConfigured(canonicalChainId)) {
+      return NextResponse.json<ApiResponse>(
+        {
+          success: false,
+          error: 'Chain not found',
+          message: `Chain ${canonicalChainId} is not available`,
+        },
+        { status: 404 }
+      );
+    }
     
     // Get user session and tier
     const userSession = await getUserSession();

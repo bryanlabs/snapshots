@@ -9,6 +9,7 @@ import {
   getEffectiveAccessTier,
   getEffectiveTierCapabilities,
 } from "@/lib/utils/tier";
+import { getCanonicalChainId, isSnapshotChainConfigured } from "@/lib/config/chains";
 
 const requestSchema = z.object({
   chainId: z.string(),
@@ -58,15 +59,24 @@ export async function POST(request: NextRequest) {
     const capabilities = getEffectiveTierCapabilities(session.user.tier);
     const body = await request.json();
     const validatedData = requestSchema.parse(body);
+    const canonicalChainId = getCanonicalChainId(validatedData.chainId);
+    if (!isSnapshotChainConfigured(canonicalChainId)) {
+      trackCustomSnapshotRequest(canonicalChainId, effectiveTier, "unknown", "invalid");
+      return NextResponse.json(
+        { error: "Chain is not available for custom snapshots.", code: "CHAIN_NOT_AVAILABLE" },
+        { status: 404 }
+      );
+    }
+
     const visibility = resolveVisibility(validatedData);
     metricContext = {
-      chainId: validatedData.chainId,
+      chainId: canonicalChainId,
       tier: effectiveTier,
       visibility,
     };
 
     if (!capabilities.canRequestCustomSnapshots) {
-      trackCustomSnapshotRequest(validatedData.chainId, effectiveTier, visibility, "denied");
+      trackCustomSnapshotRequest(canonicalChainId, effectiveTier, visibility, "denied");
       const tierError = createTierAccessError(session.user.tier, 'custom snapshots');
       return NextResponse.json(
         { error: tierError.error, code: tierError.code },
@@ -77,7 +87,7 @@ export async function POST(request: NextRequest) {
     // Enforce custom snapshot retention/quota policy to protect shared storage
     const quota = await evaluateCustomSnapshotQuota(session.user.id, effectiveTier);
     if (quota.overGlobalCap) {
-      trackCustomSnapshotRequest(validatedData.chainId, effectiveTier, visibility, "rate_limited");
+      trackCustomSnapshotRequest(canonicalChainId, effectiveTier, visibility, "rate_limited");
       return NextResponse.json(
         {
           error: "Custom snapshot storage is temporarily full. Please try again after some snapshots expire.",
@@ -87,14 +97,14 @@ export async function POST(request: NextRequest) {
       );
     }
     if (quota.maxConcurrent <= 0) {
-      trackCustomSnapshotRequest(validatedData.chainId, effectiveTier, visibility, "denied");
+      trackCustomSnapshotRequest(canonicalChainId, effectiveTier, visibility, "denied");
       return NextResponse.json(
         { error: "Your plan does not include custom snapshots.", code: "QUOTA_NOT_ALLOWED" },
         { status: 403 }
       );
     }
     if (quota.atUserLimit) {
-      trackCustomSnapshotRequest(validatedData.chainId, effectiveTier, visibility, "rate_limited");
+      trackCustomSnapshotRequest(canonicalChainId, effectiveTier, visibility, "rate_limited");
       return NextResponse.json(
         {
           error: `You can have ${quota.maxConcurrent} custom snapshot${quota.maxConcurrent === 1 ? "" : "s"} at a time. Delete an existing one or wait for it to expire.`,
@@ -110,7 +120,7 @@ export async function POST(request: NextRequest) {
     const localRequest = await prisma.snapshotRequest.create({
       data: {
         userId: session.user.id,
-        chainId: validatedData.chainId,
+        chainId: canonicalChainId,
         blockHeight: BigInt(validatedData.targetHeight),
         pruningMode: "custom",
         compressionType: validatedData.compressionType,
@@ -138,7 +148,7 @@ export async function POST(request: NextRequest) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        chain_id: validatedData.chainId,
+        chain_id: canonicalChainId,
         target_height: validatedData.targetHeight,
         compression_types: [validatedData.compressionType],
         compression_level: validatedData.compressionLevel,
@@ -167,7 +177,7 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    trackCustomSnapshotRequest(validatedData.chainId, effectiveTier, visibility, "success");
+    trackCustomSnapshotRequest(canonicalChainId, effectiveTier, visibility, "success");
 
     return NextResponse.json({
       success: true,

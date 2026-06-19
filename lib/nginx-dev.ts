@@ -2,14 +2,12 @@
 import { listObjects, objectExists } from './nginx/client';
 
 // Mock nginx responses for development. Keep this aligned with the current
-// public service shape: three chains, each with LevelDB and PebbleDB storage.
+// public service shape: two chains, each with LevelDB and PebbleDB storage.
 const mockChains = [
   'cosmoshub-4',
   'cosmoshub-4-pebble',
-  'noble-1',
-  'noble-1-pebble',
-  'osmosis-1',
-  'osmosis-1-pebble',
+  'provider',
+  'provider-pebble',
 ];
 
 type MockSnapshotConfig = {
@@ -65,52 +63,28 @@ const mockSnapshots = {
       mtime: 'Sun, 14 Jun 2026 08:09:24 GMT',
     }),
   ],
-  'noble-1': [
-    ...archive('noble-1', {
-      size: 1_324_829_151,
-      height: 52_725_869,
+  'provider': [
+    ...archive('provider', {
+      size: 1_277_163_493,
+      height: 17_793_206,
       mtime: 'Sun, 14 Jun 2026 13:41:52 GMT',
     }),
-    ...archive('noble-1', {
-      size: 1_123_240_921,
-      height: 52_723_300,
+    ...archive('provider', {
+      size: 1_250_000_000,
+      height: 17_790_000,
       mtime: 'Sun, 14 Jun 2026 07:41:29 GMT',
     }),
   ],
-  'noble-1-pebble': [
-    ...archive('noble-1-pebble', {
-      size: 890_881_178,
-      height: 52_725_529,
+  'provider-pebble': [
+    ...archive('provider-pebble', {
+      size: 900_000_000,
+      height: 17_793_100,
       mtime: 'Sun, 14 Jun 2026 10:33:47 GMT',
     }),
-    ...archive('noble-1-pebble', {
-      size: 887_432_937,
-      height: 52_725_181,
+    ...archive('provider-pebble', {
+      size: 880_000_000,
+      height: 17_789_900,
       mtime: 'Sun, 14 Jun 2026 04:25:37 GMT',
-    }),
-  ],
-  'osmosis-1': [
-    ...archive('osmosis-1', {
-      size: 56_799_059_175,
-      height: 64_010_506,
-      mtime: 'Sun, 14 Jun 2026 09:15:40 GMT',
-    }),
-    ...archive('osmosis-1', {
-      size: 54_788_337_057,
-      height: 64_007_135,
-      mtime: 'Sun, 14 Jun 2026 03:06:07 GMT',
-    }),
-  ],
-  'osmosis-1-pebble': [
-    ...archive('osmosis-1-pebble', {
-      size: 22_554_906_602,
-      height: 64_023_587,
-      mtime: 'Sun, 14 Jun 2026 11:21:28 GMT',
-    }),
-    ...archive('osmosis-1-pebble', {
-      size: 22_100_000_000,
-      height: 64_020_100,
-      mtime: 'Sun, 14 Jun 2026 05:21:28 GMT',
     }),
   ],
 };

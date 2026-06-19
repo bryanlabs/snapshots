@@ -9,7 +9,7 @@ import {
 } from '@/lib/config/supported-formats';
 import { collectResponseTime, trackRequest } from '@/lib/monitoring/metrics';
 import { extractRequestMetadata, logRequest } from '@/lib/middleware/logger';
-import { getCanonicalChainId } from '@/lib/config/chains';
+import { getCanonicalChainId, isSnapshotChainConfigured } from '@/lib/config/chains';
 
 interface ChainMetadata {
   chain_id: string;
@@ -34,6 +34,20 @@ export async function GET(
   try {
     const { chainId } = await params;
     const canonicalChainId = getCanonicalChainId(chainId);
+    if (!isSnapshotChainConfigured(canonicalChainId)) {
+      const response = NextResponse.json<ApiResponse>(
+        {
+          success: false,
+          error: 'Chain not found',
+          message: `Chain ${canonicalChainId} is not available`,
+        },
+        { status: 404 }
+      );
+
+      endTimer();
+      trackRequest('GET', '/api/v1/chains/{chainId}/info', 404);
+      return response;
+    }
     
     // Fetch all snapshots for this chain from nginx
     console.log(`Fetching chain metadata for: ${canonicalChainId}`);

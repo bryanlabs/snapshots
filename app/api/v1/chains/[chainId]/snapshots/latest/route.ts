@@ -4,7 +4,7 @@ import { generateDownloadUrl } from '@/lib/nginx/operations';
 import { collectResponseTime, trackRequest } from '@/lib/monitoring/metrics';
 import { extractRequestMetadata, logRequest } from '@/lib/middleware/logger';
 import { auth } from '@/auth';
-import { getCanonicalChainId } from '@/lib/config/chains';
+import { getCanonicalChainId, isSnapshotChainConfigured } from '@/lib/config/chains';
 import { getEffectiveAccessTier, getTierDownloadExpiry, normalizeTierName } from '@/lib/utils/tier';
 import { buildSnapshotCatalog } from '@/lib/snapshots/custom-catalog';
 import type { Snapshot } from '@/lib/types';
@@ -100,6 +100,20 @@ export async function GET(
   try {
     const { chainId } = await params;
     const canonicalChainId = getCanonicalChainId(chainId);
+    if (!isSnapshotChainConfigured(canonicalChainId)) {
+      const response = NextResponse.json<ApiResponse>(
+        {
+          success: false,
+          error: 'Chain not found',
+          message: `Chain ${canonicalChainId} is not available`,
+        },
+        { status: 404 }
+      );
+
+      endTimer();
+      trackRequest('GET', '/api/v1/chains/[chainId]/snapshots/latest', 404);
+      return response;
+    }
     const databaseFilter = normalizeDatabaseQuery(request.nextUrl.searchParams.get('database'));
     const includePrevious = request.nextUrl.searchParams.get('include_previous') === 'true';
     

@@ -1,30 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ApiResponse, Chain } from '@/lib/types';
-
-// Mock data - replace with actual database queries
-const mockChains: Record<string, Chain> = {
-  'cosmos-hub': {
-    id: 'cosmos-hub',
-    name: 'Cosmos Hub',
-    network: 'cosmoshub-4',
-    description: 'The Cosmos Hub is the first of thousands of interconnected blockchains.',
-    logoUrl: '/chains/cosmos.png',
-  },
-  'osmosis': {
-    id: 'osmosis',
-    name: 'Osmosis',
-    network: 'osmosis-1',
-    description: 'Osmosis is an advanced AMM protocol for interchain assets.',
-    logoUrl: '/chains/osmosis.png',
-  },
-  'juno': {
-    id: 'juno',
-    name: 'Juno',
-    network: 'juno-1',
-    description: 'Juno is a sovereign public blockchain in the Cosmos ecosystem.',
-    logoUrl: '/chains/juno.png',
-  },
-};
+import { getCanonicalChainId, getChainConfig, isSnapshotChainConfigured } from '@/lib/config/chains';
+import { listChains } from '@/lib/nginx/operations';
 
 export async function GET(
   request: NextRequest,
@@ -32,11 +9,21 @@ export async function GET(
 ) {
   try {
     const { chainId } = await params;
-    
-    // TODO: Implement actual database query
-    // const chain = await db.chain.findUnique({ where: { id: chainId } });
-    
-    const chain = mockChains[chainId];
+    const canonicalChainId = getCanonicalChainId(chainId);
+
+    if (!isSnapshotChainConfigured(canonicalChainId)) {
+      return NextResponse.json<ApiResponse>(
+        {
+          success: false,
+          error: 'Chain not found',
+          message: `Chain with ID ${chainId} not found`,
+        },
+        { status: 404 }
+      );
+    }
+
+    const chains = await listChains();
+    const chain = chains.find((entry) => entry.chainId === canonicalChainId);
     
     if (!chain) {
       return NextResponse.json<ApiResponse>(
@@ -49,9 +36,22 @@ export async function GET(
       );
     }
     
-    return NextResponse.json<ApiResponse<Chain>>({
+    return NextResponse.json<ApiResponse<Chain & { totalSize: number }>>({
       success: true,
-      data: chain,
+      data: {
+        id: chain.chainId,
+        name: getChainConfig(chain.chainId).name,
+        network: chain.chainId,
+        logoUrl: getChainConfig(chain.chainId).logoUrl,
+        accentColor: getChainConfig(chain.chainId).accentColor,
+        snapshotCount: chain.snapshotCount,
+        latestSnapshot: chain.latestSnapshot ? {
+          size: chain.latestSnapshot.size,
+          lastModified: chain.latestSnapshot.lastModified.toISOString(),
+          compressionType: (chain.latestSnapshot.compressionType || 'zst') as NonNullable<Chain['latestSnapshot']>['compressionType'],
+        } : undefined,
+        totalSize: chain.totalSize,
+      },
     });
   } catch (error) {
     return NextResponse.json<ApiResponse>(
