@@ -9,13 +9,26 @@
   --foreground: #1e293b;
   --card: #ffffff;
   --card-foreground: #1e293b;
+  --popover: #ffffff;
+  --popover-foreground: #1e293b;
   --muted: #f1f5f9;
   --muted-foreground: #64748b;
   --border: #e2e8f0;
-  --accent: #3b82f6;
-  --primary: #60a5fa;
-  --secondary: #8b5cf6;
-  
+  --input: #e2e8f0;
+  --primary: #2563eb;
+  --primary-foreground: #ffffff;
+  --secondary: #f1f5f9;
+  --secondary-foreground: #1e293b;
+  --accent: #8b5cf6;
+  --accent-foreground: #ffffff;
+  --ring: #2563eb;
+  --destructive: #ef4444;
+
+  /* Brand named tokens */
+  --bryanlabs-blue: #60a5fa;
+  --bryanlabs-purple: #8b5cf6;
+  --bryanlabs-dark: #1a1b26;
+
   /* Chain accent colors */
   --accent-osmosis: #9945FF;
   --accent-cosmos: #5E72E4;
@@ -31,12 +44,20 @@
   --foreground: #e0e7ff;
   --card: #242538;
   --card-foreground: #e0e7ff;
+  --popover: #242538;
+  --popover-foreground: #e0e7ff;
   --muted: #2a2b3d;
   --muted-foreground: #94a3b8;
   --border: #3a3b4d;
-  --accent: #8b5cf6;
+  --input: #3a3b4d;
   --primary: #60a5fa;
-  --secondary: #8b5cf6;
+  --primary-foreground: #ffffff;
+  --secondary: #2d3348;
+  --secondary-foreground: #e6edf9;
+  --accent: #8b5cf6;
+  --accent-foreground: #ffffff;
+  --ring: #60a5fa;
+  --destructive: #f87171;
 }
 
 @theme inline {
@@ -44,12 +65,20 @@
   --color-foreground: var(--foreground);
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
   --color-border: var(--border);
+  --color-input: var(--input);
   --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
   --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
   --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-ring: var(--ring);
+  --color-destructive: var(--destructive);
   --font-sans: var(--font-inter);
 }
 

@@ -77,7 +77,7 @@ export function CommunityAccess() {
           <p className="text-emerald-200 text-sm sm:text-base">
             <strong>Blockchain infrastructure is complex.</strong> Having direct access to experts 
             and other professionals can save hours of debugging time. Our Telegram groups aren't 
-            just support—they're professional networks where real solutions happen in real-time.
+            just support. They're professional networks where real solutions happen in real-time.
           </p>
         </div>
         
@@ -143,7 +143,7 @@ export function CommunityAccess() {
                 Hi! I'm Dan, the founder behind these snapshots. I've been running blockchain 
                 infrastructure for years and understand the pain of slow syncs and unreliable data. 
                 <strong className="text-purple-300"> Ultra users get direct access to me</strong> 
-                — not a support ticket system, but real conversations about your infrastructure challenges.
+                (not a support ticket system, but real conversations about your infrastructure challenges).
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="bg-slate-800/50 rounded-lg p-3">

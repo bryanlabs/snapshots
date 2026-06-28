@@ -1,6 +1,6 @@
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-import { PrismaAdapter } from "@auth/prisma-adapter";
+import type { Provider } from "next-auth/providers";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
@@ -19,9 +19,25 @@ const WalletLoginSchema = z.object({
   pubkey: z.string().min(1),
 });
 
+// Bryanlabs unified login via Authentik (OIDC). Enabled only when configured.
+const authentikIssuer = process.env.AUTH_AUTHENTIK_ISSUER;
+const authentikClientId = process.env.AUTH_AUTHENTIK_ID;
+const authentikClientSecret = process.env.AUTH_AUTHENTIK_SECRET;
+const authentikProvider: Provider | null =
+  authentikIssuer && authentikClientId && authentikClientSecret
+    ? {
+        id: "authentik",
+        name: "Bryanlabs",
+        type: "oidc",
+        issuer: authentikIssuer,
+        clientId: authentikClientId,
+        clientSecret: authentikClientSecret,
+        authorization: { params: { scope: "openid email profile" } },
+      }
+    : null;
+
 export const { handlers, signIn, signOut, auth } = NextAuth({
   ...authConfig,
-  adapter: PrismaAdapter(prisma),
   providers: [
     // Email/Password authentication
     CredentialsProvider({
@@ -170,10 +186,40 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         };
       },
     }),
+
+    // Bryanlabs unified SSO (Authentik). Added only when env vars are present.
+    ...(authentikProvider ? [authentikProvider] : []),
   ],
   callbacks: {
     ...authConfig.callbacks,
-    async jwt({ token, user, account }) {
+    async jwt({ token, user, account, profile }) {
+      // Authentik SSO: upsert the snapshots user and key the session to it.
+      if (account?.provider === "authentik") {
+        const email = typeof profile?.email === "string" ? profile.email : undefined;
+        let dbUser = email
+          ? await prisma.user.findUnique({ where: { email } })
+          : null;
+        if (!dbUser) {
+          const freeTier = await prisma.tier.findUnique({ where: { name: "free" } });
+          dbUser = await prisma.user.create({
+            data: {
+              email,
+              displayName: typeof profile?.name === "string" ? profile.name : email,
+              avatarUrl: typeof profile?.picture === "string" ? profile.picture : null,
+              personalTierId: freeTier?.id,
+              lastLoginAt: new Date(),
+            },
+          });
+        } else {
+          await prisma.user.update({
+            where: { id: dbUser.id },
+            data: { lastLoginAt: new Date() },
+          });
+        }
+        token.id = dbUser.id;
+        token.provider = "authentik";
+        return token;
+      }
       if (user) {
         token.id = user.id;
         token.provider = account?.provider;

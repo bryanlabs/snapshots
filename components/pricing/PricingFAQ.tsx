@@ -32,7 +32,7 @@ const faqs = [
     questions: [
       {
         question: 'How are bandwidth limits enforced?',
-        answer: 'Each tier has a dedicated bandwidth pool. Free users share a 50 Mbps pool, Premium users share a 250 Mbps pool, and Ultra users share a 500 Mbps pool. These are guarantees, not limits—you may get faster speeds during off-peak times.',
+        answer: 'Each tier has a dedicated bandwidth pool. Free users share a 50 Mbps pool, Premium users share a 250 Mbps pool, and Ultra users share a 500 Mbps pool. These are guarantees, not limits. You may get faster speeds during off-peak times.',
       },
       {
         question: 'What\'s included in "custom snapshots"?',

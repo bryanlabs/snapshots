@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/components/common/Header";
+import { NetworkBar } from "@/components/network-bar";
+import { NetworkFooter } from "@/components/network-footer";
 import { Footer } from "@/components/common/Footer";
 import { LayoutProvider } from "@/components/providers/LayoutProvider";
 import { Providers } from "@/components/providers";
@@ -117,6 +119,9 @@ export default function RootLayout({
         />
       </head>
       <body className={`${inter.variable} font-sans antialiased`}>
+        <div className="fixed inset-x-0 top-0 z-50">
+          <NetworkBar current="snapshots" />
+        </div>
         <Providers>
           <WebVitals />
           <RealUserMonitoring />
@@ -128,6 +133,7 @@ export default function RootLayout({
           <Footer />
           <MobileMenu />
         </Providers>
+        <NetworkFooter />
       </body>
     </html>
   );

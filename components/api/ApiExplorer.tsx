@@ -224,13 +224,13 @@ function CodeBlock({ value }: { value: string }) {
       <button
         type="button"
         onClick={copy}
-        className="absolute right-3 top-3 inline-flex h-8 w-8 items-center justify-center rounded-md border border-slate-700 bg-slate-900 text-slate-300 hover:border-blue-400 hover:text-blue-200"
+        className="absolute right-3 top-3 inline-flex h-8 w-8 items-center justify-center rounded-md border border-[#3a3b4d] bg-[#242538] text-[#cbd5e1] hover:border-blue-400 hover:text-blue-200"
         aria-label="Copy code"
         title="Copy code"
       >
         {copied ? <Check className="h-4 w-4" /> : <Clipboard className="h-4 w-4" />}
       </button>
-      <pre className="overflow-x-auto rounded-md border border-slate-700 bg-slate-950 p-4 pr-14 text-sm leading-6 text-slate-100">
+      <pre className="overflow-x-auto rounded-md border border-[#3a3b4d] bg-[#15161e] p-4 pr-14 text-sm leading-6 text-slate-100">
         <code>{value}</code>
       </pre>
     </div>
@@ -304,15 +304,15 @@ function ParameterInput({
     <label className="grid gap-2 md:grid-cols-[180px_1fr] md:items-center">
       <span>
         <span className="block text-sm font-medium text-slate-100">{parameter.name}</span>
-        <span className="font-mono text-xs text-slate-400">{parameter.kind}{parameter.required ? ' required' : ''}</span>
+        <span className="font-mono text-xs text-[#94a3b8]">{parameter.kind}{parameter.required ? ' required' : ''}</span>
       </span>
       <span>
-        <span className="mb-2 block text-sm text-slate-300">{parameter.description}</span>
+        <span className="mb-2 block text-sm text-[#cbd5e1]">{parameter.description}</span>
         {parameter.options ? (
           <select
             value={value}
             onChange={(event) => onChange(event.target.value)}
-            className="h-10 w-full rounded-md border border-slate-600 bg-slate-950 px-3 text-sm text-slate-100"
+            className="h-10 w-full rounded-md border border-[#3a3b4d] bg-[#15161e] px-3 text-sm text-slate-100"
           >
             {parameter.options.map((option) => (
               <option key={option.value} value={option.value}>
@@ -325,7 +325,7 @@ function ParameterInput({
             value={value}
             onChange={(event) => onChange(event.target.value)}
             placeholder={parameter.placeholder || parameter.defaultValue}
-            className="h-10 w-full rounded-md border border-slate-600 bg-slate-950 px-3 text-sm text-slate-100 placeholder:text-slate-500"
+            className="h-10 w-full rounded-md border border-[#3a3b4d] bg-[#15161e] px-3 text-sm text-slate-100 placeholder:text-[#94a3b8]"
           />
         )}
       </span>
@@ -384,7 +384,7 @@ function OperationPanel({
   }
 
   return (
-    <div className="overflow-hidden rounded-md border border-blue-500/40 bg-slate-900/70">
+    <div className="overflow-hidden rounded-md border border-[#60a5fa]/40 bg-[#242538]">
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
@@ -395,16 +395,16 @@ function OperationPanel({
         </span>
         <span className="flex min-w-0 flex-1 items-center gap-3 px-4 py-3">
           <span className="font-mono text-base font-bold text-white">{operation.path}</span>
-          <span className="hidden text-sm text-slate-300 sm:inline">{operation.summary}</span>
+          <span className="hidden text-sm text-[#cbd5e1] sm:inline">{operation.summary}</span>
         </span>
-        <span className="flex w-12 items-center justify-center text-slate-300">
+        <span className="flex w-12 items-center justify-center text-[#cbd5e1]">
           <ChevronDown className={`h-5 w-5 transition-transform ${open ? 'rotate-180' : ''}`} />
         </span>
       </button>
 
       {open && (
         <div className="space-y-6 border-t border-blue-500/30 p-5">
-          <p className="text-sm text-slate-300">{operation.description}</p>
+          <p className="text-sm text-[#cbd5e1]">{operation.description}</p>
 
           {operation.parameters.length > 0 && (
             <div className="space-y-4">
@@ -444,7 +444,7 @@ function OperationPanel({
             <div className="flex items-center justify-between gap-3">
               <h3 className="text-sm font-semibold text-white">Response</h3>
               {result && (
-                <span className="text-xs text-slate-300">
+                <span className="text-xs text-[#cbd5e1]">
                   {result.status ? `HTTP ${result.status}` : 'Request error'}
                   {result.durationMs !== null ? ` in ${result.durationMs}ms` : ''}
                 </span>
@@ -468,19 +468,19 @@ export function ApiExplorer({
   const grouped = groupOperations();
 
   return (
-    <div id="api-explorer" className="rounded-md border border-slate-700 bg-slate-900 p-4 shadow-xl">
-      <div className="mb-6 flex flex-col gap-3 border-b border-slate-700 pb-5 md:flex-row md:items-end md:justify-between">
+    <div id="api-explorer" className="rounded-md border border-[#3a3b4d] bg-[#242538] p-4 shadow-xl">
+      <div className="mb-6 flex flex-col gap-3 border-b border-[#3a3b4d] pb-5 md:flex-row md:items-end md:justify-between">
         <div>
           <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-blue-400/60 bg-blue-500/10 px-3 py-1 text-sm text-blue-200">
             <Terminal className="h-4 w-4" />
             Snapshots API
           </div>
           <h2 className="text-2xl font-bold text-white">Interactive API explorer</h2>
-          <p className="mt-2 max-w-2xl text-sm text-slate-300">
+          <p className="mt-2 max-w-2xl text-sm text-[#cbd5e1]">
             Execute public endpoints from the browser, inspect JSON responses, and copy curl commands for automation.
           </p>
         </div>
-        <div className="rounded-md border border-slate-700 bg-slate-950 px-3 py-2 font-mono text-xs text-slate-300">
+        <div className="rounded-md border border-[#3a3b4d] bg-[#15161e] px-3 py-2 font-mono text-xs text-[#cbd5e1]">
           {origin}
         </div>
       </div>
@@ -488,9 +488,9 @@ export function ApiExplorer({
       <div className="space-y-8">
         {Object.entries(grouped).map(([group, groupOperations]) => (
           <section key={group} className="space-y-3">
-            <div className="flex items-baseline gap-3 border-b border-slate-700 pb-3">
+            <div className="flex items-baseline gap-3 border-b border-[#3a3b4d] pb-3">
               <h3 className="text-base font-semibold text-white">{group}</h3>
-              <span className="text-sm text-slate-500">
+              <span className="text-sm text-[#94a3b8]">
                 {group === 'Catalog' && 'Chain and catalog discovery.'}
                 {group === 'Snapshots' && 'Artifact listing and latest signed URLs.'}
                 {group === 'Downloads' && 'Specific snapshot download URLs.'}

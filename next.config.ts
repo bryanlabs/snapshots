@@ -90,7 +90,7 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
-        source: "/:path*",
+        source: "/(.*)",
         headers: [
           // Security headers
           {
@@ -103,7 +103,7 @@ const nextConfig: NextConfig = {
           },
           {
             key: "X-Frame-Options",
-            value: "DENY",
+            value: "SAMEORIGIN",
           },
           {
             key: "X-Content-Type-Options",
@@ -119,26 +119,22 @@ const nextConfig: NextConfig = {
           },
           {
             key: "Permissions-Policy",
-            value: "camera=(), microphone=(), geolocation=(), payment=(), usb=(), magnetometer=(), accelerometer=(), gyroscope=()",
+            value: "camera=(), microphone=(), geolocation=()",
           },
           {
             key: "Content-Security-Policy",
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://vercel.live",
-              "style-src 'self' 'unsafe-inline'",
-              "img-src 'self' data: blob: https:",
-              "font-src 'self'",
-              "connect-src 'self' https://vercel.live wss://ws-us3.pusher.com https://sockjs-us3.pusher.com",
-              "media-src 'self'",
-              "object-src 'none'",
-              "child-src 'self'",
-              "frame-src 'self' https://vercel.live",
-              "frame-ancestors 'none'",
-              "form-action 'self'",
               "base-uri 'self'",
-              "manifest-src 'self'",
-              "upgrade-insecure-requests",
+              "object-src 'none'",
+              "frame-ancestors 'self'",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+              "font-src 'self' https://fonts.gstatic.com data:",
+              "img-src 'self' data: blob: https:",
+              "connect-src 'self' https: wss: ws:",
+              "frame-src 'self' https:",
+              "form-action 'self' https:",
             ].join('; '),
           },
         ],
